@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import PaywallModal from '../components/ui/PaywallModal';
 
@@ -7,10 +8,31 @@ import { GoogleGenAI, Type } from '@google/genai';
 const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
 
 export default function ScanPage() {
+  const location = useLocation();
   const { getScansRemaining, incrementScan } = useUser();
   const [ticker, setTicker] = useState('');
+  const [imagePreview, setImagePreview] = useState(null);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (location.state?.query) setTicker(location.state.query.toUpperCase());
+    if (location.state?.image) setImagePreview(location.state.image);
+    // Clear state so it doesn't persist on refresh
+    window.history.replaceState({}, document.title);
+  }, [location.state]);
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+        setTicker('Image Analysis'); // Visual cue
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const [showPaywall, setShowPaywall] = useState(false);
 
@@ -29,9 +51,23 @@ export default function ScanPage() {
     incrementScan();
 
     try {
+      let inlineData = null;
+      if (imagePreview) {
+        const matches = imagePreview.match(/^data:(image\/\w+);base64,(.+)$/);
+        if (matches) {
+          inlineData = { mimeType: matches[1], data: matches[2] };
+        }
+      }
+
+      const promptText = inlineData 
+        ? `Analyze this image, identify the primary brand, product, or company. Determine its public stock ticker, and then generate a short "what happened recently", "why it matters", and "actionable advice" for that stock.`
+        : `Analyze the stock ${t}. Provide a short "what happened recently", "why it matters", and "actionable advice".`;
+
+      const contents = inlineData ? [promptText, { inlineData }] : promptText;
+
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
-        contents: `Analyze the stock ${t}. Provide a short "what happened recently", "why it matters", and "actionable advice".`,
+        contents,
         config: {
           responseMimeType: "application/json",
           responseSchema: {
@@ -71,10 +107,24 @@ export default function ScanPage() {
       <div className="section-heading">Stock Scanner</div>
       <p className="scan-intro">Enter a ticker symbol to get an instant, plain-English analysis.</p>
 
+      {imagePreview && (
+        <div className="g-prompt-image-preview" style={{ marginBottom: '16px', background: 'var(--bg-secondary)', borderRadius: '12px' }}>
+          <img src={imagePreview} alt="Upload preview" />
+          <button type="button" onClick={() => setImagePreview(null)}>
+            <ion-icon name="close-circle"></ion-icon>
+          </button>
+        </div>
+      )}
+
       <div className="scan-input-row">
+        <label className="scan-icon-btn" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '0 12px', color: 'var(--text-secondary)' }}>
+          <input type="file" accept="image/*" style={{display: 'none'}} onChange={handleImageUpload} />
+          <ion-icon name="camera-outline" style={{ fontSize: '20px' }}></ion-icon>
+        </label>
         <input
           className="scan-input"
-          placeholder="e.g. AAPL, TSLA, NVDA"
+          style={{ borderLeft: '1px solid var(--border-light)', borderRadius: '0' }}
+          placeholder="e.g. AAPL, TSLA, NVDA or upload image"
           value={ticker}
           onChange={e => setTicker(e.target.value.toUpperCase())}
           onKeyDown={e => { if (e.key === 'Enter') handleScan(); }}
@@ -143,7 +193,7 @@ export default function ScanPage() {
         {['AAPL', 'TSLA', 'NVDA'].map(t => (
           <button key={t} className="scan-option" onClick={() => setTicker(t)}>
             <div className="scan-opt-ticker">{t}</div>
-            <div className="scan-opt-name">{STOCK_CONTEXTS[t].name}</div>
+            <div className="scan-opt-name">Tap to analyze</div>
           </button>
         ))}
       </div>

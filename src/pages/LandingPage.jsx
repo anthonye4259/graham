@@ -13,10 +13,22 @@ const SUGGESTIONS = [
 export default function LandingPage() {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
+  const [imagePreview, setImagePreview] = useState(null);
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSubmit = (e) => {
     e?.preventDefault();
-    navigate('/app');
+    navigate('/app', { state: { query, image: imagePreview } });
   };
 
   return (
@@ -40,9 +52,17 @@ export default function LandingPage() {
         </p>
 
         <form className="g-prompt-card" onSubmit={handleSubmit}>
+          {imagePreview && (
+            <div className="g-prompt-image-preview">
+              <img src={imagePreview} alt="Upload preview" />
+              <button type="button" onClick={() => setImagePreview(null)}>
+                <ion-icon name="close-circle"></ion-icon>
+              </button>
+            </div>
+          )}
           <textarea
             className="g-prompt-input"
-            placeholder="Ask about any stock or investing topic..."
+            placeholder="Ask about any stock, or upload a picture of a brand..."
             rows={1}
             value={query}
             onChange={e => setQuery(e.target.value)}
@@ -50,7 +70,10 @@ export default function LandingPage() {
           />
           <div className="g-prompt-bar">
             <div className="g-prompt-left">
-              <button type="button" className="g-prompt-icon-btn"><ion-icon name="add-outline"></ion-icon></button>
+              <label className="g-prompt-icon-btn" style={{cursor: 'pointer'}}>
+                <input type="file" accept="image/*" style={{display: 'none'}} onChange={handleImageUpload} />
+                <ion-icon name="camera-outline"></ion-icon>
+              </label>
               <div className="g-prompt-toggle">
                 <span className="g-toggle-label">Plan</span>
                 <ion-icon name="information-circle-outline" class="g-toggle-info"></ion-icon>
