@@ -40,6 +40,7 @@ html, body {
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
 }
 
 body { min-height: 100dvh; }
@@ -1745,7 +1746,34 @@ body { min-height: 100dvh; }
   display: flex; align-items: center; justify-content: center; gap: 8px;
   transition: var(--transition-base);
 }
-.share-insight-btn:hover { background: #E8E2DA; }
+
+.share-insight-btn:hover {
+  background: var(--bg-tertiary);
+  transform: translateY(-1px);
+}
+
+.g-section {
+  padding: 8rem 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+  border-top: 1px solid var(--border-light);
+}
+
+.g-section-title {
+  font-size: 2.5rem;
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+.g-section-desc {
+  font-size: 1.25rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
 .viral-watermark {
   text-align: center; font-size: 11px; color: var(--text-muted);
   margin-top: 12px; font-weight: 500;

@@ -74,6 +74,21 @@ export default function LandingPage() {
           </div>
         </div>
       </main>
+
+      <section id="features" className="g-section">
+        <h2 className="g-section-title">Learn from the best</h2>
+        <p className="g-section-desc">Graham uses AI to break down complex financial concepts into bite-sized, understandable lessons.</p>
+      </section>
+
+      <section id="how" className="g-section">
+        <h2 className="g-section-title">How it Works</h2>
+        <p className="g-section-desc">Search any ticker. Graham instantly fetches live data and explains exactly what's happening and why it matters.</p>
+      </section>
+
+      <section id="pricing" className="g-section">
+        <h2 className="g-section-title">Pricing</h2>
+        <p className="g-section-desc">Start for free. Upgrade to Graham Premium for $9.99/mo to unlock unlimited AI stock scans and options training.</p>
+      </section>
     </div>
   );
 }
