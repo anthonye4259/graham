@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import PaywallModal from '../components/ui/PaywallModal';
 
@@ -9,9 +9,11 @@ const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
 
 export default function ScanPage() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { state, getScansRemaining, incrementScan, simulateBuy } = useUser();
   const [ticker, setTicker] = useState('');
   const [imagePreview, setImagePreview] = useState(null);
+  const [showActionMenu, setShowActionMenu] = useState(false);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -133,10 +135,39 @@ export default function ScanPage() {
       )}
 
       <div className="scan-input-row">
-        <label className="scan-icon-btn" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '0 12px', color: 'var(--text-secondary)' }}>
-          <input type="file" accept="image/*" style={{display: 'none'}} onChange={handleImageUpload} />
-          <ion-icon name="camera-outline" style={{ fontSize: '20px' }}></ion-icon>
-        </label>
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+          <button 
+            type="button"
+            className="scan-icon-btn" 
+            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '0 12px', color: 'var(--text-secondary)', background: 'transparent', border: 'none' }}
+            onClick={() => setShowActionMenu(!showActionMenu)}
+          >
+            <ion-icon name="add-outline" style={{ fontSize: '20px' }}></ion-icon>
+          </button>
+
+          {showActionMenu && (
+            <div className="action-menu-popup" style={{
+              position: 'absolute', bottom: '100%', left: '0', marginBottom: '8px',
+              background: 'var(--bg-secondary)', border: '1px solid var(--border-light)',
+              borderRadius: '12px', padding: '8px', width: '200px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', gap: '4px', zIndex: 10
+            }}>
+              <label className="action-menu-item" style={{
+                display: 'flex', alignItems: 'center', gap: '8px', padding: '8px', borderRadius: '8px',
+                cursor: 'pointer', fontSize: '14px', color: 'var(--text-primary)'
+              }}>
+                <input type="file" accept="image/*" style={{display: 'none'}} onChange={(e) => { handleImageUpload(e); setShowActionMenu(false); }} />
+                <ion-icon name="image-outline"></ion-icon> Upload Image
+              </label>
+              <button type="button" className="action-menu-item" style={{
+                display: 'flex', alignItems: 'center', gap: '8px', padding: '8px', borderRadius: '8px',
+                cursor: 'pointer', fontSize: '14px', color: 'var(--text-primary)', border: 'none', background: 'transparent', textAlign: 'left'
+              }} onClick={() => { navigate('/app/profile'); setShowActionMenu(false); }}>
+                <ion-icon name="people-outline"></ion-icon> Change Persona
+              </button>
+            </div>
+          )}
+        </div>
         <input
           className="scan-input"
           style={{ borderLeft: '1px solid var(--border-light)', borderRadius: '0' }}

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useUser } from '../context/UserContext';
 import Navbar from '../components/ui/Navbar';
 
 const SUGGESTIONS = [
@@ -12,8 +13,10 @@ const SUGGESTIONS = [
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const { state, setState } = useUser();
   const [query, setQuery] = useState('');
   const [imagePreview, setImagePreview] = useState(null);
+  const [showActionMenu, setShowActionMenu] = useState(false);
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -69,13 +72,40 @@ export default function LandingPage() {
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) handleSubmit(e); }}
           />
           <div className="g-prompt-bar">
-            <div className="g-prompt-left">
-              <label className="g-prompt-icon-btn" style={{cursor: 'pointer'}}>
-                <input type="file" accept="image/*" style={{display: 'none'}} onChange={handleImageUpload} />
-                <ion-icon name="camera-outline"></ion-icon>
-              </label>
+            <div className="g-prompt-left" style={{ position: 'relative' }}>
+              <button 
+                type="button" 
+                className="g-prompt-icon-btn" 
+                onClick={() => setShowActionMenu(!showActionMenu)}
+              >
+                <ion-icon name="add-outline"></ion-icon>
+              </button>
+              
+              {showActionMenu && (
+                <div className="action-menu-popup" style={{
+                  position: 'absolute', bottom: '100%', left: '0', marginBottom: '8px',
+                  background: 'var(--bg-secondary)', border: '1px solid var(--border-light)',
+                  borderRadius: '12px', padding: '8px', width: '200px',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', gap: '4px', zIndex: 10
+                }}>
+                  <label className="action-menu-item" style={{
+                    display: 'flex', alignItems: 'center', gap: '8px', padding: '8px', borderRadius: '8px',
+                    cursor: 'pointer', fontSize: '14px', color: 'var(--text-primary)'
+                  }}>
+                    <input type="file" accept="image/*" style={{display: 'none'}} onChange={(e) => { handleImageUpload(e); setShowActionMenu(false); }} />
+                    <ion-icon name="image-outline"></ion-icon> Upload Image
+                  </label>
+                  <button type="button" className="action-menu-item" style={{
+                    display: 'flex', alignItems: 'center', gap: '8px', padding: '8px', borderRadius: '8px',
+                    cursor: 'pointer', fontSize: '14px', color: 'var(--text-primary)', border: 'none', background: 'transparent', textAlign: 'left'
+                  }} onClick={() => { navigate('/app/profile'); setShowActionMenu(false); }}>
+                    <ion-icon name="people-outline"></ion-icon> Change Persona
+                  </button>
+                </div>
+              )}
+              
               <div className="g-prompt-toggle">
-                <span className="g-toggle-label">Plan</span>
+                <span className="g-toggle-label">{state.persona}</span>
                 <ion-icon name="information-circle-outline" class="g-toggle-info"></ion-icon>
               </div>
             </div>

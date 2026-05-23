@@ -1808,6 +1808,10 @@ body { min-height: 100dvh; }
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+.action-menu-item:hover {
+  background: var(--bg-tertiary);
+}
+
 /* Streak Freeze */
 .streak-freeze-badge {
   display: flex; align-items: center; justify-content: center; gap: 4px;
