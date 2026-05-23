@@ -33,6 +33,10 @@ const DEFAULT_STATE = {
   trialDays: 7,
   hasSeenPostLessonPaywall: false,
   hasSeenOnboardingPaywall: false,
+  persona: 'Graham',
+  fantasyPortfolio: [],
+  dailyFactDate: null,
+  dailyFact: null,
 };
 
 const UserContext = createContext(null);
@@ -154,8 +158,31 @@ export function UserProvider({ children }) {
     return state.subscribed || isTrialActive();
   }, [state.subscribed, isTrialActive]);
 
+  const simulateBuy = useCallback((ticker, name, currentPrice) => {
+    setStateRaw(prev => {
+      // price might be a string like "$150.20", we need to parse it
+      const numPrice = parseFloat(currentPrice.replace(/[^0-9.-]+/g,""));
+      const newHolding = {
+        ticker,
+        name,
+        purchasePrice: numPrice,
+        shares: 1, // Just buying 1 share for simplicity in this prototype
+        date: new Date().toISOString()
+      };
+      
+      const patch = { fantasyPortfolio: [...prev.fantasyPortfolio, newHolding] };
+      if (user) updateDoc(doc(db, 'users', user.uid), patch).catch(err => console.error(err));
+      return { ...prev, ...patch };
+    });
+  }, [user]);
+
   const startTrial = useCallback(() => {
-    setState({ trialStartDate: new Date().toISOString(), subscribed: true });
+    setState({ 
+      subscribed: true, 
+      trialStartDate: new Date().toISOString(),
+      hasSeenOnboardingPaywall: true,
+      hasSeenPostLessonPaywall: true
+    });
   }, [setState]);
 
   const getScansRemaining = useCallback(() => {
@@ -195,7 +222,7 @@ export function UserProvider({ children }) {
     state, setState, addXP, completeLesson, markDailyGoal,
     isTrialActive, isPremium, startTrial, getScansRemaining,
     incrementScan, loseHeart, getGreeting, getLevelTitle, getXPProgress,
-    user, loadingAuth
+    user, loadingAuth, simulateBuy
   };
 
   if (loadingAuth) {

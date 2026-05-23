@@ -25,10 +25,30 @@ export default function HomePage() {
   const motivation = motivations[Math.floor(Math.random() * motivations.length)];
   const nextLesson = getNextLesson(state);
 
+  const dailyFacts = [
+    "If you bought $1,000 of Apple stock in 2007 instead of buying the first iPhone, it would be worth over $50,000 today.",
+    "The New York Stock Exchange was founded under a buttonwood tree on Wall Street in 1792.",
+    "Warren Buffett made 99% of his immense wealth after his 50th birthday. Compound interest takes time!",
+    "The S&P 500 has historically returned an average of about 10% per year over the last century.",
+    "A 'Bear Market' is called so because a bear attacks by swiping its paws down. A 'Bull Market' is when a bull thrusts its horns up.",
+    "Albert Einstein reportedly called compound interest the 'eighth wonder of the world'.",
+    "Index funds were created in 1975 by John Bogle, founder of Vanguard. They are often recommended as the safest long-term bet for beginners."
+  ];
+  const factOfTheDay = dailyFacts[new Date().getDay()];
+
   return (
     <div className="screen active" id="today-tab">
       <div className="today-greeting">{greeting}</div>
       <div className="today-motivation">{motivation}</div>
+      
+      <div className="stat-card" style={{ width: '100%', marginBottom: '24px', background: 'var(--bg-secondary)', borderLeft: '4px solid var(--accent-amber)', borderRadius: '8px', padding: '16px' }}>
+        <div style={{ fontSize: '12px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '600', marginBottom: '8px' }}>
+          <ion-icon name="bulb-outline" style={{ marginRight: '4px' }}></ion-icon> Fact of the Day
+        </div>
+        <div style={{ fontSize: '14px', lineHeight: '1.5', color: 'var(--text-primary)' }}>
+          {factOfTheDay}
+        </div>
+      </div>
 
       <div className="today-stats-row">
         <div className="stat-pill"><ion-icon name="flame-outline" class="pill-icon flame"></ion-icon> <span>{state.streak} day{state.streak !== 1 ? 's' : ''}</span></div>

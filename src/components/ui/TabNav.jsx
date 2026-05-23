@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 const tabs = [
   { id: '/app', icon: 'today-outline', label: 'Today' },
   { id: '/app/scan', icon: 'scan-outline', label: 'Scan' },
+  { id: '/app/portfolio', icon: 'wallet-outline', label: 'Portfolio' },
   { id: '/app/profile', icon: 'person-outline', label: 'Profile' },
 ];
 

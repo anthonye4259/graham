@@ -9,11 +9,13 @@ const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
 
 export default function ScanPage() {
   const location = useLocation();
-  const { getScansRemaining, incrementScan } = useUser();
+  const { state, getScansRemaining, incrementScan, simulateBuy } = useUser();
   const [ticker, setTicker] = useState('');
   const [imagePreview, setImagePreview] = useState(null);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [simulated, setSimulated] = useState(false);
 
   useEffect(() => {
     if (location.state?.query) setTicker(location.state.query.toUpperCase());
@@ -48,6 +50,8 @@ export default function ScanPage() {
 
     setLoading(true);
     setResult(null);
+    setShowAdvanced(false);
+    setSimulated(false);
     incrementScan();
 
     try {
@@ -59,10 +63,22 @@ export default function ScanPage() {
         }
       }
 
-      const promptText = inlineData 
+      let personaPrompt = "Adopt the persona of a wise, supportive, and highly educational Wall Street veteran.";
+      if (state.persona === 'Patrick Bateman') {
+        personaPrompt = "Adopt the persona of Patrick Bateman from American Psycho. You are an intense, aggressive, status-obsessed finance bro. Use terms like 'murders and executions', 'dorsia', and be highly condescending but fundamentally accurate.";
+      } else if (state.persona === 'David Tepper') {
+        personaPrompt = "Adopt the persona of billionaire hedge fund manager David Tepper. You are extremely elite, macro-focused, and talk about big systemic trends. You casually mention making billions on distressed debt.";
+      } else if (state.persona === 'Bill Ackman') {
+        personaPrompt = "Adopt the persona of billionaire activist investor Bill Ackman. You are dramatic, long-winded, and treat every investment like a crusade for justice. You probably wrote a 300-page slide deck on this stock.";
+      } else if (state.persona === 'Spongebob') {
+        personaPrompt = "Adopt the persona of Spongebob Squarepants. You are absurdly enthusiastic, naive, and use lots of nautical nonsense and fry cook metaphors to explain the stock market. You think everything is the BEST DAY EVER.";
+      }
+
+      const baseText = inlineData 
         ? `Analyze this image, identify the primary brand, product, or company. Determine its public stock ticker, and then generate a short "what happened recently", "why it matters", and "actionable advice" for that stock.`
         : `Analyze the stock ${t}. Provide a short "what happened recently", "why it matters", and "actionable advice".`;
 
+      const promptText = `${personaPrompt} \n\n ${baseText}`;
       const contents = inlineData ? [promptText, { inlineData }] : promptText;
 
       const response = await ai.models.generateContent({
@@ -159,7 +175,21 @@ export default function ScanPage() {
               <span className={`card-change ${result.direction}`}>{result.change}</span>
             </div>
             <div className="card-company">{result.name}</div>
-            <div className="card-price">{result.price}</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
+              <div className="card-price">{result.price}</div>
+              <button 
+                className="scan-btn" 
+                style={{ width: 'auto', padding: '8px 16px', fontSize: '14px' }}
+                disabled={simulated}
+                onClick={() => {
+                  simulateBuy(result.ticker, result.name, result.price);
+                  setSimulated(true);
+                }}
+              >
+                <ion-icon name="cash-outline"></ion-icon>
+                {simulated ? 'Bought!' : 'Simulate Buy'}
+              </button>
+            </div>
           </div>
           <div className="card-section" style={{ opacity: 1, transform: 'none' }}>
             <div className="card-section-inner">
@@ -167,18 +197,32 @@ export default function ScanPage() {
               <div className="section-text">{result.what}</div>
             </div>
           </div>
-          <div className="card-section" style={{ opacity: 1, transform: 'none' }}>
-            <div className="card-section-inner bears">
-              <div className="section-label"><ion-icon name="help-circle-outline" class="sl-icon rose"></ion-icon> Why It Matters</div>
-              <div className="section-text">{result.why}</div>
-            </div>
-          </div>
-          <div className="card-section" style={{ opacity: 1, transform: 'none' }}>
-            <div className="card-section-inner action">
-              <div className="section-label"><ion-icon name="compass-outline" class="sl-icon amber"></ion-icon> What You Should Do</div>
-              <div className="section-text">{result.action}</div>
-            </div>
-          </div>
+          
+          <button 
+            className="share-insight-btn" 
+            style={{ background: 'transparent', color: 'var(--text-secondary)', border: '1px dashed var(--border-light)', marginTop: '8px', marginBottom: '8px' }}
+            onClick={() => setShowAdvanced(!showAdvanced)}
+          >
+            <ion-icon name={showAdvanced ? "chevron-up-outline" : "chevron-down-outline"}></ion-icon>
+            {showAdvanced ? 'Hide Advanced Insights' : 'Show Advanced Insights'}
+          </button>
+
+          {showAdvanced && (
+            <>
+              <div className="card-section" style={{ opacity: 1, transform: 'none' }}>
+                <div className="card-section-inner bears">
+                  <div className="section-label"><ion-icon name="help-circle-outline" class="sl-icon rose"></ion-icon> Why It Matters</div>
+                  <div className="section-text">{result.why}</div>
+                </div>
+              </div>
+              <div className="card-section" style={{ opacity: 1, transform: 'none' }}>
+                <div className="card-section-inner action">
+                  <div className="section-label"><ion-icon name="compass-outline" class="sl-icon amber"></ion-icon> What You Should Do</div>
+                  <div className="section-text">{result.action}</div>
+                </div>
+              </div>
+            </>
+          )}
           
           <button className="share-insight-btn" onClick={() => alert('Insight shared!')}>
             <ion-icon name="share-outline"></ion-icon>

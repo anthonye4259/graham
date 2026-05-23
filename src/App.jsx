@@ -5,6 +5,7 @@ import OnboardingPage from './pages/OnboardingPage';
 import HomePage from './pages/HomePage';
 import ScanPage from './pages/ScanPage';
 import ProfilePage from './pages/ProfilePage';
+import PortfolioPage from './pages/PortfolioPage';
 import TabNav from './components/ui/TabNav';
 
 function AppShell() {
@@ -20,6 +21,7 @@ function AppShell() {
         <Routes>
           <Route index element={<HomePage />} />
           <Route path="scan" element={<ScanPage />} />
+          <Route path="portfolio" element={<PortfolioPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="*" element={<Navigate to="/app" replace />} />
         </Routes>

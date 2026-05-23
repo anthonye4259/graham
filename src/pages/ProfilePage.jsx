@@ -4,7 +4,7 @@ import { getAllLessonsCount } from '../lib/lessons';
 import PaywallModal from '../components/ui/PaywallModal';
 
 export default function ProfilePage() {
-  const { state, getLevelTitle, getXPProgress, isPremium } = useUser();
+  const { state, setState, getLevelTitle, getXPProgress, isPremium } = useUser();
   const [showPaywall, setShowPaywall] = useState(false);
   const xpPct = getXPProgress();
 
@@ -69,6 +69,31 @@ export default function ProfilePage() {
           Upgrade to Premium
         </button>
       )}
+
+      <div className="section-heading" style={{ marginTop: '24px' }}>AI Persona</div>
+      <div className="stat-card" style={{ width: '100%', textAlign: 'left', marginBottom: '6px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px' }}>
+          <span style={{ color: 'var(--text-secondary)' }}>Who explains the market to you?</span>
+          <select 
+            className="scan-input" 
+            style={{ padding: '8px', borderRadius: '8px', border: '1px solid var(--border-light)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}
+            value={state.persona}
+            onChange={(e) => {
+              if (!isPremium() && e.target.value !== 'Graham') {
+                setShowPaywall(true);
+                return;
+              }
+              setState({ persona: e.target.value });
+            }}
+          >
+            <option value="Graham">Benjamin Graham (Default)</option>
+            <option value="Patrick Bateman">Patrick Bateman (Finance Bro)</option>
+            <option value="David Tepper">David Tepper (Hedge Fund Elite)</option>
+            <option value="Bill Ackman">Bill Ackman (Dramatic Activist)</option>
+            <option value="Spongebob">Spongebob (Cartoon Chaos)</option>
+          </select>
+        </div>
+      </div>
 
       <div className="section-heading" style={{ marginTop: '24px' }}>Learning</div>
       <div className="stat-card" style={{ width: '100%', textAlign: 'left' }}>
