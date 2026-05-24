@@ -4,7 +4,7 @@ import { getAllLessonsCount } from '../lib/lessons';
 import PaywallModal from '../components/ui/PaywallModal';
 
 export default function ProfilePage() {
-  const { state, setState, getLevelTitle, getXPProgress, isPremium } = useUser();
+  const { state, setState, getLevelTitle, getXPProgress, isPremium, logout } = useUser();
   const [showPaywall, setShowPaywall] = useState(false);
   const xpPct = getXPProgress();
 
@@ -115,10 +115,12 @@ export default function ProfilePage() {
 
       <button
         className="onboard-next"
-        style={{ marginTop: '28px', background: 'var(--bg-card)', color: 'var(--accent-rose)', border: '1px solid var(--accent-rose-glow)' }}
-        onClick={() => { localStorage.clear(); window.location.reload(); }}
+        style={{ marginTop: '28px', background: 'var(--bg-card)', color: 'var(--text-secondary)', border: '1px solid var(--border-light)' }}
+        onClick={async () => {
+          await logout();
+        }}
       >
-        Reset All Data
+        Log Out
       </button>
 
       <PaywallModal 

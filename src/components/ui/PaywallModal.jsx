@@ -13,21 +13,17 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
   const handleSubscribe = async () => {
     setLoadingStripe(true);
     try {
-      const stripeKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
-      if (!stripeKey) {
+      const paymentLink = import.meta.env.VITE_STRIPE_PAYMENT_LINK;
+      if (!paymentLink) {
         // Fallback for local testing if no key is provided
-        console.warn("No Stripe Key provided. Simulating successful checkout.");
+        console.warn("No Stripe Payment Link provided. Simulating successful checkout.");
         startTrial();
         onClose();
         return;
       }
       
-      const stripe = await loadStripe(stripeKey);
-      // In a real app, you would fetch a Checkout Session ID from your Firebase backend here.
-      // For this prototype, we'll simulate the redirect or use a predefined price ID if you set one up.
-      alert("Redirecting to Stripe Checkout for: " + (billing === 'annual' ? 'Annual Plan' : 'Monthly Plan'));
-      startTrial();
-      onClose();
+      // Redirect to the Stripe Payment Link
+      window.location.href = paymentLink;
     } catch (e) {
       console.error("Stripe Checkout Error", e);
     } finally {

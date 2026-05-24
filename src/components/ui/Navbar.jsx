@@ -13,8 +13,8 @@ export default function Navbar() {
           <a href="#pricing" className="g-nav-link">Pricing</a>
         </div>
         <div className="g-nav-actions">
-          <button className="g-nav-login" onClick={() => navigate('/app')}>Log in</button>
-          <button className="g-nav-cta" onClick={() => navigate('/app')}>Get Started</button>
+          <button className="g-nav-login" onClick={() => navigate('/auth')}>Log in</button>
+          <button className="g-nav-cta" onClick={() => navigate('/auth')}>Get Started</button>
         </div>
       </div>
     </nav>

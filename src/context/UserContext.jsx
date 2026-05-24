@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { auth, db } from '../lib/firebase';
-import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+import { signInAnonymously, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 
 const XP_LEVELS = [0, 100, 250, 500, 1000, 2000, 3500, 5500, 8000, 12000, 20000];
@@ -60,12 +60,8 @@ export function UserProvider({ children }) {
           await setDoc(docRef, DEFAULT_STATE);
         }
       } else {
-        // Sign in anonymously if no user
-        try {
-          await signInAnonymously(auth);
-        } catch (err) {
-          console.error("Anonymous auth failed", err);
-        }
+        setUser(null);
+        setStateRaw(DEFAULT_STATE);
       }
       setLoadingAuth(false);
     });
@@ -81,6 +77,18 @@ export function UserProvider({ children }) {
       return next;
     });
   }, [user]);
+
+  const login = async (email, password) => {
+    return signInWithEmailAndPassword(auth, email, password);
+  };
+
+  const signup = async (email, password) => {
+    return createUserWithEmailAndPassword(auth, email, password);
+  };
+
+  const logout = async () => {
+    await signOut(auth);
+  };
 
   // Streak check on mount
   useEffect(() => {
@@ -222,7 +230,7 @@ export function UserProvider({ children }) {
     state, setState, addXP, completeLesson, markDailyGoal,
     isTrialActive, isPremium, startTrial, getScansRemaining,
     incrementScan, loseHeart, getGreeting, getLevelTitle, getXPProgress,
-    user, loadingAuth, simulateBuy
+    user, loadingAuth, simulateBuy, login, signup, logout
   };
 
   if (loadingAuth) {
