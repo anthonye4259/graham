@@ -16,8 +16,10 @@ workflows:
         script: npm run build
       - name: Sync Capacitor iOS
         script: npx cap sync ios
-      - name: Set up code signing settings on Xcode project
-        script: xcode-project use-profiles
+      - name: Fetch code signing files and set up Xcode
+        script: |
+          app-store-connect fetch-signing-files "com.graham.ai" --type IOS_APP_STORE --create
+          xcode-project use-profiles
       - name: Build IPA
         script: |
           xcode-project build-ipa \
