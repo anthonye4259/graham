@@ -2,6 +2,8 @@ import { createContext, useContext, useState, useCallback, useEffect } from 'rea
 import { auth, db } from '../lib/firebase';
 import { signInAnonymously, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { Capacitor } from '@capacitor/core';
+import { Purchases } from '@revenuecat/purchases-capacitor';
 
 const XP_LEVELS = [0, 100, 250, 500, 1000, 2000, 3500, 5500, 8000, 12000, 20000];
 
@@ -37,6 +39,9 @@ const DEFAULT_STATE = {
   fantasyPortfolio: [],
   dailyFactDate: null,
   dailyFact: null,
+  premiumScansToday: 0,
+  lastPremiumScanDate: null,
+  chatHistory: [],
 };
 
 const UserContext = createContext(null);
@@ -46,26 +51,70 @@ export function UserProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loadingAuth, setLoadingAuth] = useState(true);
 
-  // Initialize Auth
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-        // Load Firestore Data
-        const docRef = doc(db, 'users', currentUser.uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          setStateRaw({ ...DEFAULT_STATE, ...docSnap.data() });
-        } else {
-          await setDoc(docRef, DEFAULT_STATE);
-        }
-      } else {
-        setUser(null);
-        setStateRaw(DEFAULT_STATE);
+    let isMounted = true;
+    
+    // Safety fallback: ensure loading screen clears after 5 seconds if Firestore hangs
+    const safetyTimer = setTimeout(() => {
+      if (isMounted) {
+        setLoadingAuth(false);
+        console.warn("Auth initialization timed out. Forcing app to load.");
       }
-      setLoadingAuth(false);
+    }, 5000);
+
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      try {
+        if (currentUser) {
+          setUser(currentUser);
+          
+          // Configure RevenueCat if Native
+          let isNativeSubscribed = false;
+          if (Capacitor.isNativePlatform()) {
+            try {
+              if (import.meta.env.VITE_REVENUECAT_PUBLIC_KEY) {
+                await Purchases.configure({ apiKey: import.meta.env.VITE_REVENUECAT_PUBLIC_KEY, appUserID: currentUser.uid });
+                const customerInfo = await Purchases.getCustomerInfo();
+                if (typeof customerInfo.entitlements.active["premium"] !== "undefined") {
+                  isNativeSubscribed = true;
+                }
+              }
+            } catch (err) {
+              console.error("RevenueCat Init Error:", err);
+            }
+          }
+
+          // Load Firestore Data
+          const docRef = doc(db, 'users', currentUser.uid);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            if (isNativeSubscribed) data.subscribed = true;
+            if (isMounted) setStateRaw({ ...DEFAULT_STATE, ...data });
+          } else {
+            const defaultWithSub = { ...DEFAULT_STATE };
+            if (isNativeSubscribed) defaultWithSub.subscribed = true;
+            await setDoc(docRef, defaultWithSub);
+            if (isMounted) setStateRaw(defaultWithSub);
+          }
+        } else {
+          if (isMounted) {
+            setUser(null);
+            setStateRaw(DEFAULT_STATE);
+          }
+        }
+      } catch (err) {
+        console.error("Auth state error:", err);
+      } finally {
+        if (isMounted) setLoadingAuth(false);
+        clearTimeout(safetyTimer);
+      }
     });
-    return () => unsubscribe();
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+      clearTimeout(safetyTimer);
+    };
   }, []);
 
   const setState = useCallback((patch) => {
@@ -194,13 +243,26 @@ export function UserProvider({ children }) {
   }, [setState]);
 
   const getScansRemaining = useCallback(() => {
-    if (isPremium()) return Infinity;
-    return Math.max(0, 2 - state.scanCount);
-  }, [isPremium, state.scanCount]);
+    return isPremium() ? Infinity : 0;
+  }, [isPremium]);
 
   const incrementScan = useCallback(() => {
-    setState({ scanCount: state.scanCount + 1 });
-  }, [setState, state.scanCount]);
+    setStateRaw(prev => {
+      let patch = {};
+      if (isPremium()) {
+        const today = new Date().toDateString();
+        if (prev.lastPremiumScanDate !== today) {
+          patch = { lastPremiumScanDate: today, premiumScansToday: 1 };
+        } else {
+          patch = { premiumScansToday: (prev.premiumScansToday || 0) + 1 };
+        }
+      }
+      if (user && Object.keys(patch).length > 0) {
+        updateDoc(doc(db, 'users', user.uid), patch).catch(err => console.error(err));
+      }
+      return { ...prev, ...patch };
+    });
+  }, [isPremium, user]);
 
   const loseHeart = useCallback(() => {
     if (state.hearts > 0) setState({ hearts: state.hearts - 1 });

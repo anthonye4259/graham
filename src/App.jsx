@@ -4,14 +4,17 @@ import { UserProvider, useUser } from './context/UserContext';
 import LandingPage from './pages/LandingPage';
 import AuthPage from './pages/AuthPage';
 import OnboardingPage from './pages/OnboardingPage';
-import HomePage from './pages/HomePage';
 import ScanPage from './pages/ScanPage';
-import ProfilePage from './pages/ProfilePage';
-import PortfolioPage from './pages/PortfolioPage';
-import TabNav from './components/ui/TabNav';
+import SettingsPage from './pages/SettingsPage';
+import PrivacyPage from './pages/PrivacyPage';
+import TermsPage from './pages/TermsPage';
+import SupportPage from './pages/SupportPage';
+import FeedPage from './pages/FeedPage';
+import DashboardLayout from './components/ui/DashboardLayout';
+import PaywallModal from './components/ui/PaywallModal';
 
 function AppShell() {
-  const { user, loadingAuth, state, startTrial } = useUser();
+  const { user, loadingAuth, state, startTrial, isPremium } = useUser();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -35,18 +38,21 @@ function AppShell() {
   }
 
   return (
-    <div className="app-shell">
-      <div className="app-content">
-        <Routes>
-          <Route index element={<HomePage />} />
+    <>
+      <Routes>
+        <Route element={<DashboardLayout />}>
+          <Route index element={<FeedPage />} />
           <Route path="scan" element={<ScanPage />} />
-          <Route path="portfolio" element={<PortfolioPage />} />
-          <Route path="profile" element={<ProfilePage />} />
+          <Route path="settings" element={<SettingsPage />} />
           <Route path="*" element={<Navigate to="/app" replace />} />
-        </Routes>
-      </div>
-      <TabNav />
-    </div>
+        </Route>
+      </Routes>
+
+      {/* Mandatory Hard Paywall Overlay if not premium */}
+      {!isPremium() && (
+        <PaywallModal isOpen={true} onClose={() => {}} source="hardwall" />
+      )}
+    </>
   );
 }
 
@@ -56,6 +62,9 @@ export default function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/auth" element={<AuthPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/support" element={<SupportPage />} />
         <Route path="/app/*" element={<AppShell />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

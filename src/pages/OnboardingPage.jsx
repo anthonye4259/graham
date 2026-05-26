@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useUser } from '../context/UserContext';
-import { getTodaysLesson, getAllLessonsCount } from '../lib/lessons';
-import ValueProp from '../components/Onboarding/ValueProp';
+import { analytics, trackEvent } from '../lib/firebase';
+
 import NameStep from '../components/Onboarding/NameStep';
 import GoalStep from '../components/Onboarding/GoalStep';
-import ExperienceStep from '../components/Onboarding/ExperienceStep';
-import BuildingPlan from '../components/Onboarding/BuildingPlan';
-import PlanReveal from '../components/Onboarding/PlanReveal';
-import TrialPaywall from '../components/Onboarding/TrialPaywall';
+import RiskStep from '../components/Onboarding/RiskStep';
+import PersonaStep from '../components/Onboarding/PersonaStep';
+import HowItWorksStep from '../components/Onboarding/HowItWorksStep';
+import WhoIsGrahamStep from '../components/Onboarding/WhoIsGrahamStep';
 
 const TOTAL_STEPS = 7;
 
@@ -17,6 +17,7 @@ export default function OnboardingPage() {
 
   const advance = () => {
     if (step + 1 >= TOTAL_STEPS) {
+      trackEvent('onboarding_complete');
       setState({ onboarded: true, hasSeenOnboardingPaywall: true });
     } else {
       setStep(s => s + 1);
@@ -24,13 +25,13 @@ export default function OnboardingPage() {
   };
 
   const steps = [
-    <ValueProp key={0} onNext={advance} totalSteps={TOTAL_STEPS} />,
-    <NameStep key={1} step={1} totalSteps={TOTAL_STEPS} onNext={(name) => { setState({ name }); advance(); }} />,
-    <GoalStep key={2} step={2} totalSteps={TOTAL_STEPS} onNext={(goal) => { setState({ investingGoal: goal }); advance(); }} />,
-    <ExperienceStep key={3} step={3} totalSteps={TOTAL_STEPS} onNext={(exp) => { setState({ experience: exp }); advance(); }} />,
-    <BuildingPlan key={4} onDone={advance} />,
-    <PlanReveal key={5} step={5} totalSteps={TOTAL_STEPS} onNext={advance} />,
-    <TrialPaywall key={6} step={6} totalSteps={TOTAL_STEPS} onTrial={() => { startTrial(); advance(); }} onSkip={advance} />,
+    <NameStep key={0} step={1} totalSteps={TOTAL_STEPS} onNext={(name) => { setState({ name }); advance(); }} />,
+    <GoalStep key={1} step={2} totalSteps={TOTAL_STEPS} onNext={(goal) => { setState({ investingGoal: goal }); advance(); }} />,
+    <RiskStep key={2} step={3} totalSteps={TOTAL_STEPS} onNext={(risk) => { setState({ riskTolerance: risk }); advance(); }} />,
+    <WhoIsGrahamStep key={3} onNext={advance} />,
+    <HowItWorksStep key={4} onNext={advance} />,
+    <PersonaStep key={5} step={6} totalSteps={TOTAL_STEPS} onNext={(persona) => { setState({ persona }); advance(); }} />,
+    <BuildingPlan key={6} onDone={advance} />
   ];
 
   return (
