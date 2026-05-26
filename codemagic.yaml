@@ -4,7 +4,7 @@ workflows:
     max_build_duration: 120
     instance_type: mac_mini_m2
     integrations:
-      app_store_connect: "Your_App_Store_Connect_Key_Name" # MUST MATCH the name in your Codemagic Team Settings -> Integrations
+      app_store_connect: "h"
     environment:
       node: 20
       xcode: latest
