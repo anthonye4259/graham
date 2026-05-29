@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { initializeAuth, browserLocalPersistence } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getAnalytics, logEvent } from 'firebase/analytics';
 
@@ -17,14 +17,31 @@ const firebaseConfig = {
 
 // Initialize Firebase
 export const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+
+// CRITICAL: Use browserLocalPersistence (localStorage) instead of default
+// indexedDBLocalPersistence. IndexedDB deadlocks in WKWebView on iOS/iPadOS.
+export const auth = initializeAuth(app, {
+  persistence: browserLocalPersistence,
+});
+
 export const db = getFirestore(app);
-export const analytics = getAnalytics(app);
+
+// Analytics - wrap in try-catch for WKWebView compatibility
+let analyticsInstance = null;
+try {
+  analyticsInstance = getAnalytics(app);
+} catch (e) {
+  console.warn('Analytics init skipped:', e.message);
+}
+export const analytics = analyticsInstance;
 
 export const trackEvent = (eventName, params = {}) => {
   const affiliateId = localStorage.getItem('affiliate_id');
   if (affiliateId) {
     params.affiliate_id = affiliateId;
   }
-  logEvent(analytics, eventName, params);
+  if (analytics) {
+    logEvent(analytics, eventName, params);
+  }
 };
+

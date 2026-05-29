@@ -67,19 +67,24 @@ export function UserProvider({ children }) {
         if (currentUser) {
           setUser(currentUser);
           
-          // Configure RevenueCat if Native
+          // Configure RevenueCat if Native — with timeout
           let isNativeSubscribed = false;
           if (Capacitor.isNativePlatform()) {
             try {
               if (import.meta.env.VITE_REVENUECAT_PUBLIC_KEY) {
-                await Purchases.configure({ apiKey: import.meta.env.VITE_REVENUECAT_PUBLIC_KEY, appUserID: currentUser.uid });
-                const customerInfo = await Purchases.getCustomerInfo();
-                if (typeof customerInfo.entitlements.active["premium"] !== "undefined") {
-                  isNativeSubscribed = true;
-                }
+                await Promise.race([
+                  (async () => {
+                    await Purchases.configure({ apiKey: import.meta.env.VITE_REVENUECAT_PUBLIC_KEY, appUserID: currentUser.uid });
+                    const customerInfo = await Purchases.getCustomerInfo();
+                    if (typeof customerInfo.entitlements.active["premium"] !== "undefined") {
+                      isNativeSubscribed = true;
+                    }
+                  })(),
+                  new Promise((_, reject) => setTimeout(() => reject(new Error('RC timeout')), 5000))
+                ]);
               }
             } catch (err) {
-              console.error("RevenueCat Init Error:", err);
+              console.warn("RevenueCat skipped:", err.message);
             }
           }
 
