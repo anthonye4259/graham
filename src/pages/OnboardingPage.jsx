@@ -8,6 +8,7 @@ import RiskStep from '../components/Onboarding/RiskStep';
 import PersonaStep from '../components/Onboarding/PersonaStep';
 import HowItWorksStep from '../components/Onboarding/HowItWorksStep';
 import WhoIsGrahamStep from '../components/Onboarding/WhoIsGrahamStep';
+import BuildingPlan from '../components/Onboarding/BuildingPlan';
 
 const TOTAL_STEPS = 7;
 
