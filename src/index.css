@@ -2,6 +2,8 @@
 :root {
   --bg-primary: #FAF7F2;
   --bg-secondary: #F0EBE3;
+  --bg-main: #FAF7F2;
+  --bg-tertiary: #E8E3DB;
   --bg-card: #FFFFFF;
   --bg-card-elevated: #FFFFFF;
   --bg-glass: rgba(255, 255, 255, 0.85);
@@ -9,14 +11,20 @@
   --accent-gold-glow: rgba(166, 124, 82, 0.10);
   --accent-warm: #CD7F32;
   --accent-warm-glow: rgba(205, 127, 50, 0.10);
+  --accent-teal: #10B981;
+  --accent-blue: #3B82F6;
+  --accent-orange: #F59E0B;
+  --accent-purple: #8B5CF6;
   --accent-rose: #EF4444;
   --accent-rose-glow: rgba(239, 68, 68, 0.08);
   --accent-green: #16A34A;
   --accent-green-glow: rgba(22, 163, 74, 0.08);
   --text-primary: #1A1815;
   --text-secondary: #6B6560;
+  --text-tertiary: #8A8480;
   --text-muted: #A09890;
   --border-subtle: rgba(26, 24, 21, 0.08);
+  --border-light: rgba(26, 24, 21, 0.10);
   --radius-card: 16px;
   --radius-input: 12px;
   --radius-pill: 20px;
@@ -843,6 +851,56 @@ body { min-height: 100dvh; }
    ONBOARDING
    ============================================================ */
 .onboarding { justify-content: center; align-items: center; z-index: 90; background: var(--bg-primary); }
+
+/* React onboarding step containers */
+.ob-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  width: 100%;
+  padding: calc(24px + env(safe-area-inset-top)) 24px calc(24px + env(safe-area-inset-bottom));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.ob-content {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+}
+.ob-subtitle {
+  font-size: 16px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.ob-progress {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-bottom: 32px;
+  width: 100%;
+  max-width: 480px;
+  height: 4px;
+  background: var(--border-light);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.ob-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-teal), var(--accent-blue));
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+.ob-option-btn {
+  width: 100%;
+  transition: all 0.2s ease;
+}
+.ob-option-btn:hover {
+  border-color: var(--accent-gold) !important;
+  background: var(--accent-gold-glow) !important;
+  transform: translateY(-1px);
+}
 .onboard-step { text-align: center; width: 100%; max-width: 340px; animation: fadeUp 0.4s ease forwards; }
 .onboard-hero-icon { margin-bottom: 20px; }
 .onboard-hero-icon ion-icon { font-size: 44px; color: var(--accent-gold); }

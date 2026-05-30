@@ -106,7 +106,7 @@ export default function FeedPage() {
   const feedItems = generateFeedContent();
 
   return (
-    <div style={{ position: 'relative', height: '100dvh', width: '100vw', overflow: 'hidden' }}>
+    <div style={{ position: 'relative', height: 'calc(100dvh - 80px - env(safe-area-inset-bottom))', width: '100vw', overflow: 'hidden' }}>
       
       {/* Top Header with Persona Switcher */}
       <div style={{ position: 'absolute', top: 'calc(env(safe-area-inset-top) + 16px)', left: 0, right: 0, zIndex: 50, display: 'flex', justifyContent: 'center' }}>
@@ -137,7 +137,7 @@ export default function FeedPage() {
       </div>
 
       <div style={{
-        height: '100dvh',
+        height: '100%',
         width: '100vw',
         overflowY: 'scroll',
         scrollSnapType: 'y mandatory',
@@ -147,7 +147,7 @@ export default function FeedPage() {
       }} className="hide-scrollbar">
         {feedItems.map((item) => (
           <div key={item.id} style={{
-            height: '100dvh',
+            height: 'calc(100dvh - 80px - env(safe-area-inset-bottom))',
             width: '100vw',
             scrollSnapAlign: 'start',
             display: 'flex',

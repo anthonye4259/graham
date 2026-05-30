@@ -15,7 +15,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div style={{ padding: '32px', maxWidth: '800px', margin: '0 auto', width: '100%' }}>
+    <div style={{ padding: '32px', paddingBottom: 'calc(120px + env(safe-area-inset-bottom))', maxWidth: '800px', margin: '0 auto', width: '100%' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '32px' }}>
         <button 
           onClick={() => navigate(-1)}

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useUser } from '../../context/UserContext';
 import { analytics, trackEvent } from '../../lib/firebase';
 
@@ -202,8 +203,8 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
                 Restore Purchases
               </button>
               <div style={{ display: 'flex', gap: '16px', fontSize: '10px', color: 'var(--text-tertiary)' }}>
-                <a href="/terms" target="_blank" style={{ color: 'inherit', textDecoration: 'none' }}>Terms of Use</a>
-                <a href="/privacy" target="_blank" style={{ color: 'inherit', textDecoration: 'none' }}>Privacy Policy</a>
+                <Link to="/terms" style={{ color: 'inherit', textDecoration: 'none' }}>Terms of Use</Link>
+                <Link to="/privacy" style={{ color: 'inherit', textDecoration: 'none' }}>Privacy Policy</Link>
               </div>
             </div>
           </div>

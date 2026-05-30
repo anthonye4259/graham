@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 export default function TrialPaywall({ step, totalSteps, onTrial, onSkip }) {
   return (
     <div className="onboard-step ob-trial-wall">
@@ -37,7 +39,12 @@ export default function TrialPaywall({ step, totalSteps, onTrial, onSkip }) {
       <button className="ob-pw-cta" onClick={onTrial}>Start your FREE week—no payment now</button>
       <button className="ob-pw-alt" onClick={onTrial}>or $9.99/month</button>
       <button className="ob-trial-skip" onClick={onSkip}>Maybe later</button>
-      <div className="ob-pw-legal">Terms of Use · Privacy Policy</div>
+      <div className="ob-pw-legal">
+        <Link to="/terms" style={{ color: 'inherit', textDecoration: 'none' }}>Terms of Use</Link>
+        {' · '}
+        <Link to="/privacy" style={{ color: 'inherit', textDecoration: 'none' }}>Privacy Policy</Link>
+      </div>
     </div>
   );
 }
+

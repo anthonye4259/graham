@@ -29,6 +29,8 @@ export default function ScanPage() {
   const [showPaywall, setShowPaywall] = useState(false);
   const [showDeepDiveModal, setShowDeepDiveModal] = useState(false);
   const [deepDiveTicker, setDeepDiveTicker] = useState('');
+  const chatContainerRef = useRef(null);
+  const chatEndRef = useRef(null);
 
   const scansLeft = getScansRemaining();
 
@@ -59,7 +61,7 @@ export default function ScanPage() {
   };
 
   const handleScan = async (queryOverride, imageOverride) => {
-    const queryToUse = queryOverride || input;
+    const queryToUse = queryOverride || ticker;
     const imageToUse = imageOverride || imagePreview;
 
     if (!queryToUse.trim() && !imageToUse) return;
@@ -78,7 +80,7 @@ export default function ScanPage() {
       }
     }
 
-    const newUserMsg = { role: 'user', content: t, image: imagePreview };
+    const newUserMsg = { role: 'user', content: queryToUse, image: imagePreview };
     const newMessages = [...messages, newUserMsg];
     setState({ chatHistory: newMessages });
     setTicker('');
@@ -101,7 +103,7 @@ export default function ScanPage() {
       if (newMessages.length === 1) {
         const baseText = inlineData 
           ? `Analyze this image. Identify the primary brand, product, company, or financial chart. Determine the relevant public asset (Stock Ticker or Crypto Symbol). Generate a short "what happened recently", "why it matters", and "actionable advice".`
-          : `Analyze the user's input: "${t}". The input might be a Stock Ticker, a Crypto Asset, or a general news query/URL.
+          : `Analyze the user's input: "${queryToUse}". The input might be a Stock Ticker, a Crypto Asset, or a general news query/URL.
              Determine what it is. Provide the primary asset symbol (or a short topic name if it's general news), the current approximate price (if applicable, else "N/A"), and a short "what happened recently", "why it matters", and "actionable advice".`;
 
         const promptText = `${personaPrompt} \n\n ${baseText}`;
@@ -154,7 +156,7 @@ export default function ScanPage() {
       if (newMessages.length === 1) {
         setState({ chatHistory: [...newMessages, { 
           role: 'model', type: 'rich', 
-          data: { name: t, ticker: t, price: '—', change: '0.0%', direction: 'neutral', what: 'Unable to fetch recent data right now.', why: 'The AI service might be temporarily unavailable.', action: 'Please try again later or verify your API key.' }
+          data: { name: queryToUse, ticker: queryToUse, price: '—', change: '0.0%', direction: 'neutral', what: 'Unable to fetch recent data right now.', why: 'The AI service might be temporarily unavailable.', action: 'Please try again later or verify your API key.' }
         }] });
       } else {
         setState({ chatHistory: [...newMessages, { role: 'model', type: 'text', content: "I'm having trouble connecting to my data sources right now. Please try again." }] });
@@ -186,7 +188,7 @@ export default function ScanPage() {
       )}
 
       {/* Scrollable Chat Area */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '24px 24px 120px 24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div ref={chatContainerRef} style={{ flex: 1, overflowY: 'auto', padding: '24px 24px calc(180px + env(safe-area-inset-bottom)) 24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
         
         {messages.length === 0 && !loading && !imagePreview && (
           <MarketPulse onScanClick={(t) => {
@@ -308,7 +310,7 @@ export default function ScanPage() {
       </div>
 
       {/* Fixed Input Area at Bottom */}
-      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingBottom: '24px', paddingTop: '16px', borderTop: '1px solid var(--border-light)', background: 'var(--bg-main)', zIndex: 10 }}>
+      <div style={{ position: 'absolute', bottom: 'calc(80px + env(safe-area-inset-bottom))', left: 0, right: 0, paddingBottom: '16px', paddingTop: '16px', borderTop: '1px solid var(--border-light)', background: 'var(--bg-main)', zIndex: 10 }}>
         <div className="scan-input-row" style={{ maxWidth: '800px', margin: '0 auto', background: 'var(--bg-secondary)', borderRadius: '24px', padding: '4px', border: '1px solid var(--border-light)', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
             <button 
