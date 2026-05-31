@@ -902,7 +902,7 @@ body { min-height: 100dvh; }
   background: var(--accent-gold-glow) !important;
   transform: translateY(-1px);
 }
-.onboard-step { text-align: center; width: 100%; max-width: 340px; animation: fadeUp 0.4s ease forwards; }
+.onboard-step { text-align: center; width: 100%; max-width: 340px; height: 100%; position: relative; display: flex; flex-direction: column; justify-content: center; animation: fadeUp 0.4s ease forwards; }
 .onboard-hero-icon { margin-bottom: 20px; }
 .onboard-hero-icon ion-icon { font-size: 44px; color: var(--accent-gold); }
 .onboard-title {
@@ -921,12 +921,13 @@ body { min-height: 100dvh; }
   border-radius: var(--radius-btn);
   color: var(--text-primary);
   font-family: var(--font-body);
-  font-size: 15px;
-  font-weight: 500;
-  text-align: left;
+  display: flex;
+  padding: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-card);
   cursor: pointer;
   transition: var(--transition-base);
-  display: flex;
   align-items: center;
   gap: 14px;
 }
@@ -951,12 +952,11 @@ body { min-height: 100dvh; }
 }
 .onboard-input:focus { border-color: rgba(166,124,82,0.4); }
 .onboard-next {
-  position: fixed;
+  position: absolute;
   bottom: calc(24px + env(safe-area-inset-bottom));
   left: 50%;
   transform: translateX(-50%);
-  width: calc(100% - 40px);
-  max-width: 340px;
+  width: 100%;
   z-index: 100;
   padding: 18px;
   background: linear-gradient(135deg, var(--accent-warm), #B8722A);

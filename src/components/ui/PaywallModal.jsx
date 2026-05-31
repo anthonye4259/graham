@@ -53,7 +53,7 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
             window.location.reload();
           }
         } else {
-          alert("Subscriptions are currently unavailable.");
+          alert("Subscriptions are currently unavailable (StoreKit returned no products). If you are testing, please ensure In-App Purchases are approved in App Store Connect.");
         }
       } catch (e) {
         if (!e.userCancelled) console.error("RC Purchase Error", e);
@@ -117,7 +117,17 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
     }
   };
 
-  const price = billing === 'annual' ? '$99.00' : (billing === 'weekly' ? '$2.99' : '$9.99');
+  // Calculate dynamic price based on RevenueCat packages if available
+  let dynamicPrice = null;
+  if (rcPackages.length > 0) {
+    const targetType = billing === 'annual' ? 'ANNUAL' : (billing === 'weekly' ? 'WEEKLY' : 'MONTHLY');
+    const pkg = rcPackages.find(p => p.packageType === targetType);
+    if (pkg && pkg.product) {
+      dynamicPrice = pkg.product.priceString;
+    }
+  }
+
+  const price = dynamicPrice || (billing === 'annual' ? '$99.00' : (billing === 'weekly' ? '$2.99' : '$9.99'));
   const billedText = billing === 'annual' ? 'Billed annually (Includes 7-Day Free Trial)' : (billing === 'weekly' ? 'Billed weekly' : 'Billed monthly');
   const periodText = billing === 'annual' ? 'yr' : (billing === 'weekly' ? 'wk' : 'mo');
 

@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 
-export default function Navbar() {
+export default function Navbar({ onOpenPricing }) {
   const navigate = useNavigate();
 
   return (
@@ -8,9 +8,9 @@ export default function Navbar() {
       <div className="g-navbar-inner">
         <div className="g-nav-logo" onClick={() => navigate('/')}>graham.</div>
         <div className="g-nav-links">
-          <a href="#features" className="g-nav-link">Learn</a>
-          <a href="#how" className="g-nav-link">How it Works</a>
-          <a href="#pricing" className="g-nav-link">Pricing</a>
+          <a href="#" className="g-nav-link" onClick={(e) => { e.preventDefault(); navigate('/auth'); }}>Learn</a>
+          <a href="#" className="g-nav-link" onClick={(e) => { e.preventDefault(); navigate('/auth'); }}>How it Works</a>
+          <button className="g-nav-link" style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit' }} onClick={onOpenPricing}>Pricing</button>
         </div>
         <div className="g-nav-actions">
           <button className="g-nav-login" onClick={() => navigate('/auth')}>Log in</button>

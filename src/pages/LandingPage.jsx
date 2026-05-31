@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import Navbar from '../components/ui/Navbar';
 import TutorialModal from '../components/ui/TutorialModal';
+import PaywallModal from '../components/ui/PaywallModal';
 
 const SUGGESTIONS = [
   'Stock Analysis',
@@ -31,6 +32,7 @@ export default function LandingPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   
   const [showTutorial, setShowTutorial] = useState(false);
+  const [showPricing, setShowPricing] = useState(false);
 
   // Affiliate Tracking
   useEffect(() => {
@@ -92,10 +94,11 @@ export default function LandingPage() {
           onClose={() => setShowTutorial(false)} 
         />
       )}
+      <PaywallModal isOpen={showPricing} onClose={() => setShowPricing(false)} source="landing" />
       {/* Animated Mesh Gradient Background */}
       <div className="landing-bg-mesh"></div>
 
-      <Navbar />
+      <Navbar onOpenPricing={() => setShowPricing(true)} />
 
       <main className="g-hero" style={{ zIndex: 1, position: 'relative' }}>
         <div className="g-announce" style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.05)' }}>
