@@ -1,4 +1,4 @@
-const { onRequest } = require("firebase-functions/v2/https");
+const { onRequest, onCall, HttpsError } = require("firebase-functions/v2/https");
 const { defineSecret } = require('firebase-functions/params');
 const admin = require("firebase-admin");
 admin.initializeApp();
@@ -166,4 +166,100 @@ exports.grahamDailyTrade = onSchedule({ schedule: "30 9 * * 1-5", secrets: [gemi
 exports.manualGrahamTrade = onRequest({ secrets: [geminiApiKey] }, async (req, res) => {
   await executeGrahamTrade(geminiApiKey.value());
   res.send("Trade executed successfully!");
+});
+
+// === PLAID INTEGRATION ===
+const { Configuration, PlaidApi, PlaidEnvironments } = require('plaid');
+const plaidClientId = defineSecret('PLAID_CLIENT_ID');
+const plaidSecret = defineSecret('PLAID_SECRET');
+
+function getPlaidClient() {
+  const configuration = new Configuration({
+    basePath: PlaidEnvironments.sandbox,
+    baseOptions: {
+      headers: {
+        'PLAID-CLIENT-ID': plaidClientId.value(),
+        'PLAID-SECRET': plaidSecret.value(),
+      },
+    },
+  });
+  return new PlaidApi(configuration);
+}
+
+exports.createPlaidLinkToken = onCall({ secrets: [plaidClientId, plaidSecret] }, async (request) => {
+  const uid = request.auth?.uid;
+  if (!uid) throw new HttpsError('unauthenticated', 'User must be logged in');
+
+  const plaidClient = getPlaidClient();
+  const plaidRequest = {
+    user: { client_user_id: uid },
+    client_name: 'Graham AI',
+    products: ['auth', 'transactions', 'investments'],
+    country_codes: ['US'],
+    language: 'en',
+  };
+
+  try {
+    const createTokenResponse = await plaidClient.linkTokenCreate(plaidRequest);
+    return { link_token: createTokenResponse.data.link_token };
+  } catch (error) {
+    console.error("Plaid linkTokenCreate error:", error.response?.data || error);
+    throw new HttpsError('internal', 'Unable to create Plaid link token');
+  }
+});
+
+exports.exchangePlaidPublicToken = onCall({ secrets: [plaidClientId, plaidSecret] }, async (request) => {
+  const uid = request.auth?.uid;
+  if (!uid) throw new HttpsError('unauthenticated', 'User must be logged in');
+  
+  const publicToken = request.data.publicToken;
+  if (!publicToken) throw new HttpsError('invalid-argument', 'Missing publicToken');
+
+  const plaidClient = getPlaidClient();
+  try {
+    const response = await plaidClient.itemPublicTokenExchange({
+      public_token: publicToken,
+    });
+    const accessToken = response.data.access_token;
+    const itemId = response.data.item_id;
+
+    await admin.firestore().collection('users').doc(uid).set({
+      plaidAccessToken: accessToken,
+      plaidItemId: itemId,
+      plaidSyncedAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Plaid itemPublicTokenExchange error:", error.response?.data || error);
+    throw new HttpsError('internal', 'Unable to exchange public token');
+  }
+});
+
+exports.syncPlaidHoldings = onCall({ secrets: [plaidClientId, plaidSecret] }, async (request) => {
+  const uid = request.auth?.uid;
+  if (!uid) throw new HttpsError('unauthenticated', 'User must be logged in');
+
+  const doc = await admin.firestore().collection('users').doc(uid).get();
+  const accessToken = doc.data()?.plaidAccessToken;
+  if (!accessToken) throw new HttpsError('failed-precondition', 'User has not linked a Plaid account');
+
+  const plaidClient = getPlaidClient();
+  try {
+    const response = await plaidClient.investmentsHoldingsGet({
+      access_token: accessToken,
+    });
+    
+    await admin.firestore().collection('users').doc(uid).set({
+      plaidHoldings: response.data.holdings,
+      plaidSecurities: response.data.securities,
+      plaidAccounts: response.data.accounts,
+      plaidLastSync: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    
+    return { success: true, accounts: response.data.accounts, holdings: response.data.holdings, securities: response.data.securities };
+  } catch (error) {
+    console.error("Plaid investmentsHoldingsGet error:", error.response?.data || error);
+    throw new HttpsError('internal', 'Unable to fetch holdings');
+  }
 });

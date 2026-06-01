@@ -2,6 +2,7 @@ import { initializeApp } from 'firebase/app';
 import { initializeAuth, browserLocalPersistence } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getAnalytics, logEvent } from 'firebase/analytics';
+import { getFunctions } from 'firebase/functions';
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -25,6 +26,7 @@ export const auth = initializeAuth(app, {
 });
 
 export const db = getFirestore(app);
+export const functions = getFunctions(app);
 
 // Analytics - wrap in try-catch for WKWebView compatibility
 let analyticsInstance = null;
