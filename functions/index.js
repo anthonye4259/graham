@@ -45,3 +45,125 @@ exports.stripeWebhook = onRequest({ secrets: [stripeSecretKey, stripeWebhookSecr
   // Return a 200 response to acknowledge receipt of the event
   res.send();
 });
+
+const { onSchedule } = require("firebase-functions/v2/scheduler");
+const { GoogleGenAI } = require('@google/genai');
+const geminiApiKey = defineSecret('GEMINI_API_KEY');
+
+async function executeGrahamTrade(apiKey) {
+  const db = admin.firestore();
+  const fundRef = db.collection('global').doc('graham_fund');
+  
+  let fundDoc = await fundRef.get();
+  if (!fundDoc.exists) {
+    await fundRef.set({
+      startingCash: 100000,
+      currentCash: 100000,
+      holdings: [],
+      tradeHistory: []
+    });
+    fundDoc = await fundRef.get();
+  }
+  
+  const fundData = fundDoc.data();
+  
+  const ai = new GoogleGenAI({ apiKey });
+  
+  const prompt = `You are Graham, the ultimate value and quant investor AI. 
+Here is your current portfolio state:
+Cash: $${fundData.currentCash}
+Holdings: ${JSON.stringify(fundData.holdings)}
+
+Analyze the market right now (use your latest knowledge). Choose ONE action: BUY, SELL, or HOLD. 
+Limit your universe to high-liquidity stocks (e.g. AAPL, MSFT, NVDA, TSLA, SPY, QQQ).
+If you buy, specify the ticker, an estimated current price, and the number of shares (make sure cost <= Cash).
+If you sell, you must own the shares in Holdings. 
+
+Output ONLY valid JSON in this exact format:
+{
+  "action": "BUY" | "SELL" | "HOLD",
+  "ticker": "AAPL",
+  "price": 150.50,
+  "shares": 10,
+  "rationale": "A 2-sentence explanation of why you made this trade."
+}`;
+
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.5-flash',
+    contents: prompt,
+    config: {
+      responseMimeType: "application/json"
+    }
+  });
+
+  const text = response.text;
+  let decision;
+  try {
+    decision = JSON.parse(text);
+  } catch (e) {
+    console.error("Failed to parse AI response:", text);
+    return;
+  }
+
+  if (decision.action === "HOLD") {
+    console.log("Graham chose to hold.");
+    return;
+  }
+
+  // Update logic
+  let newCash = fundData.currentCash;
+  let newHoldings = [...fundData.holdings];
+  const tradeValue = decision.price * decision.shares;
+
+  if (decision.action === "BUY") {
+    if (tradeValue > newCash) {
+      console.log("Not enough cash for trade. Skipping.");
+      return;
+    }
+    newCash -= tradeValue;
+    const existing = newHoldings.find(h => h.ticker === decision.ticker);
+    if (existing) {
+      existing.avgPrice = ((existing.shares * existing.avgPrice) + tradeValue) / (existing.shares + decision.shares);
+      existing.shares += decision.shares;
+    } else {
+      newHoldings.push({ ticker: decision.ticker, shares: decision.shares, avgPrice: decision.price });
+    }
+  } else if (decision.action === "SELL") {
+    const existingIndex = newHoldings.findIndex(h => h.ticker === decision.ticker);
+    if (existingIndex === -1 || newHoldings[existingIndex].shares < decision.shares) {
+      console.log("Not enough shares to sell. Skipping.");
+      return;
+    }
+    newCash += tradeValue;
+    newHoldings[existingIndex].shares -= decision.shares;
+    if (newHoldings[existingIndex].shares === 0) {
+      newHoldings.splice(existingIndex, 1);
+    }
+  }
+
+  const newTrade = {
+    date: new Date().toISOString(),
+    type: decision.action,
+    ticker: decision.ticker,
+    shares: decision.shares,
+    price: decision.price,
+    rationale: decision.rationale
+  };
+
+  await fundRef.update({
+    currentCash: newCash,
+    holdings: newHoldings,
+    tradeHistory: admin.firestore.FieldValue.arrayUnion(newTrade)
+  });
+
+  console.log("Trade executed:", newTrade);
+}
+
+exports.grahamDailyTrade = onSchedule({ schedule: "30 9 * * 1-5", secrets: [geminiApiKey] }, async (event) => {
+  await executeGrahamTrade(geminiApiKey.value());
+});
+
+exports.manualGrahamTrade = onRequest({ secrets: [geminiApiKey] }, async (req, res) => {
+  await executeGrahamTrade(geminiApiKey.value());
+  res.send("Trade executed successfully!");
+});

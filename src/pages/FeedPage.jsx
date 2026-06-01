@@ -1,11 +1,23 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useUser } from '../context/UserContext';
 import { PERSONAS } from '../lib/personas';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 
 export default function FeedPage() {
   const { state, setState } = useUser();
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [showPersonaMenu, setShowPersonaMenu] = useState(false);
+  const [grahamFund, setGrahamFund] = useState(null);
+
+  useEffect(() => {
+    const unsub = onSnapshot(doc(db, 'global', 'graham_fund'), (docSnap) => {
+      if (docSnap.exists()) {
+        setGrahamFund(docSnap.data());
+      }
+    });
+    return () => unsub();
+  }, []);
 
   const handleAnswer = (itemId, index) => {
     setSelectedAnswers(prev => ({ ...prev, [itemId]: index }));
@@ -27,6 +39,31 @@ export default function FeedPage() {
       content: state.dailyFact || "If you invested $1,000 in Amazon at IPO, it would be worth over $1.5 million today.",
       color: 'var(--accent-blue)'
     });
+
+    // 1.5 Graham Fund Status
+    if (grahamFund) {
+      const totalValue = grahamFund.currentCash + (grahamFund.holdings || []).reduce((acc, h) => acc + (h.shares * h.avgPrice), 0);
+      const returnPct = ((totalValue - 100000) / 100000) * 100;
+      const lastTrade = grahamFund.tradeHistory && grahamFund.tradeHistory.length > 0 
+        ? grahamFund.tradeHistory[grahamFund.tradeHistory.length - 1] 
+        : null;
+
+      let contentStr = `Current Value: $${totalValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} (${returnPct > 0 ? '+' : ''}${returnPct.toFixed(2)}%)\n\n`;
+      if (lastTrade) {
+        contentStr += `Latest Move:\nGraham ${lastTrade.type === 'BUY' ? 'bought' : 'sold'} ${lastTrade.shares} shares of ${lastTrade.ticker} at $${lastTrade.price.toFixed(2)}.\n\nRationale:\n"${lastTrade.rationale}"`;
+      } else {
+        contentStr += `Holding $100k cash. Waiting for market conditions to shift.`;
+      }
+
+      items.push({
+        id: 'graham-fund',
+        type: 'flashcard',
+        topic: 'The Graham Fund',
+        title: 'AI Portfolio',
+        content: contentStr,
+        color: 'var(--accent-purple)'
+      });
+    }
 
     // 2. Persona Specific Content
     if (p === 'Homelander') {
