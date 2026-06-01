@@ -168,98 +168,56 @@ exports.manualGrahamTrade = onRequest({ secrets: [geminiApiKey] }, async (req, r
   res.send("Trade executed successfully!");
 });
 
-// === PLAID INTEGRATION ===
-const { Configuration, PlaidApi, PlaidEnvironments } = require('plaid');
-const plaidClientId = defineSecret('PLAID_CLIENT_ID');
-const plaidSecret = defineSecret('PLAID_SECRET');
-
-function getPlaidClient() {
-  const configuration = new Configuration({
-    basePath: PlaidEnvironments.sandbox,
-    baseOptions: {
-      headers: {
-        'PLAID-CLIENT-ID': plaidClientId.value(),
-        'PLAID-SECRET': plaidSecret.value(),
-      },
-    },
-  });
-  return new PlaidApi(configuration);
-}
-
-exports.createPlaidLinkToken = onCall({ secrets: [plaidClientId, plaidSecret] }, async (request) => {
+// === SCREENSHOT AI INTEGRATION ===
+exports.analyzePortfolioScreenshot = onCall({ secrets: [geminiApiKey] }, async (request) => {
   const uid = request.auth?.uid;
   if (!uid) throw new HttpsError('unauthenticated', 'User must be logged in');
 
-  const plaidClient = getPlaidClient();
-  const plaidRequest = {
-    user: { client_user_id: uid },
-    client_name: 'Graham AI',
-    products: ['auth', 'transactions', 'investments'],
-    country_codes: ['US'],
-    language: 'en',
-  };
+  const { imageBase64 } = request.data;
+  if (!imageBase64) throw new HttpsError('invalid-argument', 'Missing image data');
 
-  try {
-    const createTokenResponse = await plaidClient.linkTokenCreate(plaidRequest);
-    return { link_token: createTokenResponse.data.link_token };
-  } catch (error) {
-    console.error("Plaid linkTokenCreate error:", error.response?.data || error);
-    throw new HttpsError('internal', 'Unable to create Plaid link token');
-  }
-});
-
-exports.exchangePlaidPublicToken = onCall({ secrets: [plaidClientId, plaidSecret] }, async (request) => {
-  const uid = request.auth?.uid;
-  if (!uid) throw new HttpsError('unauthenticated', 'User must be logged in');
+  const ai = new GoogleGenAI({ apiKey: geminiApiKey.value() });
   
-  const publicToken = request.data.publicToken;
-  if (!publicToken) throw new HttpsError('invalid-argument', 'Missing publicToken');
+  const prompt = `You are a financial data extraction AI.
+Analyze this screenshot of a brokerage account (like Robinhood, Fidelity, or Apple Stocks).
+Extract the user's holdings. If you see cash, include it as ticker 'CASH'.
+Output a JSON array of objects with the exact structure:
+[
+  { "ticker": "AAPL", "shares": 10.5, "price": 150.00 },
+  ...
+]
+Only return valid JSON, no markdown. If you cannot find holdings, return an empty array [].`;
 
-  const plaidClient = getPlaidClient();
   try {
-    const response = await plaidClient.itemPublicTokenExchange({
-      public_token: publicToken,
+    const base64Data = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
+    
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [
+        prompt,
+        {
+          inlineData: {
+            data: base64Data,
+            mimeType: "image/jpeg"
+          }
+        }
+      ],
+      config: {
+        responseMimeType: "application/json"
+      }
     });
-    const accessToken = response.data.access_token;
-    const itemId = response.data.item_id;
+
+    const text = response.text;
+    const holdings = JSON.parse(text);
 
     await admin.firestore().collection('users').doc(uid).set({
-      plaidAccessToken: accessToken,
-      plaidItemId: itemId,
-      plaidSyncedAt: admin.firestore.FieldValue.serverTimestamp()
+      screenshotHoldings: holdings,
+      screenshotSyncedAt: admin.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
 
-    return { success: true };
+    return { success: true, holdings };
   } catch (error) {
-    console.error("Plaid itemPublicTokenExchange error:", error.response?.data || error);
-    throw new HttpsError('internal', 'Unable to exchange public token');
-  }
-});
-
-exports.syncPlaidHoldings = onCall({ secrets: [plaidClientId, plaidSecret] }, async (request) => {
-  const uid = request.auth?.uid;
-  if (!uid) throw new HttpsError('unauthenticated', 'User must be logged in');
-
-  const doc = await admin.firestore().collection('users').doc(uid).get();
-  const accessToken = doc.data()?.plaidAccessToken;
-  if (!accessToken) throw new HttpsError('failed-precondition', 'User has not linked a Plaid account');
-
-  const plaidClient = getPlaidClient();
-  try {
-    const response = await plaidClient.investmentsHoldingsGet({
-      access_token: accessToken,
-    });
-    
-    await admin.firestore().collection('users').doc(uid).set({
-      plaidHoldings: response.data.holdings,
-      plaidSecurities: response.data.securities,
-      plaidAccounts: response.data.accounts,
-      plaidLastSync: admin.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
-    
-    return { success: true, accounts: response.data.accounts, holdings: response.data.holdings, securities: response.data.securities };
-  } catch (error) {
-    console.error("Plaid investmentsHoldingsGet error:", error.response?.data || error);
-    throw new HttpsError('internal', 'Unable to fetch holdings');
+    console.error("Screenshot analysis error:", error);
+    throw new HttpsError('internal', 'Unable to analyze screenshot');
   }
 });

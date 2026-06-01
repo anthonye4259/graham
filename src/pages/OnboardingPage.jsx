@@ -10,7 +10,7 @@ import InteractiveTeaser from '../components/Onboarding/InteractiveTeaser';
 import PersonaStep from '../components/Onboarding/PersonaStep';
 import HowItWorksStep from '../components/Onboarding/HowItWorksStep';
 import WhoIsGrahamStep from '../components/Onboarding/WhoIsGrahamStep';
-import PlaidSyncStep from '../components/Onboarding/PlaidSyncStep';
+import PortfolioUploadStep from '../components/Onboarding/PortfolioUploadStep';
 import BuildingPlan from '../components/Onboarding/BuildingPlan';
 
 const TOTAL_STEPS = 10;
@@ -40,7 +40,7 @@ export default function OnboardingPage() {
     <WhoIsGrahamStep key={5} onNext={advance} />,
     <HowItWorksStep key={6} onNext={advance} />,
     <PersonaStep key={7} step={8} totalSteps={TOTAL_STEPS} onNext={(persona) => { setState({ persona }); advance(); }} />,
-    <PlaidSyncStep key={8} step={9} totalSteps={TOTAL_STEPS} onNext={advance} />,
+    <PortfolioUploadStep key={8} step={9} totalSteps={TOTAL_STEPS} onNext={advance} />,
     <BuildingPlan key={9} onDone={advance} />
   ];
 
