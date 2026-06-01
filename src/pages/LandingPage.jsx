@@ -179,6 +179,7 @@ export default function LandingPage() {
       <footer className="g-footer" style={{ zIndex: 1, position: 'relative' }}>
         <div>© 2026 Graham AI. All rights reserved.</div>
         <div className="g-footer-links">
+          <Link to="/about" style={{ color: 'inherit', textDecoration: 'none' }}>Our Story</Link>
           <Link to="/privacy" style={{ color: 'inherit', textDecoration: 'none' }}>Privacy</Link>
           <Link to="/terms" style={{ color: 'inherit', textDecoration: 'none' }}>Terms</Link>
         </div>

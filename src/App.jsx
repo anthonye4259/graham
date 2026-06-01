@@ -9,6 +9,7 @@ import SettingsPage from './pages/SettingsPage';
 import PrivacyPage from './pages/PrivacyPage';
 import TermsPage from './pages/TermsPage';
 import SupportPage from './pages/SupportPage';
+import AboutPage from './pages/AboutPage';
 import FeedPage from './pages/FeedPage';
 import DashboardLayout from './components/ui/DashboardLayout';
 import PaywallModal from './components/ui/PaywallModal';
@@ -62,6 +63,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/auth" element={<AuthPage />} />
+        <Route path="/about" element={<AboutPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/support" element={<SupportPage />} />
