@@ -11,6 +11,7 @@ import TermsPage from './pages/TermsPage';
 import SupportPage from './pages/SupportPage';
 import AboutPage from './pages/AboutPage';
 import FeedPage from './pages/FeedPage';
+import MarketsPage from './pages/MarketsPage';
 import DashboardLayout from './components/ui/DashboardLayout';
 import PaywallModal from './components/ui/PaywallModal';
 
@@ -43,6 +44,7 @@ function AppShell() {
       <Routes>
         <Route element={<DashboardLayout />}>
           <Route index element={<FeedPage />} />
+          <Route path="markets" element={<MarketsPage />} />
           <Route path="scan" element={<ScanPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="*" element={<Navigate to="/app" replace />} />

@@ -237,7 +237,8 @@ exports.manualGenerateMacroFeed = onRequest({ secrets: [geminiApiKey], timeoutSe
 });
 
 async function executeMacroGeneration(apiKey) {
-  const yahooFinance = require('yahoo-finance2').default;
+  const YahooFinance = require('yahoo-finance2').default;
+  const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
   const ai = new GoogleGenAI({ apiKey });
   
   const symbols = [
@@ -325,3 +326,102 @@ Output ONLY valid JSON matching this schema:
   console.log("Macro daily feed successfully generated.");
   return payload;
 }
+
+// === MARKETS HUB DATA GENERATOR ===
+exports.apiGetMarketsHub = onRequest({ secrets: [geminiApiKey], cors: true, timeoutSeconds: 120 }, async (req, res) => {
+  try {
+    const YahooFinance = require('yahoo-finance2').default;
+    const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
+    const { GoogleGenAI } = require('@google/genai');
+    const ai = new GoogleGenAI({ apiKey: geminiApiKey.value() });
+
+    const symbols = [
+      { id: 'Dow Jones', ticker: '^DJI', type: 'index' },
+      { id: 'S&P 500', ticker: '^GSPC', type: 'index' },
+      { id: 'NASDAQ', ticker: '^IXIC', type: 'index' },
+      { id: 'AAPL', ticker: 'AAPL', type: 'stock' },
+      { id: 'MSFT', ticker: 'MSFT', type: 'stock' },
+      { id: 'TSLA', ticker: 'TSLA', type: 'stock' },
+      { id: 'BTC', ticker: 'BTC-USD', type: 'crypto' },
+      { id: 'ETH', ticker: 'ETH-USD', type: 'crypto' },
+      { id: '10Y Treasury', ticker: '^TNX', type: 'bond' }
+    ];
+
+    const today = new Date();
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(today.getDate() - 7);
+    const period1 = Math.floor(sevenDaysAgo.getTime() / 1000);
+    const period2 = Math.floor(today.getTime() / 1000);
+
+    const marketAssets = [];
+
+    for (const s of symbols) {
+      let q;
+      try {
+        q = await yahooFinance.quote(s.ticker);
+      } catch (e) {
+        console.warn("Failed quote for", s.ticker, e.message);
+        continue;
+      }
+      if (!q) continue;
+
+      let history = [];
+      try {
+        const histResult = await yahooFinance.historical(s.ticker, { period1, period2, interval: '1d' });
+        history = histResult.map(h => h.close);
+      } catch (e) {
+        console.warn("Failed history for", s.ticker, e.message);
+      }
+
+      marketAssets.push({
+        id: s.id,
+        ticker: s.ticker,
+        type: s.type,
+        name: q.shortName || s.id,
+        price: q.regularMarketPrice,
+        change: q.regularMarketChange,
+        changePercent: q.regularMarketChangePercent,
+        history: history
+      });
+    }
+
+    // Fetch News
+    let newsArticles = [];
+    try {
+      const searchRes = await yahooFinance.search('markets', { newsCount: 5 });
+      if (searchRes && searchRes.news) {
+        newsArticles = searchRes.news;
+      }
+    } catch(e) {
+      console.warn("Failed news", e.message);
+    }
+
+    // Summarize with Gemini
+    let newsSummary = null;
+    try {
+      const prompt = `You are a financial analyst. Summarize the following market news into a cohesive "Business News" digest (1 short paragraph). Focus on major indices, crypto, and large caps.\n\nNews Headlines:\n${newsArticles.map(a => a.title).join('\n')}`;
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt
+      });
+      newsSummary = response.text;
+    } catch (e) {
+      console.error("Gemini failed, using fallback:", e.message);
+      newsSummary = "Market volatility continues as investors digest the latest economic data. Keep an eye on major tech stocks and crypto movements throughout the week.";
+    }
+
+    res.json({
+      success: true,
+      data: {
+        assets: marketAssets,
+        news: newsArticles,
+        summary: newsSummary,
+        updatedAt: new Date().toISOString()
+      }
+    });
+
+  } catch (err) {
+    console.error("apiGetMarketsHub error", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
