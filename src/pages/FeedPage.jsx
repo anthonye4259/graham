@@ -3,12 +3,14 @@ import { useUser } from '../context/UserContext';
 import { PERSONAS } from '../lib/personas';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import FundModal from '../components/ui/FundModal';
 
 export default function FeedPage() {
   const { state, setState } = useUser();
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [showPersonaMenu, setShowPersonaMenu] = useState(false);
   const [grahamFund, setGrahamFund] = useState(null);
+  const [showFundModal, setShowFundModal] = useState(false);
 
   useEffect(() => {
     const unsub = onSnapshot(doc(db, 'global', 'graham_fund'), (docSnap) => {
@@ -207,9 +209,19 @@ export default function FeedPage() {
               </h2>
 
               {item.type === 'flashcard' || item.type === 'visual' ? (
-                <p style={{ fontSize: '20px', lineHeight: 1.5, opacity: 0.9, whiteSpace: 'pre-wrap' }}>
-                  {item.content}
-                </p>
+                <div 
+                  onClick={() => item.id === 'graham-fund' && setShowFundModal(true)}
+                  style={{ cursor: item.id === 'graham-fund' ? 'pointer' : 'default' }}
+                >
+                  <p style={{ fontSize: '20px', lineHeight: 1.5, opacity: 0.9, whiteSpace: 'pre-wrap' }}>
+                    {item.content}
+                  </p>
+                  {item.id === 'graham-fund' && (
+                    <div style={{ marginTop: '24px', padding: '12px 24px', background: 'rgba(255,255,255,0.2)', borderRadius: '24px', display: 'inline-flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
+                      Tap to view holdings <ion-icon name="arrow-forward-outline"></ion-icon>
+                    </div>
+                  )}
+                </div>
               ) : null}
 
               {item.type === 'quiz' && (
@@ -278,6 +290,12 @@ export default function FeedPage() {
           </div>
         ))}
       </div>
+
+      <FundModal 
+        isOpen={showFundModal} 
+        onClose={() => setShowFundModal(false)} 
+        fundData={grahamFund} 
+      />
     </div>
   );
 }
