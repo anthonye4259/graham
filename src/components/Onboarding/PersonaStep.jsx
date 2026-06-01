@@ -18,10 +18,18 @@ export default function PersonaStep({ step, totalSteps, onNext }) {
               key={p.id} 
               className="ob-option-btn hover-bg-light" 
               onClick={() => onNext(p.id)}
-              style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', padding: '24px', borderRadius: '16px', border: '1px solid var(--border-light)', background: 'var(--bg-card)', color: 'var(--text-primary)', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s ease' }}
+              style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-light)', background: 'var(--bg-card)', color: 'var(--text-primary)', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s ease', position: 'relative', overflow: 'hidden' }}
             >
-              <div style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--accent-teal)' }}>{p.name}</div>
-              <div style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>{p.desc}</div>
+              <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--accent-gold-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '16px', flexShrink: 0, border: '1px solid var(--accent-gold)' }}>
+                <ion-icon name="person" style={{ fontSize: '24px', color: 'var(--accent-gold)' }}></ion-icon>
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '4px', color: 'var(--text-primary)' }}>{p.name}</div>
+                <div style={{ color: 'var(--text-secondary)', fontSize: '14px', lineHeight: 1.4 }}>{p.desc}</div>
+              </div>
+              <div style={{ padding: '8px 16px', background: 'var(--accent-teal)', color: '#000', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold', marginLeft: '12px' }}>
+                SELECT
+              </div>
             </button>
           ))}
         </div>
