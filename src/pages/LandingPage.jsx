@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
+import { Capacitor } from '@capacitor/core';
 import Navbar from '../components/ui/Navbar';
 import TutorialModal from '../components/ui/TutorialModal';
 import PaywallModal from '../components/ui/PaywallModal';
@@ -179,7 +180,7 @@ export default function LandingPage() {
       <footer className="g-footer" style={{ zIndex: 1, position: 'relative' }}>
         <div>© 2026 Graham AI. All rights reserved.</div>
         <div className="g-footer-links">
-          <Link to="/about" style={{ color: 'inherit', textDecoration: 'none' }}>Our Story</Link>
+          {!Capacitor.isNativePlatform() && <Link to="/about" style={{ color: 'inherit', textDecoration: 'none' }}>Our Story</Link>}
           <Link to="/privacy" style={{ color: 'inherit', textDecoration: 'none' }}>Privacy</Link>
           <Link to="/terms" style={{ color: 'inherit', textDecoration: 'none' }}>Terms</Link>
         </div>

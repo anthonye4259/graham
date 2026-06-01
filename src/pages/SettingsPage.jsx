@@ -1,5 +1,6 @@
 import { useUser } from '../context/UserContext';
 import { useNavigate } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
 
 export default function SettingsPage() {
   const { state, setState, logout, isPremium, requestPushPermissions } = useUser();
@@ -117,20 +118,22 @@ export default function SettingsPage() {
           </div>
         </section>
 
-        {/* About Section */}
-        <section style={{ background: 'var(--bg-card)', border: '1px solid var(--border-light)', borderRadius: '16px', padding: '24px' }}>
-          <h2 style={{ fontSize: '18px', marginBottom: '16px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <ion-icon name="information-circle-outline" style={{ color: 'var(--text-primary)' }}></ion-icon> About
-          </h2>
-          <button 
-            onClick={() => navigate('/about')}
-            style={{ background: 'transparent', color: 'var(--text-secondary)', border: 'none', padding: '0', fontSize: '16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}
-            className="hover-text-primary"
-          >
-            <span>Our Story</span>
-            <ion-icon name="chevron-forward-outline"></ion-icon>
-          </button>
-        </section>
+        {/* About Section - Web Only */}
+        {!Capacitor.isNativePlatform() && (
+          <section style={{ background: 'var(--bg-card)', border: '1px solid var(--border-light)', borderRadius: '16px', padding: '24px' }}>
+            <h2 style={{ fontSize: '18px', marginBottom: '16px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <ion-icon name="information-circle-outline" style={{ color: 'var(--text-primary)' }}></ion-icon> About
+            </h2>
+            <button 
+              onClick={() => navigate('/about')}
+              style={{ background: 'transparent', color: 'var(--text-secondary)', border: 'none', padding: '0', fontSize: '16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}
+              className="hover-text-primary"
+            >
+              <span>Our Story</span>
+              <ion-icon name="chevron-forward-outline"></ion-icon>
+            </button>
+          </section>
+        )}
 
         {/* Danger Zone */}
         <section style={{ background: 'var(--bg-card)', border: '1px solid var(--accent-rose)', borderRadius: '16px', padding: '24px' }}>
