@@ -6,14 +6,7 @@ export default function SettingsPage() {
   const { state, setState, logout, isPremium, requestPushPermissions } = useUser();
   const navigate = useNavigate();
 
-  const handleManageBilling = () => {
-    const portalUrl = import.meta.env.VITE_STRIPE_CUSTOMER_PORTAL;
-    if (portalUrl) {
-      window.open(portalUrl, '_blank');
-    } else {
-      alert("Stripe Portal link not configured yet.");
-    }
-  };
+
 
   return (
     <div style={{ padding: '32px', paddingBottom: 'calc(120px + env(safe-area-inset-bottom))', maxWidth: '800px', margin: '0 auto', width: '100%' }}>
@@ -68,14 +61,7 @@ export default function SettingsPage() {
             ) : null}
           </div>
 
-          <div style={{ display: 'flex', gap: '16px' }}>
-            <button 
-              onClick={handleManageBilling}
-              style={{ background: 'var(--text-primary)', color: 'var(--bg-main)', border: 'none', padding: '12px 24px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
-            >
-              <ion-icon name="wallet-outline"></ion-icon> Manage Subscription
-            </button>
-          </div>
+
         </section>
 
         {/* Preferences */}

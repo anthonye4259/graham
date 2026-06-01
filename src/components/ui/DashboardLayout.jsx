@@ -38,8 +38,8 @@ export default function DashboardLayout() {
           <span>Home</span>
         </button>
         <button onClick={() => navigate('/app/scan')} className="nav-item">
-          <ion-icon name="scan-circle" class="nav-scan-icon"></ion-icon>
-          <span>Ask AI</span>
+          <ion-icon name="chatbubbles" class="nav-scan-icon"></ion-icon>
+          <span>Advisor</span>
         </button>
         <button onClick={() => navigate('/app/settings')} className={`nav-item ${location.pathname === '/app/settings' ? 'active' : ''}`}>
           <ion-icon name="person"></ion-icon>
