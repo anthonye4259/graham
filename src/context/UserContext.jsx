@@ -4,6 +4,7 @@ import { signInAnonymously, onAuthStateChanged, createUserWithEmailAndPassword, 
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { Capacitor } from '@capacitor/core';
 import { Purchases } from '@revenuecat/purchases-capacitor';
+import { PushNotifications } from '@capacitor/push-notifications';
 
 const XP_LEVELS = [0, 100, 250, 500, 1000, 2000, 3500, 5500, 8000, 12000, 20000];
 
@@ -33,7 +34,6 @@ const DEFAULT_STATE = {
   subscribed: false,
   trialStartDate: null,
   trialDays: 7,
-  hasSeenPostLessonPaywall: false,
   hasSeenOnboardingPaywall: false,
   persona: 'Graham',
   fantasyPortfolio: [],
@@ -42,6 +42,8 @@ const DEFAULT_STATE = {
   premiumScansToday: 0,
   lastPremiumScanDate: null,
   chatHistory: [],
+  pushEnabled: false,
+  pushToken: null,
 };
 
 const UserContext = createContext(null);
@@ -143,6 +145,34 @@ export function UserProvider({ children }) {
   const logout = async () => {
     await signOut(auth);
   };
+
+  const requestPushPermissions = async () => {
+    if (Capacitor.isNativePlatform()) {
+      let permStatus = await PushNotifications.checkPermissions();
+
+      if (permStatus.receive === 'prompt') {
+        permStatus = await PushNotifications.requestPermissions();
+      }
+
+      if (permStatus.receive === 'granted') {
+        await PushNotifications.register();
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      PushNotifications.addListener('registration', (token) => {
+        if (user) {
+          updateDoc(doc(db, 'users', user.uid), { pushToken: token.value, pushEnabled: true });
+          setStateRaw(s => ({ ...s, pushToken: token.value, pushEnabled: true }));
+        }
+      });
+      PushNotifications.addListener('registrationError', (error) => {
+        console.error('Error on registration: ' + JSON.stringify(error));
+      });
+    }
+  }, [user]);
 
   // Streak check on mount
   useEffect(() => {
@@ -297,7 +327,7 @@ export function UserProvider({ children }) {
     state, setState, addXP, completeLesson, markDailyGoal,
     isTrialActive, isPremium, startTrial, getScansRemaining,
     incrementScan, loseHeart, getGreeting, getLevelTitle, getXPProgress,
-    user, loadingAuth, simulateBuy, login, signup, logout
+    user, loadingAuth, simulateBuy, login, signup, logout, requestPushPermissions
   };
 
   if (loadingAuth) {

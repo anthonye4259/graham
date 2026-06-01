@@ -16,12 +16,15 @@ const TOTAL_STEPS = 9;
 
 export default function OnboardingPage() {
   const [step, setStep] = useState(0);
-  const { state, setState, startTrial } = useUser();
+  const { state, setState, startTrial, requestPushPermissions } = useUser();
 
-  const advance = () => {
+  const advance = async () => {
     if (step + 1 >= TOTAL_STEPS) {
       trackEvent('onboarding_complete');
       setState({ onboarded: true, hasSeenOnboardingPaywall: true });
+      if (state.pushEnabled === false) {
+        await requestPushPermissions();
+      }
     } else {
       setStep(s => s + 1);
     }

@@ -2,7 +2,7 @@ import { useUser } from '../context/UserContext';
 import { useNavigate } from 'react-router-dom';
 
 export default function SettingsPage() {
-  const { state, logout, isPremium } = useUser();
+  const { state, setState, logout, isPremium, requestPushPermissions } = useUser();
   const navigate = useNavigate();
 
   const handleManageBilling = () => {
@@ -73,6 +73,46 @@ export default function SettingsPage() {
               style={{ background: 'var(--text-primary)', color: 'var(--bg-main)', border: 'none', padding: '12px 24px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
             >
               <ion-icon name="wallet-outline"></ion-icon> Manage Subscription
+            </button>
+          </div>
+        </section>
+
+        {/* Preferences */}
+        <section style={{ background: 'var(--bg-card)', border: '1px solid var(--border-light)', borderRadius: '16px', padding: '24px' }}>
+          <h2 style={{ fontSize: '18px', marginBottom: '16px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <ion-icon name="options-outline" style={{ color: 'var(--accent-gold)' }}></ion-icon> Preferences
+          </h2>
+          
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <div style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--text-primary)', marginBottom: '4px' }}>
+                Daily AI Briefings
+              </div>
+              <div style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
+                Receive a daily market breakdown from your AI persona every morning.
+              </div>
+            </div>
+            
+            <button 
+              onClick={async () => {
+                if (!state.pushEnabled) {
+                  await requestPushPermissions();
+                } else {
+                  // If they want to disable, they must do it in OS settings, but we can set the flag to false to stop sending them on backend
+                  setState({ pushEnabled: false });
+                }
+              }}
+              style={{
+                width: '50px', height: '28px', borderRadius: '14px',
+                background: state.pushEnabled ? 'var(--accent-teal)' : 'var(--border-light)',
+                position: 'relative', cursor: 'pointer', border: 'none', transition: 'all 0.3s'
+              }}
+            >
+              <div style={{
+                width: '24px', height: '24px', borderRadius: '50%', background: '#fff',
+                position: 'absolute', top: '2px', left: state.pushEnabled ? '24px' : '2px',
+                transition: 'all 0.3s', boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+              }} />
             </button>
           </div>
         </section>

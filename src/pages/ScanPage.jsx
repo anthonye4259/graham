@@ -219,15 +219,6 @@ export default function ScanPage() {
                   <div className="card-company">{result.name}</div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px', marginBottom: '16px' }}>
                     <div className="card-price">{result.price}</div>
-                    <button 
-                      className="scan-btn" 
-                      style={{ width: 'auto', padding: '8px 16px', fontSize: '14px' }}
-                      disabled={simulated[idx]}
-                      onClick={() => handleBuy(idx, result.ticker, result.name, result.price)}
-                    >
-                      <ion-icon name="cash-outline"></ion-icon>
-                      {simulated[idx] ? 'Bought!' : 'Simulate Buy'}
-                    </button>
                   </div>
                   <PriceChart direction={result.direction} symbol={result.ticker} />
                 </div>
@@ -264,10 +255,32 @@ export default function ScanPage() {
                   </>
                 )}
                 
-                <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+                <div style={{ display: 'flex', gap: '12px', marginTop: '16px', flexDirection: 'column' }}>
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <a 
+                      href={`https://robinhood.com/stocks/${result.ticker}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="scan-btn" 
+                      style={{ flex: 1, background: '#00c805', color: '#000', border: 'none', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                      <ion-icon name="trending-up-outline"></ion-icon>
+                      Trade on Robinhood
+                    </a>
+                    <a 
+                      href={`https://www.coinbase.com/price/${result.ticker}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="scan-btn" 
+                      style={{ flex: 1, background: '#0052ff', color: '#fff', border: 'none', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                      <ion-icon name="logo-bitcoin"></ion-icon>
+                      Trade on Coinbase
+                    </a>
+                  </div>
                   <button 
                     className="scan-btn" 
-                    style={{ flex: 1, background: 'var(--bg-card)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
+                    style={{ background: 'var(--bg-card)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
                     onClick={() => triggerDeepDive(result.ticker)}
                   >
                     <ion-icon name="document-text-outline"></ion-icon>
