@@ -323,7 +323,16 @@ export default function ScanPage() {
       </div>
 
       {/* Fixed Input Area at Bottom */}
-      <div style={{ position: 'absolute', bottom: 'calc(80px + env(safe-area-inset-bottom))', left: 0, right: 0, paddingBottom: '16px', paddingTop: '16px', borderTop: '1px solid var(--border-light)', background: 'var(--bg-main)', zIndex: 10 }}>
+      <div style={{ position: 'absolute', bottom: 'calc(80px + env(safe-area-inset-bottom))', left: 0, right: 0, paddingBottom: '16px', paddingTop: '8px', borderTop: '1px solid var(--border-light)', background: 'var(--bg-main)', zIndex: 10 }}>
+        
+        {messages.length === 0 && (
+          <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', padding: '0 24px 12px 24px', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }} className="hide-scrollbar">
+            <button onClick={() => { setTicker("Analyze AAPL"); handleScan("Analyze AAPL"); }} style={{ whiteSpace: 'nowrap', padding: '6px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-light)', borderRadius: '16px', color: 'var(--text-primary)', fontSize: '13px', cursor: 'pointer' }}>Analyze AAPL</button>
+            <button onClick={() => { setTicker("Should I buy Bitcoin?"); handleScan("Should I buy Bitcoin?"); }} style={{ whiteSpace: 'nowrap', padding: '6px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-light)', borderRadius: '16px', color: 'var(--text-primary)', fontSize: '13px', cursor: 'pointer' }}>Should I buy Bitcoin?</button>
+            <button onClick={() => { setTicker("What are options?"); handleScan("What are options?"); }} style={{ whiteSpace: 'nowrap', padding: '6px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-light)', borderRadius: '16px', color: 'var(--text-primary)', fontSize: '13px', cursor: 'pointer' }}>What are options?</button>
+          </div>
+        )}
+
         <div className="scan-input-row" style={{ maxWidth: '800px', margin: '0 auto', background: 'var(--bg-secondary)', borderRadius: '24px', padding: '4px', border: '1px solid var(--border-light)', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
             <button 

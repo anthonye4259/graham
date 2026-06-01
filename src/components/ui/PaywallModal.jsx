@@ -127,7 +127,7 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
     }
   }
 
-  const price = dynamicPrice || (billing === 'annual' ? '$99.00' : (billing === 'weekly' ? '$2.99' : '$9.99'));
+  const price = dynamicPrice || (billing === 'annual' ? '$99.00' : (billing === 'weekly' ? '$3.99' : '$12.00'));
   const billedText = billing === 'annual' ? 'Billed annually (Includes 7-Day Free Trial)' : (billing === 'weekly' ? 'Billed weekly' : 'Billed monthly');
   const periodText = billing === 'annual' ? 'yr' : (billing === 'weekly' ? 'wk' : 'mo');
 
