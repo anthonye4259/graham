@@ -3,6 +3,7 @@
     "source": "functions"
   },
   "hosting": {
+    "site": "grahamapp",
     "public": "dist",
     "ignore": [
       "firebase.json",
