@@ -10,6 +10,22 @@ export default function DashboardLayout() {
   return (
     <div style={{ height: '100dvh', width: '100vw', backgroundColor: 'var(--bg-main)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       
+      {/* Global Logo Header */}
+      <div style={{
+        position: 'absolute',
+        top: 'calc(env(safe-area-inset-top) + 12px)',
+        left: 0,
+        right: 0,
+        height: '40px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 100,
+        pointerEvents: 'none'
+      }}>
+        <img src="/graham_lowercase_g_logo.png" alt="Graham Logo" style={{ height: '32px', width: '32px', objectFit: 'contain' }} />
+      </div>
+
       {/* Main Content Area */}
       <main style={{ flex: 1, position: 'relative', overflowY: 'auto' }}>
         <Outlet />
