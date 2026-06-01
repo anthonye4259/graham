@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { UserProvider, useUser } from './context/UserContext';
 import LandingPage from './pages/LandingPage';
 import AuthPage from './pages/AuthPage';
@@ -15,6 +16,8 @@ import MarketsPage from './pages/MarketsPage';
 import DashboardLayout from './components/ui/DashboardLayout';
 import PaywallModal from './components/ui/PaywallModal';
 
+const isNative = Capacitor.isNativePlatform();
+
 function AppShell() {
   const { user, loadingAuth, state, startTrial, isPremium } = useUser();
   const location = useLocation();
@@ -24,7 +27,6 @@ function AppShell() {
     const params = new URLSearchParams(location.search);
     if (params.get('success') === 'true') {
       startTrial();
-      // Remove query param
       navigate('/app', { replace: true });
     }
   }, [location, startTrial, navigate]);
@@ -63,15 +65,17 @@ export default function App() {
   return (
     <UserProvider>
       <Routes>
-        <Route path="/" element={<LandingPage />} />
+        {/* On native mobile, skip landing page and go straight to app */}
+        <Route path="/" element={isNative ? <Navigate to="/app" replace /> : <LandingPage />} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/support" element={<SupportPage />} />
         <Route path="/app/*" element={<AppShell />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to={isNative ? "/app" : "/"} replace />} />
       </Routes>
     </UserProvider>
   );
 }
+
