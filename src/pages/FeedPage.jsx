@@ -144,11 +144,22 @@ export default function FeedPage() {
 
   const feedItems = generateFeedContent();
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
+  };
+  const greeting = `${getGreeting()}, ${state.name?.split(' ')[0] || 'Investor'}`;
+
   return (
     <div style={{ position: 'relative', height: 'calc(100dvh - 80px - env(safe-area-inset-bottom))', width: '100vw', overflow: 'hidden' }}>
       
-      {/* Top Header with Persona Switcher */}
-      <div style={{ position: 'absolute', top: 'calc(env(safe-area-inset-top) + 16px)', left: 0, right: 0, zIndex: 50, display: 'flex', justifyContent: 'center' }}>
+      {/* Top Header with Greeting & Persona Switcher */}
+      <div style={{ position: 'absolute', top: 'calc(env(safe-area-inset-top) + 16px)', left: 0, right: 0, zIndex: 50, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 20px' }}>
+        <div style={{ color: '#FFF', fontSize: '18px', fontWeight: 'bold', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+          {greeting}
+        </div>
         <div style={{ position: 'relative' }}>
           <button 
             onClick={() => setShowPersonaMenu(!showPersonaMenu)}
@@ -289,6 +300,35 @@ export default function FeedPage() {
 
           </div>
         ))}
+      </div>
+
+      {/* Sticky Chat Input */}
+      <div style={{
+        position: 'absolute',
+        bottom: '20px',
+        left: '20px',
+        right: '20px',
+        zIndex: 50,
+        background: 'rgba(20, 20, 20, 0.85)',
+        backdropFilter: 'blur(16px)',
+        border: '1px solid rgba(255,255,255,0.1)',
+        borderRadius: '30px',
+        display: 'flex',
+        alignItems: 'center',
+        padding: '8px 16px',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.4)'
+      }}>
+        <ion-icon name="mic" style={{ color: 'var(--accent-teal)', fontSize: '24px', marginRight: '12px' }}></ion-icon>
+        <input 
+          type="text" 
+          placeholder="Ask Graham anything..." 
+          style={{ flex: 1, background: 'transparent', border: 'none', color: '#FFF', fontSize: '16px', outline: 'none' }}
+          disabled
+        />
+        <ion-icon name="link-outline" style={{ color: '#999', fontSize: '20px', marginRight: '12px' }}></ion-icon>
+        <button style={{ background: 'var(--accent-teal)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <ion-icon name="send" style={{ color: '#FFF', fontSize: '14px', marginLeft: '2px' }}></ion-icon>
+        </button>
       </div>
 
       <FundModal 
