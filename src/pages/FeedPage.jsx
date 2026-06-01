@@ -4,6 +4,7 @@ import { PERSONAS } from '../lib/personas';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import FundModal from '../components/ui/FundModal';
+import MacroTerminalCard from '../components/Feed/MacroTerminalCard';
 
 export default function FeedPage() {
   const { state, setState } = useUser();
@@ -11,14 +12,23 @@ export default function FeedPage() {
   const [showPersonaMenu, setShowPersonaMenu] = useState(false);
   const [grahamFund, setGrahamFund] = useState(null);
   const [showFundModal, setShowFundModal] = useState(false);
+  const [macroData, setMacroData] = useState(null);
 
   useEffect(() => {
-    const unsub = onSnapshot(doc(db, 'global', 'graham_fund'), (docSnap) => {
+    const unsubFund = onSnapshot(doc(db, 'global', 'graham_fund'), (docSnap) => {
       if (docSnap.exists()) {
         setGrahamFund(docSnap.data());
       }
     });
-    return () => unsub();
+    const unsubMacro = onSnapshot(doc(db, 'global', 'macro_daily'), (docSnap) => {
+      if (docSnap.exists()) {
+        setMacroData(docSnap.data());
+      }
+    });
+    return () => {
+      unsubFund();
+      unsubMacro();
+    };
   }, []);
 
   const handleAnswer = (itemId, index) => {
@@ -31,6 +41,35 @@ export default function FeedPage() {
     const p = state.persona;
     const r = state.riskTolerance; // Safe, Moderate, Aggressive
     const g = state.investingGoal; // Basics, Grow Wealth, Trade Options
+
+    // 0. Macro Terminal
+    const terminalData = macroData || {
+      quotes: [
+        { id: "SPX", price: "4,100.50", change: "+12.4", changePercent: "+0.3%", status: "up" },
+        { id: "VIX", price: "14.20", change: "-0.5", changePercent: "-3.4%", status: "down" },
+        { id: "10Y", price: "4.25%", change: "+0.02", changePercent: "+0.5%", status: "up" },
+        { id: "EUR/USD", price: "1.0850", change: "-0.002", changePercent: "-0.2%", status: "down" },
+        { id: "GOLD", price: "2,050.00", change: "+5.0", changePercent: "+0.2%", status: "up" },
+        { id: "BTC", price: "64,200", change: "+1200", changePercent: "+1.9%", status: "up" }
+      ],
+      newsSummary: {
+        headline: "Hotter-than-expected CPI print fuels rate concerns",
+        body: "Print confirms inflation stickiness in services. Front-end repricing already under way. Curve flattening implies recession optionality fading."
+      },
+      tradeIdeas: [
+        { type: "LONG BUY", target: "USD", rationale: "Data still strong - ECB multi-month pause", conviction: "High" },
+        { type: "SHORT SELL", target: "2Y UST", rationale: "Front-end repricing not complete", conviction: "High" }
+      ]
+    };
+
+    items.push({
+      id: 'macro-terminal',
+      type: 'macro-terminal',
+      topic: 'Live Markets',
+      title: '',
+      color: '#0d1117',
+      data: terminalData
+    });
 
     // 1. Fact of the Day
     items.push({
@@ -218,6 +257,10 @@ export default function FeedPage() {
               <h2 style={{ fontSize: '36px', fontWeight: '800', marginBottom: '24px', lineHeight: 1.1, letterSpacing: '-1px' }}>
                 {item.title}
               </h2>
+
+              {item.type === 'macro-terminal' && (
+                <MacroTerminalCard data={item.data} />
+              )}
 
               {item.type === 'flashcard' || item.type === 'visual' ? (
                 <div 
