@@ -6,6 +6,7 @@ import { db } from '../lib/firebase';
 import { hapticSuccess, hapticError, hapticSelection } from '../lib/haptics';
 import FundModal from '../components/ui/FundModal';
 import MacroTerminalCard from '../components/Feed/MacroTerminalCard';
+import JargonText from '../components/Feed/JargonText';
 
 export default function FeedPage() {
   const { state, setState } = useUser();
@@ -274,7 +275,7 @@ export default function FeedPage() {
                   style={{ cursor: item.id === 'graham-fund' ? 'pointer' : 'default' }}
                 >
                   <p style={{ fontSize: '20px', lineHeight: 1.5, opacity: 0.9, whiteSpace: 'pre-wrap' }}>
-                    {item.content}
+                    <JargonText text={item.content} />
                   </p>
                   {item.id === 'graham-fund' && (
                     <div style={{ marginTop: '24px', padding: '12px 24px', background: 'rgba(255,255,255,0.2)', borderRadius: '24px', display: 'inline-flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
