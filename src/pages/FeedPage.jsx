@@ -7,6 +7,7 @@ import { hapticSuccess, hapticError, hapticSelection } from '../lib/haptics';
 import FundModal from '../components/ui/FundModal';
 import MacroTerminalCard from '../components/Feed/MacroTerminalCard';
 import JargonText from '../components/Feed/JargonText';
+import FeedTutorialOverlay from '../components/ui/FeedTutorialOverlay';
 
 export default function FeedPage() {
   const { state, setState } = useUser();
@@ -199,8 +200,10 @@ export default function FeedPage() {
   const greeting = `${getGreeting()}, ${state.name?.split(' ')[0] || 'Investor'}`;
 
   return (
-    <div style={{ position: 'relative', height: 'calc(100dvh - 80px - env(safe-area-inset-bottom))', width: '100vw', overflow: 'hidden' }}>
+    <div style={{ position: 'relative', height: 'calc(100dvh - 80px - env(safe-area-bottom))', width: '100vw', overflow: 'hidden' }}>
       
+      <FeedTutorialOverlay />
+
       {/* Top Header with Greeting & Persona Switcher */}
       <div style={{ position: 'absolute', top: 'calc(env(safe-area-inset-top) + 16px)', left: 0, right: 0, zIndex: 50, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 20px' }}>
         <div style={{ color: '#FFF', fontSize: '18px', fontWeight: 'bold', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>

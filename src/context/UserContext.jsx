@@ -45,6 +45,7 @@ const DEFAULT_STATE = {
   pushEnabled: false,
   pushToken: null,
   milestones: [],
+  hasSeenFeedTutorial: false,
 };
 
 const UserContext = createContext(null);
