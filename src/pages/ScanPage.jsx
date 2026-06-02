@@ -134,7 +134,16 @@ export default function ScanPage() {
         });
         
         const data = JSON.parse(response.text());
-        setState({ chatHistory: [...newMessages, { role: 'model', type: 'rich', data }] });
+        
+        let newMilestones = state.milestones || [];
+        if (inlineData && !newMilestones.includes('first_screenshot')) {
+          newMilestones = [...newMilestones, 'first_screenshot'];
+        }
+
+        setState({ 
+          chatHistory: [...newMessages, { role: 'model', type: 'rich', data }],
+          milestones: newMilestones
+        });
       } else {
         // Follow up chat
         const history = newMessages.map(m => {

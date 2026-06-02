@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { hapticSelection, hapticSuccess } from '../../lib/haptics';
+import { useUser } from '../../context/UserContext';
 
 export default function BrokerageActionSheet({ isOpen, onClose, assetId, assetName }) {
   const [isVisible, setIsVisible] = useState(false);
+  const { state, setState } = useUser();
 
   useEffect(() => {
     if (isOpen) {
@@ -19,6 +21,10 @@ export default function BrokerageActionSheet({ isOpen, onClose, assetId, assetNa
 
   const handleRoute = (brokerage) => {
     hapticSuccess();
+    
+    if (!state.milestones?.includes('first_brokerage')) {
+      setState({ milestones: [...(state.milestones || []), 'first_brokerage'] });
+    }
     
     // Fallbacks or real deep-links depending on the asset
     // These are web URLs that typically intercept into native apps if installed

@@ -44,6 +44,7 @@ const DEFAULT_STATE = {
   chatHistory: [],
   pushEnabled: false,
   pushToken: null,
+  milestones: [],
 };
 
 const UserContext = createContext(null);
