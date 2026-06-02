@@ -8,6 +8,7 @@ import FundModal from '../components/ui/FundModal';
 import MacroTerminalCard from '../components/Feed/MacroTerminalCard';
 import JargonText from '../components/Feed/JargonText';
 import FeedTutorialOverlay from '../components/ui/FeedTutorialOverlay';
+import StockOfTheDayCard from '../components/Feed/StockOfTheDayCard';
 
 export default function FeedPage() {
   const { state, setState } = useUser();
@@ -70,6 +71,20 @@ export default function FeedPage() {
       ]
     };
 
+    // 1. Stock of the Day
+    items.push({
+      id: 'sotd',
+      type: 'stock_of_day',
+      stock: {
+        ticker: 'PLTR',
+        name: 'Palantir Technologies',
+        price: 24.50,
+        change: 1.20,
+        history: [18, 19, 21, 20, 22, 24.50]
+      },
+      insight: "Palantir just secured a major Department of Defense contract for its AIP platform. Commercial revenue is accelerating faster than expected."
+    });
+
     items.push({
       id: 'macro-terminal',
       type: 'macro-terminal',
@@ -79,7 +94,7 @@ export default function FeedPage() {
       data: terminalData
     });
 
-    // 1. Fact of the Day
+    // 2. Fact of the Day
     items.push({
       id: 'daily-fact',
       type: 'flashcard',
@@ -89,7 +104,7 @@ export default function FeedPage() {
       color: 'var(--accent-blue)'
     });
 
-    // 1.5 Graham Fund Status
+    // 3. Graham Fund Status
     if (grahamFund) {
       const totalValue = grahamFund.currentCash + (grahamFund.holdings || []).reduce((acc, h) => acc + (h.shares * h.avgPrice), 0);
       const returnPct = ((totalValue - 100000) / 100000) * 100;
@@ -114,7 +129,7 @@ export default function FeedPage() {
       });
     }
 
-    // 2. Persona Specific Content
+    // 4. Persona Specific Content
     if (p === 'Homelander') {
       items.push({
         id: 'homelander-1',
@@ -153,7 +168,7 @@ export default function FeedPage() {
       });
     }
 
-    // 3. Goal/Risk Specific Content
+    // 5. Goal/Risk Specific Content
     if (g === 'Learn Basics' || r === 'Safe') {
       items.push({
         id: 'basic-quiz',
@@ -176,7 +191,7 @@ export default function FeedPage() {
       });
     }
 
-    // 4. General Educational Visual
+    // 6. General Educational Visual
     items.push({
       id: 'visual-1',
       type: 'visual',
@@ -244,7 +259,16 @@ export default function FeedPage() {
         msOverflowStyle: 'none',
         scrollbarWidth: 'none',
       }} className="hide-scrollbar">
-        {feedItems.map((item) => (
+        {feedItems.map((item) => {
+          if (item.type === 'stock_of_day') {
+            return (
+              <div key={item.id} style={{ height: 'calc(100dvh - 80px - env(safe-area-inset-bottom))', width: '100vw', scrollSnapAlign: 'start', background: 'var(--bg-main)' }}>
+                <StockOfTheDayCard stock={item.stock} insight={item.insight} />
+              </div>
+            );
+          }
+          
+          return (
           <div key={item.id} style={{
             height: 'calc(100dvh - 80px - env(safe-area-inset-bottom))',
             width: '100vw',
@@ -354,7 +378,8 @@ export default function FeedPage() {
             </div>
 
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Sticky Chat Input */}
