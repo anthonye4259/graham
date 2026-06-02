@@ -1,6 +1,7 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useUser } from '../../context/UserContext';
 import { useState } from 'react';
+import { hapticSelection } from '../../lib/haptics';
 
 
 export default function DashboardLayout() {
@@ -33,19 +34,19 @@ export default function DashboardLayout() {
 
       {/* Mobile Bottom Navigation */}
       <nav className="bottom-nav">
-        <button onClick={() => navigate('/app')} className={`nav-item ${location.pathname === '/app' ? 'active' : ''}`}>
+        <button onClick={() => { hapticSelection(); navigate('/app'); }} className={`nav-item ${location.pathname === '/app' ? 'active' : ''}`}>
           <ion-icon name="home"></ion-icon>
           <span>Home</span>
         </button>
-        <button onClick={() => navigate('/app/markets')} className={`nav-item ${location.pathname === '/app/markets' ? 'active' : ''}`}>
+        <button onClick={() => { hapticSelection(); navigate('/app/markets'); }} className={`nav-item ${location.pathname === '/app/markets' ? 'active' : ''}`}>
           <ion-icon name="bar-chart-outline"></ion-icon>
           <span>Markets</span>
         </button>
-        <button onClick={() => navigate('/app/scan')} className="nav-item">
+        <button onClick={() => { hapticSelection(); navigate('/app/scan'); }} className="nav-item">
           <ion-icon name="chatbubbles" class="nav-scan-icon"></ion-icon>
           <span>Advisor</span>
         </button>
-        <button onClick={() => navigate('/app/settings')} className={`nav-item ${location.pathname === '/app/settings' ? 'active' : ''}`}>
+        <button onClick={() => { hapticSelection(); navigate('/app/settings'); }} className={`nav-item ${location.pathname === '/app/settings' ? 'active' : ''}`}>
           <ion-icon name="person"></ion-icon>
           <span>Profile</span>
         </button>

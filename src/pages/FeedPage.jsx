@@ -3,6 +3,7 @@ import { useUser } from '../context/UserContext';
 import { PERSONAS } from '../lib/personas';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { hapticSuccess, hapticError, hapticSelection } from '../lib/haptics';
 import FundModal from '../components/ui/FundModal';
 import MacroTerminalCard from '../components/Feed/MacroTerminalCard';
 
@@ -31,8 +32,13 @@ export default function FeedPage() {
     };
   }, []);
 
-  const handleAnswer = (itemId, index) => {
+  const handleAnswer = (itemId, index, isCorrect) => {
     setSelectedAnswers(prev => ({ ...prev, [itemId]: index }));
+    if (isCorrect) {
+      hapticSuccess();
+    } else {
+      hapticError();
+    }
   };
 
   // Generate dynamic content based on Persona and Risk/Goal
@@ -300,7 +306,9 @@ export default function FeedPage() {
                     return (
                       <button 
                         key={i} 
-                        onClick={() => !hasAnswered && handleAnswer(item.id, i)}
+                        onClick={() => {
+                          if (!hasAnswered) handleAnswer(item.id, i, isCorrect);
+                        }}
                         style={{
                           padding: '20px',
                           borderRadius: '16px',

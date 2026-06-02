@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
+import { hapticSelection, hapticImpactMedium } from '../lib/haptics';
 import PaywallModal from '../components/ui/PaywallModal';
 import PriceChart from '../components/ui/PriceChart';
 import MarketPulse from '../components/ui/MarketPulse';
@@ -61,6 +62,7 @@ export default function ScanPage() {
   };
 
   const handleScan = async (queryOverride, imageOverride) => {
+    hapticImpactMedium();
     const queryToUse = queryOverride || ticker;
     const imageToUse = imageOverride || imagePreview;
 
