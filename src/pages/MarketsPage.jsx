@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import Sparkline from '../components/ui/Sparkline';
 import ReactMarkdown from 'react-markdown';
-import ReactMarkdown from 'react-markdown';
 import { hapticSelection } from '../lib/haptics';
+
+export default function MarketsPage() {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [newsExpanded, setNewsExpanded] = useState(false);
 
   useEffect(() => {
