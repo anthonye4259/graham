@@ -59,10 +59,12 @@ export default function DashboardLayout() {
           left: 0;
           right: 0;
           height: calc(80px + env(safe-area-inset-bottom));
-          background: rgba(0,0,0,0.85);
-          backdrop-filter: blur(10px);
+          background: rgba(250,247,242,0.75);
+          backdrop-filter: blur(20px) saturate(180%);
+          -webkit-backdrop-filter: blur(20px) saturate(180%);
           z-index: 1000;
-          border-top: 1px solid rgba(255,255,255,0.1);
+          border-top: 0.5px solid rgba(26,24,21,0.08);
+          box-shadow: 0 -4px 24px rgba(26,24,21,0.02);
           justify-content: space-around;
           padding-bottom: env(safe-area-inset-bottom);
           align-items: center;
@@ -79,13 +81,14 @@ export default function DashboardLayout() {
           font-weight: 600;
           padding: 8px 16px;
           cursor: pointer;
-          transition: all 0.2s ease;
+          transition: var(--transition-spring);
         }
         .nav-item.active {
-          color: #FFFFFF;
+          color: #1A1815;
+          transform: scale(1.05);
         }
         .nav-item ion-icon { font-size: 24px; }
-        .nav-scan-icon { font-size: 56px !important; color: var(--accent-teal); transform: translateY(-10px); }
+        .nav-scan-icon { font-size: 50px !important; color: var(--accent-gold); transform: translateY(-8px); filter: drop-shadow(0 4px 12px rgba(166,124,82,0.3)); }
       `}</style>
     </div>
   );

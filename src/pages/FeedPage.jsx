@@ -202,9 +202,9 @@ export default function FeedPage() {
         <div style={{ position: 'relative' }}>
           <button 
             onClick={() => setShowPersonaMenu(!showPersonaMenu)}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.2)', padding: '8px 16px', borderRadius: '20px', color: '#FFF', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(20px) saturate(180%)', WebkitBackdropFilter: 'blur(20px) saturate(180%)', border: '0.5px solid rgba(255,255,255,0.5)', padding: '8px 16px', borderRadius: '24px', color: '#1A1815', fontSize: '14px', fontWeight: '600', cursor: 'pointer', boxShadow: '0 4px 16px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,1)', transition: 'var(--transition-spring)' }}
           >
-            <ion-icon name="color-wand" style={{ color: 'var(--accent-blue)' }}></ion-icon>
+            <ion-icon name="color-wand" style={{ color: 'var(--accent-gold)' }}></ion-icon>
             {PERSONAS.find(p => p.id === state.persona)?.name.split(' ')[0] || 'Graham'}
             <ion-icon name="chevron-down"></ion-icon>
           </button>
@@ -215,9 +215,9 @@ export default function FeedPage() {
                 <button 
                   key={p.id}
                   onClick={() => { setState({ persona: p.id }); setShowPersonaMenu(false); }}
-                  style={{ width: '100%', padding: '12px', textAlign: 'left', background: state.persona === p.id ? 'var(--bg-main)' : 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '2px' }}
+                  style={{ width: '100%', padding: '12px', textAlign: 'left', background: state.persona === p.id ? 'var(--accent-gold-glow)' : 'transparent', border: 'none', color: state.persona === p.id ? 'var(--accent-gold)' : 'var(--text-primary)', cursor: 'pointer', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '2px', transition: 'var(--transition-base)' }}
                 >
-                  <span style={{ fontSize: '14px', fontWeight: state.persona === p.id ? 'bold' : 'normal' }}>{p.name}</span>
+                  <span style={{ fontSize: '14px', fontWeight: state.persona === p.id ? '600' : '500' }}>{p.name}</span>
                 </button>
               ))}
             </div>
@@ -352,24 +352,25 @@ export default function FeedPage() {
         left: '20px',
         right: '20px',
         zIndex: 50,
-        background: 'rgba(20, 20, 20, 0.85)',
-        backdropFilter: 'blur(16px)',
-        border: '1px solid rgba(255,255,255,0.1)',
-        borderRadius: '30px',
+        background: 'rgba(255, 255, 255, 0.9)',
+        backdropFilter: 'blur(24px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+        border: '0.5px solid rgba(0,0,0,0.05)',
+        borderRadius: '32px',
         display: 'flex',
         alignItems: 'center',
         padding: '8px 16px',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.4)'
+        boxShadow: '0 8px 32px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,1)'
       }}>
-        <ion-icon name="mic" style={{ color: 'var(--accent-teal)', fontSize: '24px', marginRight: '12px' }}></ion-icon>
+        <ion-icon name="mic" style={{ color: 'var(--accent-gold)', fontSize: '24px', marginRight: '12px' }}></ion-icon>
         <input 
           type="text" 
           placeholder="Ask Graham anything..." 
-          style={{ flex: 1, background: 'transparent', border: 'none', color: '#FFF', fontSize: '16px', outline: 'none' }}
+          style={{ flex: 1, background: 'transparent', border: 'none', color: '#1A1815', fontSize: '16px', outline: 'none', fontWeight: '500' }}
           disabled
         />
-        <ion-icon name="link-outline" style={{ color: '#999', fontSize: '20px', marginRight: '12px' }}></ion-icon>
-        <button style={{ background: 'var(--accent-teal)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+        <ion-icon name="link-outline" style={{ color: '#A09890', fontSize: '20px', marginRight: '12px' }}></ion-icon>
+        <button style={{ background: 'linear-gradient(135deg, var(--accent-gold), var(--accent-warm))', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 8px rgba(166,124,82,0.3)' }}>
           <ion-icon name="send" style={{ color: '#FFF', fontSize: '14px', marginLeft: '2px' }}></ion-icon>
         </button>
       </div>
