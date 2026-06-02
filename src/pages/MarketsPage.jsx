@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import Sparkline from '../components/ui/Sparkline';
 import ReactMarkdown from 'react-markdown';
 import { hapticSelection } from '../lib/haptics';
+import BrokerageActionSheet from '../components/ui/BrokerageActionSheet';
 
 export default function MarketsPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [newsExpanded, setNewsExpanded] = useState(false);
+  const [selectedAsset, setSelectedAsset] = useState(null);
 
   useEffect(() => {
     const fetchMarkets = async () => {
@@ -78,7 +80,7 @@ export default function MarketsPage() {
                 <div 
                   key={asset.ticker} 
                   className="interactive-row"
-                  onClick={() => hapticSelection()}
+                  onClick={() => { hapticSelection(); setSelectedAsset(asset); }}
                   style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', borderBottom: i === data.assets.length - 1 ? 'none' : '1px solid var(--border-subtle)', cursor: 'pointer' }}
                 >
                   
@@ -188,6 +190,12 @@ export default function MarketsPage() {
         </div>
       )}
 
+      <BrokerageActionSheet 
+        isOpen={!!selectedAsset}
+        onClose={() => setSelectedAsset(null)}
+        assetId={selectedAsset?.ticker?.replace('^', '')}
+        assetName={selectedAsset?.name}
+      />
     </div>
   );
 }
