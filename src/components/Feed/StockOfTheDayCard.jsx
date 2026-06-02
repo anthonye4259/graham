@@ -128,6 +128,7 @@ export default function StockOfTheDayCard({ stock, insight, onTrade }) {
         onClose={() => setShowBrokerage(false)}
         assetId={stock.ticker}
         assetName={stock.name}
+        assetPrice={stock.price}
       />
     </div>
   );

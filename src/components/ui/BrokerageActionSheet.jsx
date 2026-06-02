@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { hapticSelection, hapticSuccess } from '../../lib/haptics';
 import { useUser } from '../../context/UserContext';
 
-export default function BrokerageActionSheet({ isOpen, onClose, assetId, assetName }) {
+export default function BrokerageActionSheet({ isOpen, onClose, assetId, assetName, assetPrice }) {
   const [isVisible, setIsVisible] = useState(false);
+  const [showToast, setShowToast] = useState(false);
   const { state, setState } = useUser();
 
   useEffect(() => {
@@ -18,6 +19,18 @@ export default function BrokerageActionSheet({ isOpen, onClose, assetId, assetNa
   if (!isOpen && !isVisible) return null;
 
   const isCrypto = ['BTC', 'ETH', 'SOL'].includes(assetId);
+
+  const handlePaperTrade = () => {
+    hapticSuccess();
+    const priceToUse = assetPrice || '100.00'; // fallback
+    state.simulateBuy(assetId, assetName || assetId, priceToUse.toString());
+    
+    setShowToast(true);
+    setTimeout(() => {
+      setShowToast(false);
+      onClose();
+    }, 2000);
+  };
 
   const handleRoute = (brokerage) => {
     hapticSuccess();
@@ -99,8 +112,50 @@ export default function BrokerageActionSheet({ isOpen, onClose, assetId, assetNa
           </p>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {/* Robinhood - Primary for Stocks */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          
+          {/* Practice Section */}
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color: 'var(--accent-gold)' }}>
+              <ion-icon name="school-outline"></ion-icon>
+              <span style={{ fontSize: '12px', fontWeight: '800', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Practice First</span>
+            </div>
+            <button 
+              onClick={handlePaperTrade}
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '16px',
+                background: 'linear-gradient(135deg, rgba(166,124,82,0.1), rgba(166,124,82,0.05))',
+                border: '1px solid var(--accent-gold)',
+                borderRadius: '16px',
+                color: 'var(--accent-gold)',
+                fontSize: '16px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                boxShadow: '0 4px 16px rgba(166,124,82,0.1)'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '32px', height: '32px', backgroundColor: 'var(--accent-gold)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFF' }}>
+                  <ion-icon name="cash-outline" style={{ fontSize: '18px' }}></ion-icon>
+                </div>
+                Paper Trade on Graham
+              </div>
+              <ion-icon name="checkmark-circle-outline" style={{ fontSize: '20px' }}></ion-icon>
+            </button>
+          </div>
+
+          {/* Real Execution Section */}
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color: 'var(--text-secondary)' }}>
+              <ion-icon name="wallet-outline"></ion-icon>
+              <span style={{ fontSize: '12px', fontWeight: '800', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Execute Real Trade</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {/* Robinhood - Primary for Stocks */}
           {!isCrypto && (
             <button 
               onClick={() => handleRoute('Robinhood')}
@@ -185,14 +240,42 @@ export default function BrokerageActionSheet({ isOpen, onClose, assetId, assetNa
               <ion-icon name="open-outline" style={{ color: 'var(--text-tertiary)' }}></ion-icon>
             </button>
           )}
+            </div>
+          </div>
         </div>
         
-        <button 
+        <button  
           onClick={() => { hapticSelection(); onClose(); }}
           style={{ width: '100%', padding: '16px', marginTop: '16px', background: 'none', border: 'none', color: 'var(--text-tertiary)', fontSize: '16px', fontWeight: '600', cursor: 'pointer' }}
         >
           Cancel
         </button>
+      </div>
+
+      {/* Toast Notification */}
+      <div style={{
+        position: 'absolute',
+        bottom: showToast ? 'calc(100% + 16px)' : 'calc(100% - 20px)',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        backgroundColor: 'var(--accent-gold)',
+        color: '#FFF',
+        padding: '12px 24px',
+        borderRadius: '24px',
+        fontSize: '14px',
+        fontWeight: '700',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        opacity: showToast ? 1 : 0,
+        pointerEvents: 'none',
+        transition: 'all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)',
+        boxShadow: '0 8px 32px rgba(166,124,82,0.3)',
+        zIndex: 1001,
+        whiteSpace: 'nowrap'
+      }}>
+        <ion-icon name="checkmark-circle"></ion-icon>
+        Added to Fantasy Portfolio!
       </div>
     </div>
   );

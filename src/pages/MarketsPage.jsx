@@ -195,6 +195,7 @@ export default function MarketsPage() {
         onClose={() => setSelectedAsset(null)}
         assetId={selectedAsset?.ticker?.replace('^', '')}
         assetName={selectedAsset?.name}
+        assetPrice={selectedAsset?.price}
       />
     </div>
   );
