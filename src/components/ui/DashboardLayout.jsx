@@ -29,7 +29,9 @@ export default function DashboardLayout() {
 
       {/* Main Content Area */}
       <main style={{ flex: 1, position: 'relative', overflowY: 'auto' }}>
-        <Outlet />
+        <div key={location.pathname} className="fade-in" style={{ height: '100%' }}>
+          <Outlet />
+        </div>
       </main>
 
       {/* Mobile Bottom Navigation */}

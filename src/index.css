@@ -803,6 +803,44 @@ body { min-height: 100dvh; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 2px; }
 
+/* === UX EXPERT DETAILS === */
+.skeleton-pulse {
+  background: linear-gradient(90deg, rgba(26,24,21,0.04) 25%, rgba(26,24,21,0.08) 50%, rgba(26,24,21,0.04) 75%);
+  background-size: 400% 100%;
+  animation: skeletonLoad 1.5s ease-in-out infinite;
+}
+@keyframes skeletonLoad {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+.interactive-row {
+  transition: transform 0.15s cubic-bezier(0.2, 0, 0, 1), background-color 0.15s;
+}
+.interactive-row:active {
+  transform: scale(0.97);
+  background-color: var(--border-subtle);
+  border-radius: 12px;
+  margin: 0 -12px;
+  padding-left: 12px !important;
+  padding-right: 12px !important;
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-in {
+  animation: fadeIn 0.4s ease forwards;
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 /* ============================================================
    BOTTOM TAB BAR
    ============================================================ */

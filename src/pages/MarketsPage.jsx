@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Sparkline from '../components/ui/Sparkline';
 import ReactMarkdown from 'react-markdown';
-
-export default function MarketsPage() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+import ReactMarkdown from 'react-markdown';
+import { hapticSelection } from '../lib/haptics';
   const [newsExpanded, setNewsExpanded] = useState(false);
 
   useEffect(() => {
@@ -44,18 +42,29 @@ export default function MarketsPage() {
   const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
 
   return (
-    <div className="markets-page" style={{ height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: '#000', color: '#fff', position: 'relative' }}>
+    <div className="markets-page fade-in-up" style={{ height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: 'transparent', color: 'var(--text-primary)', position: 'relative' }}>
       
       {/* Header */}
       <div style={{ padding: '24px 20px 12px 20px' }}>
-        <h1 style={{ margin: 0, fontSize: '32px', fontWeight: '800' }}>Markets</h1>
-        <h2 style={{ margin: 0, fontSize: '28px', fontWeight: '700', color: '#8E8E93' }}>{today}</h2>
+        <h1 style={{ margin: 0, fontSize: '32px', fontWeight: '800', letterSpacing: '-1px' }}>Markets</h1>
+        <h2 style={{ margin: 0, fontSize: '28px', fontWeight: '700', color: 'var(--text-secondary)', letterSpacing: '-1px' }}>{today}</h2>
       </div>
 
       {/* List */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px calc(140px + env(safe-area-inset-bottom)) 20px' }}>
         {loading ? (
-          <div style={{ padding: '20px', textAlign: 'center', color: '#8E8E93' }}>Loading markets...</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '12px' }}>
+            {[1,2,3,4,5].map(i => (
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid var(--border-subtle)' }}>
+                <div style={{ flex: 1 }}>
+                  <div className="skeleton-pulse" style={{ height: '20px', width: '60px', borderRadius: '4px', marginBottom: '8px' }}></div>
+                  <div className="skeleton-pulse" style={{ height: '14px', width: '120px', borderRadius: '4px' }}></div>
+                </div>
+                <div className="skeleton-pulse" style={{ width: '80px', height: '36px', borderRadius: '8px', marginRight: '16px' }}></div>
+                <div className="skeleton-pulse" style={{ width: '70px', height: '28px', borderRadius: '6px' }}></div>
+              </div>
+            ))}
+          </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             {data?.assets?.map((asset, i) => {
@@ -63,12 +72,17 @@ export default function MarketsPage() {
               const color = isUp ? '#34C759' : '#FF3B30';
               
               return (
-                <div key={asset.ticker} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', borderBottom: i === data.assets.length - 1 ? 'none' : '1px solid #1C1C1E' }}>
+                <div 
+                  key={asset.ticker} 
+                  className="interactive-row"
+                  onClick={() => hapticSelection()}
+                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', borderBottom: i === data.assets.length - 1 ? 'none' : '1px solid var(--border-subtle)', cursor: 'pointer' }}
+                >
                   
                   {/* Ticker & Name */}
                   <div style={{ flex: 1, minWidth: 0, paddingRight: '12px' }}>
                     <div style={{ fontSize: '18px', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{asset.id}</div>
-                    <div style={{ fontSize: '13px', color: '#8E8E93', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: '2px' }}>{asset.name}</div>
+                    <div style={{ fontSize: '13px', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: '2px' }}>{asset.name}</div>
                   </div>
 
                   {/* Sparkline */}
@@ -113,11 +127,13 @@ export default function MarketsPage() {
             left: 0,
             right: 0,
             height: newsExpanded ? 'calc(100% - 100px)' : '120px',
-            backgroundColor: '#1C1C1E',
+            background: 'var(--bg-glass)',
+            backdropFilter: 'blur(24px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(24px) saturate(180%)',
             borderTopLeftRadius: '24px',
             borderTopRightRadius: '24px',
             padding: '16px 20px',
-            boxShadow: '0 -4px 20px rgba(0,0,0,0.5)',
+            boxShadow: '0 -12px 48px rgba(26,24,21,0.08), inset 0 1px 0 rgba(255,255,255,1)',
             transition: 'height 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
             overflowY: newsExpanded ? 'auto' : 'hidden',
             display: 'flex',
@@ -127,24 +143,26 @@ export default function MarketsPage() {
         >
           {/* Drag Handle */}
           <div 
-            style={{ width: '40px', height: '5px', backgroundColor: '#48484A', borderRadius: '4px', margin: '0 auto 16px auto', cursor: 'pointer' }}
-            onClick={() => setNewsExpanded(!newsExpanded)}
+            style={{ width: '40px', height: '5px', backgroundColor: 'var(--border-subtle)', borderRadius: '4px', margin: '0 auto 16px auto', cursor: 'pointer' }}
+            onClick={() => { hapticSelection(); setNewsExpanded(!newsExpanded); }}
           />
           
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', cursor: 'pointer' }} onClick={() => setNewsExpanded(!newsExpanded)}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', cursor: 'pointer' }} onClick={() => { hapticSelection(); setNewsExpanded(!newsExpanded); }}>
             <div>
-              <h2 style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: '#fff' }}>Business News</h2>
-              <div style={{ fontSize: '13px', color: '#8E8E93', marginTop: '2px' }}>AI Summarized Digest</div>
+              <h2 style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: 'var(--text-primary)' }}>Business News</h2>
+              <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '2px' }}>AI Summarized Digest</div>
             </div>
           </div>
 
           <div style={{ 
             fontSize: '15px', 
             lineHeight: '1.5', 
-            color: '#EBEBF5',
-            backgroundColor: '#2C2C2E',
+            color: 'var(--text-primary)',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-subtle)',
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.7)',
             padding: '16px',
-            borderRadius: '12px',
+            borderRadius: '16px',
             marginBottom: '24px',
             pointerEvents: 'auto'
           }}>
@@ -152,12 +170,12 @@ export default function MarketsPage() {
           </div>
 
           {newsExpanded && (
-            <div>
-              <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '16px', color: '#fff' }}>Top Headlines</h3>
+            <div className="fade-in-up">
+              <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '16px', color: 'var(--text-primary)' }}>Top Headlines</h3>
               {data.news?.map((item, idx) => (
-                <div key={idx} style={{ marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid #38383A' }}>
-                  <div style={{ fontSize: '13px', color: '#8E8E93', marginBottom: '4px' }}>{item.publisher || "Yahoo Finance"}</div>
-                  <a href={item.link} target="_blank" rel="noopener noreferrer" style={{ fontSize: '16px', fontWeight: '500', color: '#fff', textDecoration: 'none' }}>
+                <div key={idx} style={{ marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid var(--border-subtle)' }}>
+                  <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '4px' }}>{item.publisher || "Yahoo Finance"}</div>
+                  <a href={item.link} target="_blank" rel="noopener noreferrer" style={{ fontSize: '16px', fontWeight: '500', color: 'var(--text-primary)', textDecoration: 'none' }}>
                     {item.title}
                   </a>
                 </div>

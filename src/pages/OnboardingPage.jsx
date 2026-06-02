@@ -48,7 +48,9 @@ export default function OnboardingPage() {
 
   return (
     <div className="screen onboarding active">
-      {steps[step]}
+      <div key={step} className="fade-in-up" style={{ height: '100%', width: '100%' }}>
+        {steps[step]}
+      </div>
     </div>
   );
 }

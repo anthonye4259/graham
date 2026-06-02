@@ -31,7 +31,17 @@ function AppShell() {
     }
   }, [location, startTrial, navigate]);
 
-  if (loadingAuth) return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading...</div>;
+  if (loadingAuth) {
+    return (
+      <div className="shimmer-overlay active">
+        <div className="shimmer-icon">
+          <ion-icon name="finger-print-outline"></ion-icon>
+        </div>
+        <div className="shimmer-text">Authenticating...</div>
+        <div className="shimmer-bar"><div className="shimmer-bar-fill"></div></div>
+      </div>
+    );
+  }
 
   if (!user) {
     return <Navigate to="/auth" replace />;
