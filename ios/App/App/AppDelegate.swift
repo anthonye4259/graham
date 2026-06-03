@@ -9,10 +9,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        FirebaseApp.configure()
-        
-        Messaging.messaging().delegate = self
-        UNUserNotificationCenter.current().delegate = self
+        // Initialize Firebase safely - prevent crash if config is missing
+        if let _ = Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist") {
+            FirebaseApp.configure()
+            Messaging.messaging().delegate = self
+            UNUserNotificationCenter.current().delegate = self
+        } else {
+            print("⚠️ GoogleService-Info.plist not found - Firebase not configured")
+        }
         
         return true
     }
