@@ -180,7 +180,7 @@ function showOnboarding() {
         <div class="ob-tl-track"><div class="ob-tl-fill"></div></div>
         <div class="ob-tl-point active"><div class="ob-tl-dot">${I('thumbs-up-outline')}</div><div class="ob-tl-label">Today</div><div class="ob-tl-sub">Unlock Graham</div></div>
         <div class="ob-tl-point"><div class="ob-tl-dot">${I('notifications-outline')}</div><div class="ob-tl-label">Day 5</div><div class="ob-tl-sub">Reminder</div></div>
-        <div class="ob-tl-point locked"><div class="ob-tl-dot">${I('lock-closed-outline')}</div><div class="ob-tl-label">Day 7</div><div class="ob-tl-sub">Billed $89.99</div></div>
+        <div class="ob-tl-point locked"><div class="ob-tl-dot">${I('lock-closed-outline')}</div><div class="ob-tl-label">Day 7</div><div class="ob-tl-sub">Billed $249.99</div></div>
       </div>
 
       <ul class="ob-trial-features">
@@ -190,9 +190,9 @@ function showOnboarding() {
         <li><span class="ob-feat-icon">${I('diamond-outline')}</span> Exclusive access to Graham AI</li>
       </ul>
 
-      <div class="ob-pw-price">Free for 7 days, then<br/><span class="ob-pw-amount">$89.99/year</span>  ($7.49/month)</div>
+      <div class="ob-pw-price">Free for 7 days, then<br/><span class="ob-pw-amount">$249.99/year</span>  ($20.83/month)</div>
       <button class="ob-pw-cta" id="ob-trial-start">Start your FREE week—no payment now</button>
-      <button class="ob-pw-alt" id="ob-trial-monthly">or $9.99/month</button>
+      <button class="ob-pw-alt" id="ob-trial-monthly">or $29.99/month</button>
       <button class="ob-trial-skip" id="ob-trial-skip">Maybe later</button>
       <div class="ob-pw-legal">Terms of Use · Privacy Policy</div>
     </div></div>`;
@@ -275,8 +275,8 @@ function bootApp() {
           <li class="paywall-feature"><span class="paywall-check">${I('checkmark-outline')}</span>AI-powered action plans</li>
         </ul>
         <div class="paywall-pricing">
-          <div class="pricing-option" data-plan="monthly"><div class="pricing-period">Monthly</div><div class="pricing-amount">$14.99</div><div class="pricing-sub">/month</div></div>
-          <div class="pricing-option selected" data-plan="annual"><span class="save-badge">Save 44%</span><div class="pricing-period">Annual</div><div class="pricing-amount">$99.99</div><div class="pricing-sub">$8.33/month</div></div>
+          <div class="pricing-option" data-plan="monthly"><div class="pricing-period">Monthly</div><div class="pricing-amount">$29.99</div><div class="pricing-sub">/month</div></div>
+          <div class="pricing-option selected" data-plan="annual"><span class="save-badge">Save 30%</span><div class="pricing-period">Annual</div><div class="pricing-amount">$249.99</div><div class="pricing-sub">$20.83/month</div></div>
         </div>
         <button class="paywall-cta" id="paywall-cta">Get Unlimited Access</button>
         <button class="paywall-dismiss" id="paywall-dismiss">Not now</button>
