@@ -80,9 +80,10 @@ export default function DashboardLayout() {
           flex-direction: column;
           align-items: center;
           gap: 4px;
-          font-size: 10px;
+          font-size: 11px;
           font-weight: 600;
-          padding: 8px 16px;
+          padding: 10px 16px;
+          min-height: 44px;
           cursor: pointer;
           transition: var(--transition-spring);
         }

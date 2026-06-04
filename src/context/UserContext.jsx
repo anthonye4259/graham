@@ -92,16 +92,22 @@ export function UserProvider({ children }) {
             }
           }
 
+          // App Store Review account bypass
+          const REVIEW_EMAIL = 'appreview@graham.ai';
+          const isReviewAccount = currentUser.email === REVIEW_EMAIL;
+
           // Load Firestore Data
           const docRef = doc(db, 'users', currentUser.uid);
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
             const data = docSnap.data();
-            if (isNativeSubscribed) data.subscribed = true;
+            if (isNativeSubscribed || isReviewAccount) data.subscribed = true;
+            if (isReviewAccount) { data.onboarded = true; data.name = data.name || 'App Reviewer'; data.investingGoal = data.investingGoal || 'learn_basics'; data.persona = data.persona || 'Graham'; data.hasSeenFeedTutorial = true; }
             if (isMounted) setStateRaw({ ...DEFAULT_STATE, ...data });
           } else {
             const defaultWithSub = { ...DEFAULT_STATE };
-            if (isNativeSubscribed) defaultWithSub.subscribed = true;
+            if (isNativeSubscribed || isReviewAccount) defaultWithSub.subscribed = true;
+            if (isReviewAccount) { defaultWithSub.onboarded = true; defaultWithSub.name = 'App Reviewer'; defaultWithSub.investingGoal = 'learn_basics'; defaultWithSub.persona = 'Graham'; defaultWithSub.hasSeenFeedTutorial = true; }
             await setDoc(docRef, defaultWithSub);
             if (isMounted) setStateRaw(defaultWithSub);
           }

@@ -127,7 +127,7 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
     }
   }
 
-  const price = dynamicPrice || (billing === 'annual' ? '$99.00' : (billing === 'weekly' ? '$3.99' : '$12.00'));
+  const price = dynamicPrice || (billing === 'annual' ? '$39.99' : (billing === 'weekly' ? '$2.99' : '$7.99'));
   const billedText = billing === 'annual' ? 'Billed annually (Includes 7-Day Free Trial)' : (billing === 'weekly' ? 'Billed weekly' : 'Billed monthly');
   const periodText = billing === 'annual' ? 'yr' : (billing === 'weekly' ? 'wk' : 'mo');
 
@@ -151,21 +151,21 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
             <button
               className={`billing-btn ${billing === 'weekly' ? 'active' : ''}`}
               onClick={() => setBilling('weekly')}
-              style={{ padding: '8px 4px', fontSize: '13px' }}
+              style={{ padding: '12px 8px', fontSize: '14px', minHeight: '44px' }}
             >
               Weekly
             </button>
             <button
               className={`billing-btn ${billing === 'monthly' ? 'active' : ''}`}
               onClick={() => setBilling('monthly')}
-              style={{ padding: '8px 4px', fontSize: '13px' }}
+              style={{ padding: '12px 8px', fontSize: '14px', minHeight: '44px' }}
             >
               Monthly
             </button>
             <button
               className={`billing-btn ${billing === 'annual' ? 'active' : ''}`}
               onClick={() => setBilling('annual')}
-              style={{ padding: '8px 4px', fontSize: '13px', position: 'relative' }}
+              style={{ padding: '12px 8px', fontSize: '14px', minHeight: '44px', position: 'relative' }}
             >
               Yearly
               <span className="save-badge" style={{ position: 'absolute', top: '-10px', right: '-5px', fontSize: '10px' }}>Save 30%</span>
@@ -209,7 +209,7 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
               <ion-icon name="lock-closed-outline"></ion-icon> Secure Stripe Checkout
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center', marginTop: '16px' }}>
-              <button onClick={handleRestore} style={{ background: 'none', border: 'none', color: 'var(--text-tertiary)', fontSize: '12px', cursor: 'pointer', textDecoration: 'underline' }}>
+              <button onClick={handleRestore} style={{ background: 'none', border: 'none', color: 'var(--text-tertiary)', fontSize: '14px', cursor: 'pointer', textDecoration: 'underline', padding: '12px 16px', minHeight: '44px' }}>
                 Restore Purchases
               </button>
               <div style={{ display: 'flex', gap: '16px', fontSize: '10px', color: 'var(--text-tertiary)' }}>
