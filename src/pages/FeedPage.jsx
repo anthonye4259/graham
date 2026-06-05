@@ -82,7 +82,7 @@ export default function FeedPage() {
   const greeting = `${getGreeting()}, ${state.name?.split(' ')[0] || 'Investor'}`;
 
   return (
-    <div style={{ position: 'relative', height: '100%', width: '100vw', backgroundColor: 'var(--bg-main)' }}>
+    <div style={{ position: 'relative', minHeight: '100dvh', width: '100%', backgroundColor: 'var(--bg-main)' }}>
       
       {/* Top Header */}
       <div style={{ padding: 'calc(env(safe-area-inset-top) + 24px) 24px 16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -96,7 +96,7 @@ export default function FeedPage() {
         display: 'flex',
         flexDirection: 'column',
         gap: '24px',
-        overflowY: 'auto'
+        alignItems: 'center'
       }}>
         {feedItems.map((item) => {
           if (item.type === 'stock_of_day') {

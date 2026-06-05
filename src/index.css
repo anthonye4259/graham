@@ -109,9 +109,9 @@ body { min-height: 100dvh; }
 }
 .screen.onboarding {
   min-height: 100dvh;
-  max-width: 480px;
+  max-width: 600px;
   margin: 0 auto;
-  padding-bottom: calc(100px + env(safe-area-inset-bottom));
+  padding: 0 24px calc(100px + env(safe-area-inset-bottom)) 24px;
 }
 .screen.hidden { opacity: 0; pointer-events: none; transform: translateY(30px); }
 .screen.active { opacity: 1; pointer-events: all; transform: translateY(0); }
@@ -948,7 +948,7 @@ body { min-height: 100dvh; }
   background: var(--accent-gold-glow) !important;
   transform: translateY(-1px);
 }
-.onboard-step { text-align: center; width: 100%; max-width: 340px; height: 100%; position: relative; display: flex; flex-direction: column; justify-content: center; animation: fadeUp 0.4s ease forwards; }
+.onboard-step { text-align: center; width: 100%; max-width: 500px; margin: 0 auto; height: 100%; position: relative; display: flex; flex-direction: column; justify-content: center; animation: fadeUp 0.4s ease forwards; }
 .onboard-hero-icon { margin-bottom: 20px; }
 .onboard-hero-icon ion-icon { font-size: 44px; color: var(--accent-gold); }
 .onboard-title {
@@ -959,23 +959,21 @@ body { min-height: 100dvh; }
   margin-bottom: 8px;
 }
 .onboard-subtitle { font-size: 14px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 32px; }
-.onboard-options { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+.onboard-options { display: flex; flex-direction: column; gap: 12px; width: 100%; }
 .onboard-option {
-  padding: 16px 20px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-btn);
-  color: var(--text-primary);
-  font-family: var(--font-body);
   display: flex;
-  padding: 16px;
+  padding: 18px 20px;
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-card);
+  color: var(--text-primary);
+  font-family: var(--font-body);
   cursor: pointer;
   transition: var(--transition-base);
   align-items: center;
   gap: 14px;
+  min-height: 56px;
+  font-size: 16px;
 }
 .onboard-option:hover, .onboard-option.selected {
   border-color: var(--accent-gold);
@@ -985,7 +983,7 @@ body { min-height: 100dvh; }
 .onboard-option:hover .ob-icon { color: var(--accent-gold); }
 .onboard-input {
   width: 100%;
-  padding: 16px 20px;
+  padding: 18px 20px;
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-input);
@@ -994,14 +992,12 @@ body { min-height: 100dvh; }
   font-size: 18px;
   text-align: center;
   outline: none;
-  margin-bottom: 16px;
+  margin-bottom: 24px;
+  min-height: 56px;
 }
 .onboard-input:focus { border-color: rgba(166,124,82,0.4); }
 .onboard-next {
-  position: absolute;
-  bottom: calc(24px + env(safe-area-inset-bottom));
-  left: 50%;
-  transform: translateX(-50%);
+  position: relative;
   width: 100%;
   z-index: 100;
   padding: 18px;
@@ -1010,14 +1006,15 @@ body { min-height: 100dvh; }
   border-radius: var(--radius-btn);
   color: #FFFFFF;
   font-family: var(--font-sans);
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
   cursor: pointer;
-  margin-top: 0;
+  margin-top: 16px;
+  min-height: 56px;
   transition: var(--transition-spring);
 }
 .onboard-next:disabled { opacity: 0.4; cursor: not-allowed; }
-.onboard-next:hover:not(:disabled) { transform: translateX(-50%) scale(1.02); }
+.onboard-next:hover:not(:disabled) { transform: scale(1.02); }
 
 /* Progress dots (used on value prop + plan reveal) */
 .ob-progress { display: flex; gap: 6px; justify-content: center; margin-bottom: 32px; }
