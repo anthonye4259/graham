@@ -152,7 +152,7 @@ export default function ScanPage() {
           return `Graham: ${m.content}`;
         }).join('\n\n');
 
-        const followUpPrompt = `${personaPrompt}\n\nHere is the chat history:\n${history}\n\nProvide a conversational, helpful, and insightful response to the user's latest message. Keep it formatted nicely with markdown.`;
+        const followUpPrompt = `${personaPrompt}\n\nHere is the chat history:\n${history}\n\nProvide a conversational, helpful, and insightful response. Your primary goal is to be an educational mentor and teach the user how to invest and trade. Break down complex concepts simply, use analogies, ask guiding questions to test their knowledge, and stay strictly in character. Keep it formatted nicely with markdown.`;
 
         const response = await ai.models.generateContent({
           model: 'gemini-2.5-flash',
@@ -338,9 +338,9 @@ export default function ScanPage() {
         
         {messages.length === 0 && (
           <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', padding: '0 24px 12px 24px', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }} className="hide-scrollbar">
-            <button onClick={() => { setTicker("Analyze AAPL"); handleScan("Analyze AAPL"); }} style={{ whiteSpace: 'nowrap', padding: '6px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-light)', borderRadius: '16px', color: 'var(--text-primary)', fontSize: '13px', cursor: 'pointer' }}>Analyze AAPL</button>
-            <button onClick={() => { setTicker("Should I buy Bitcoin?"); handleScan("Should I buy Bitcoin?"); }} style={{ whiteSpace: 'nowrap', padding: '6px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-light)', borderRadius: '16px', color: 'var(--text-primary)', fontSize: '13px', cursor: 'pointer' }}>Should I buy Bitcoin?</button>
-            <button onClick={() => { setTicker("What are options?"); handleScan("What are options?"); }} style={{ whiteSpace: 'nowrap', padding: '6px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-light)', borderRadius: '16px', color: 'var(--text-primary)', fontSize: '13px', cursor: 'pointer' }}>What are options?</button>
+            <button onClick={() => { setTicker("Teach me how to read a stock chart."); handleScan("Teach me how to read a stock chart."); }} style={{ whiteSpace: 'nowrap', padding: '6px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-light)', borderRadius: '16px', color: 'var(--text-primary)', fontSize: '13px', cursor: 'pointer' }}>Teach me how to read a chart</button>
+            <button onClick={() => { setTicker("Explain index funds like I'm 5."); handleScan("Explain index funds like I'm 5."); }} style={{ whiteSpace: 'nowrap', padding: '6px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-light)', borderRadius: '16px', color: 'var(--text-primary)', fontSize: '13px', cursor: 'pointer' }}>Explain index funds like I'm 5</button>
+            <button onClick={() => { setTicker("What is a good way to manage risk?"); handleScan("What is a good way to manage risk?"); }} style={{ whiteSpace: 'nowrap', padding: '6px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-light)', borderRadius: '16px', color: 'var(--text-primary)', fontSize: '13px', cursor: 'pointer' }}>How to manage risk?</button>
           </div>
         )}
 
