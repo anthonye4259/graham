@@ -266,21 +266,20 @@ async function executeMacroGeneration(apiKey) {
     }
   }
 
-  const prompt = `You are a professional quantitative macro analyst running a Bloomberg Terminal.
-Here is the current live data for key macro indicators:
-${JSON.stringify(quotesData, null, 2)}
-
-You need to output a JSON object containing three parts:
-1. "quotes": Format the data provided into an array of objects: { "id": "SPX", "price": "4,100.50", "change": "+1.2", "changePercent": "+0.5%", "status": "up" | "down" }
-2. "newsSummary": Search the web for today's breaking macro-economic news (e.g. CPI prints, Fed statements, inflation data, bond yields). Write a dense, institutional-grade summary (2-3 sentences max) like a terminal parsing engine. Include "headline" and "body".
-3. "tradeIdeas": Generate 2-3 actionable trade ideas based on the news and quotes. Each idea must have: { "type": "LONG BUY" | "SHORT SELL", "target": "e.g. EUR/USD", "rationale": "Short explanation", "conviction": "High" | "Medium" | "Low" }
-
-Output ONLY valid JSON matching this schema:
+  const prompt = `You are a friendly, jargon-free financial writer.
+Search the web for the biggest corporate earnings calls or SEC 8-K filings from the last 24 hours.
+Strip out all the corporate fluff and write a 2-paragraph morning newsletter summarizing what actually happened in plain, 5th-grade English.
+Make it sound engaging and easy to read.
+Use this format:
 {
-  "quotes": [{ "id": "String", "price": "String", "change": "String", "changePercent": "String", "status": "String" }],
-  "newsSummary": { "headline": "String", "body": "String" },
-  "tradeIdeas": [{ "type": "String", "target": "String", "rationale": "String", "conviction": "String" }]
-}`;
+  "title": "A catchy, short title (e.g. 'Apple's Big Moves' or 'The Markets Today')",
+  "date": "Today's Date",
+  "sections": [
+    { "heading": "Short Heading 1", "content": "Paragraph 1 text" },
+    { "heading": "Short Heading 2", "content": "Paragraph 2 text" }
+  ]
+}
+Output ONLY valid JSON matching this schema.`;
 
   let payload;
   try {
@@ -296,26 +295,19 @@ Output ONLY valid JSON matching this schema:
   } catch (err) {
     console.error("Gemini API failed (possibly invalid key). Using fallback.", err.message);
     
-    // Fallback data using the REAL quotes we just fetched!
+    // Fallback data
     payload = {
-      quotes: symbols.map(s => {
-        const qData = quotesData[s.id];
-        return {
-          id: s.id,
-          price: typeof qData.price === 'number' ? qData.price.toLocaleString(undefined, {minimumFractionDigits: 2}) : "0.00",
-          change: qData.change > 0 ? `+${qData.change.toFixed(2)}` : qData.change.toFixed(2),
-          changePercent: qData.changePercent > 0 ? `+${(qData.changePercent).toFixed(2)}%` : `${(qData.changePercent).toFixed(2)}%`,
-          status: qData.change >= 0 ? "up" : "down"
-        };
-      }),
-      newsSummary: {
-        headline: "Hotter-than-expected CPI print fuels rate concerns",
-        body: "Print confirms inflation stickiness in services. Front-end repricing already under way. Curve flattening implies recession optionality fading. USD strength against low-yielders."
-      },
-      tradeIdeas: [
-        { type: "LONG BUY", target: "USD", rationale: "Data still strong - ECB multi-month pause", conviction: "High" },
-        { type: "SHORT SELL", target: "2Y UST", rationale: "Front-end repricing not complete - Fed cut delayed", conviction: "High" },
-        { type: "LONG BUY", target: "GOLD", rationale: "Geopolitical hedge - CB demand persistent", conviction: "Medium" }
+      title: "Markets Hold Steady Amid Earnings",
+      date: new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' }),
+      sections: [
+        {
+          heading: "Big Tech Reports",
+          content: "Several major tech companies released their earnings reports today. While revenues were generally strong, some investors were looking for more aggressive growth in the AI sector."
+        },
+        {
+          heading: "What it Means for You",
+          content: "If you own broad market index funds, you don't need to do much. The market is absorbing this new information, and long-term investors should stick to their plan."
+        }
       ]
     };
   }

@@ -5,7 +5,7 @@ import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { hapticSuccess, hapticError, hapticSelection } from '../lib/haptics';
 import FundModal from '../components/ui/FundModal';
-import MacroTerminalCard from '../components/Feed/MacroTerminalCard';
+import DailyBrieferCard from '../components/Feed/DailyBrieferCard';
 import JargonText from '../components/Feed/JargonText';
 import FeedTutorialOverlay from '../components/ui/FeedTutorialOverlay';
 import StockOfTheDayCard from '../components/Feed/StockOfTheDayCard';
@@ -53,21 +53,17 @@ export default function FeedPage() {
 
     // 0. Macro Terminal
     const terminalData = macroData || {
-      quotes: [
-        { id: "SPX", price: "4,100.50", change: "+12.4", changePercent: "+0.3%", status: "up" },
-        { id: "VIX", price: "14.20", change: "-0.5", changePercent: "-3.4%", status: "down" },
-        { id: "10Y", price: "4.25%", change: "+0.02", changePercent: "+0.5%", status: "up" },
-        { id: "EUR/USD", price: "1.0850", change: "-0.002", changePercent: "-0.2%", status: "down" },
-        { id: "GOLD", price: "2,050.00", change: "+5.0", changePercent: "+0.2%", status: "up" },
-        { id: "BTC", price: "64,200", change: "+1200", changePercent: "+1.9%", status: "up" }
-      ],
-      newsSummary: {
-        headline: "Hotter-than-expected CPI print fuels rate concerns",
-        body: "Print confirms inflation stickiness in services. Front-end repricing already under way. Curve flattening implies recession optionality fading."
-      },
-      tradeIdeas: [
-        { type: "LONG BUY", target: "USD", rationale: "Data still strong - ECB multi-month pause", conviction: "High" },
-        { type: "SHORT SELL", target: "2Y UST", rationale: "Front-end repricing not complete", conviction: "High" }
+      title: "Markets Hold Steady Amid Earnings",
+      date: new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' }),
+      sections: [
+        {
+          heading: "Big Tech Reports",
+          content: "Several major tech companies released their earnings reports today. While revenues were generally strong, some investors were looking for more aggressive growth in the AI sector."
+        },
+        {
+          heading: "What it Means for You",
+          content: "If you own broad market index funds, you don't need to do much. The market is absorbing this new information, and long-term investors should stick to their plan."
+        }
       ]
     };
 
@@ -86,11 +82,11 @@ export default function FeedPage() {
     });
 
     items.push({
-      id: 'macro-terminal',
-      type: 'macro-terminal',
-      topic: 'Live Markets',
+      id: 'daily-briefer',
+      type: 'daily-briefer',
+      topic: 'The Daily Briefer',
       title: '',
-      color: '#0d1117',
+      color: 'var(--bg-card)',
       data: terminalData
     });
 
@@ -292,8 +288,8 @@ export default function FeedPage() {
                 {item.title}
               </h2>
 
-              {item.type === 'macro-terminal' && (
-                <MacroTerminalCard data={item.data} />
+              {item.type === 'daily-briefer' && (
+                <DailyBrieferCard data={item.data} />
               )}
 
               {item.type === 'flashcard' || item.type === 'visual' ? (
