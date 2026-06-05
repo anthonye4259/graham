@@ -75,6 +75,18 @@ body { min-height: 100dvh; }
   position: relative;
 }
 
+/* === PREMIUM INTERACTION PHYSICS === */
+/* Makes buttons feel like physical objects when tapped */
+button, .btn, .onboard-option, .scan-option, .hover-bg, .brokerage-option, .nav-item {
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  will-change: transform;
+}
+
+button:active:not(:disabled), .btn:active:not(:disabled), .onboard-option:active, .scan-option:active, .hover-bg:active, .brokerage-option:active, .nav-item:active {
+  transform: scale(0.96) !important;
+  transition: transform 0.05s ease-out !important; /* Instant press down */
+}
+
 /* React app shell layout */
 .app-shell {
   width: 100%;
