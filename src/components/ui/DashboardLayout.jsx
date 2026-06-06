@@ -9,7 +9,7 @@ export default function DashboardLayout() {
   const location = useLocation();
 
   return (
-    <div style={{ height: '100dvh', width: '100vw', backgroundColor: 'var(--bg-main)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100dvh', width: '100%', backgroundColor: 'var(--bg-main)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       
       {/* Global Logo Header */}
       <div style={{
@@ -29,7 +29,7 @@ export default function DashboardLayout() {
 
       {/* Main Content Area */}
       <main style={{ flex: 1, position: 'relative', overflowY: 'auto' }}>
-        <div key={location.pathname} className="fade-in" style={{ height: '100%' }}>
+        <div key={location.pathname} className="fade-in" style={{ minHeight: '100%' }}>
           <Outlet />
         </div>
       </main>
