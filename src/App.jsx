@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-
 import { useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { UserProvider, useUser } from './context/UserContext';
+import ErrorBoundary from './components/ErrorBoundary';
 import LandingPage from './pages/LandingPage';
 import AuthPage from './pages/AuthPage';
 import OnboardingPage from './pages/OnboardingPage';
@@ -52,7 +53,7 @@ function AppShell() {
   }
 
   return (
-    <>
+    <ErrorBoundary>
       <Routes>
         <Route element={<DashboardLayout />}>
           <Route index element={<FeedPage />} />
@@ -67,7 +68,7 @@ function AppShell() {
       {!isPremium() && (
         <PaywallModal isOpen={true} onClose={() => {}} source="hardwall" />
       )}
-    </>
+    </ErrorBoundary>
   );
 }
 

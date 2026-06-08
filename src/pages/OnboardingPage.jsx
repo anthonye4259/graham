@@ -22,10 +22,16 @@ export default function OnboardingPage() {
 
   const advance = async () => {
     if (step + 1 >= TOTAL_STEPS) {
-      trackEvent('onboarding_complete');
+      try {
+        trackEvent('onboarding_complete');
+      } catch (e) { /* analytics failure is non-critical */ }
       setState({ onboarded: true, hasSeenOnboardingPaywall: true });
-      if (state.pushEnabled === false) {
-        await requestPushPermissions();
+      try {
+        if (state.pushEnabled === false) {
+          await requestPushPermissions();
+        }
+      } catch (e) {
+        console.warn('Push permissions failed during onboarding:', e);
       }
     } else {
       setStep(s => s + 1);

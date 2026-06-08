@@ -155,16 +155,20 @@ export function UserProvider({ children }) {
   };
 
   const requestPushPermissions = async () => {
-    if (Capacitor.isNativePlatform()) {
-      let permStatus = await PushNotifications.checkPermissions();
+    try {
+      if (Capacitor.isNativePlatform()) {
+        let permStatus = await PushNotifications.checkPermissions();
 
-      if (permStatus.receive === 'prompt') {
-        permStatus = await PushNotifications.requestPermissions();
-      }
+        if (permStatus.receive === 'prompt') {
+          permStatus = await PushNotifications.requestPermissions();
+        }
 
-      if (permStatus.receive === 'granted') {
-        await PushNotifications.register();
+        if (permStatus.receive === 'granted') {
+          await PushNotifications.register();
+        }
       }
+    } catch (e) {
+      console.warn('Push notification setup failed:', e);
     }
   };
 
