@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { GoogleGenAI } from '@google/genai';
 import { useUser } from '../../context/UserContext';
+import AppleIntelligence from '../../plugins/AppleIntelligence';
 
 const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
 
@@ -37,13 +38,32 @@ Structure the report using markdown with the following exactly 4 headers:
 
 Write dense, highly informative paragraphs for each section. Format it beautifully with bullet points where necessary. Make it feel incredibly premium and insightful.`;
 
-        const response = await ai.models.generateContent({
-          model: 'gemini-2.5-flash',
-          contents: promptText,
-        });
+        let resultText = "";
+        
+        try {
+          // Attempt to use free on-device/private cloud compute first
+          const { available } = await AppleIntelligence.checkAvailability();
+          if (available) {
+            const response = await AppleIntelligence.generateText({
+              prompt: promptText,
+              model: 'afm-3-cloud-pro' // Use server model for complex reasoning
+            });
+            resultText = response.text;
+          } else {
+            throw new Error("Apple Intelligence unavailable");
+          }
+        } catch (appleErr) {
+          // Fallback to Gemini if unavailable or errored
+          console.log("Falling back to Gemini:", appleErr);
+          const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: promptText,
+          });
+          resultText = response.text();
+        }
 
         if (isMounted) {
-          setReport(response.text());
+          setReport(resultText);
           setLoading(false);
         }
       } catch (err) {
