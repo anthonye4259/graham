@@ -101,12 +101,15 @@ export default function ScanPage() {
 
       const personaPrompt = getPersonaPrompt(state.persona);
 
-      // If it's the first message, do a rich scan.
+        // If it's the first message, do a rich scan.
       if (newMessages.length === 1) {
         const baseText = inlineData 
-          ? `Analyze this image. Identify the primary brand, product, company, or financial chart. Determine the relevant public asset (Stock Ticker or Crypto Symbol). Generate a short "what happened recently", "why it matters", and "actionable advice".`
+          ? `Analyze this image. Identify the primary brand, product, company, or financial chart. Determine the relevant public asset (Stock Ticker or Crypto Symbol). Generates a simulated portfolio decision ("What Graham Would Do").`
           : `Analyze the user's input: "${queryToUse}". The input might be a Stock Ticker, a Crypto Asset, or a general news query/URL.
-             Determine what it is. Provide the primary asset symbol (or a short topic name if it's general news), the current approximate price (if applicable, else "N/A"), and a short "what happened recently", "why it matters", and "actionable advice".`;
+             Determine what it is. Provide the primary asset symbol (or a short topic name if it's general news), the current approximate price (if applicable, else "N/A").
+             Then, state what "you" (Graham) would do right now with this asset if you were managing a portfolio. Your verdict MUST be "BUY", "SELL", or "HOLD".
+             Provide exactly 3 short, jargon-free bullet points defending your verdict.
+             Finally, provide the advanced insights: a short "what happened recently", "why it matters", and "actionable advice".`;
 
         const promptText = `${personaPrompt} \n\n ${baseText}`;
         const contents = inlineData ? [promptText, { inlineData }] : promptText;
@@ -124,11 +127,13 @@ export default function ScanPage() {
                 price: { type: Type.STRING },
                 change: { type: Type.STRING },
                 direction: { type: Type.STRING },
+                graham_verdict: { type: Type.STRING, description: "Must be exactly BUY, SELL, or HOLD" },
+                graham_reasons: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Exactly 3 bullet points" },
                 what: { type: Type.STRING },
                 why: { type: Type.STRING },
                 action: { type: Type.STRING },
               },
-              required: ["name", "ticker", "price", "change", "direction", "what", "why", "action"],
+              required: ["name", "ticker", "price", "change", "direction", "graham_verdict", "graham_reasons", "what", "why", "action"],
             },
           }
         });
@@ -167,7 +172,7 @@ export default function ScanPage() {
       if (newMessages.length === 1) {
         setState({ chatHistory: [...newMessages, { 
           role: 'model', type: 'rich', 
-          data: { name: queryToUse, ticker: queryToUse, price: '—', change: '0.0%', direction: 'neutral', what: 'Unable to fetch recent data right now.', why: 'The AI service might be temporarily unavailable.', action: 'Please try again later or verify your API key.' }
+          data: { name: queryToUse, ticker: queryToUse, price: '—', change: '0.0%', direction: 'neutral', graham_verdict: 'HOLD', graham_reasons: ['Unable to fetch data.', 'AI service unavailable.', 'Please try again later.'], what: 'Unable to fetch recent data right now.', why: 'The AI service might be temporarily unavailable.', action: 'Please try again later or verify your API key.' }
         }] });
       } else {
         setState({ chatHistory: [...newMessages, { role: 'model', type: 'text', content: "I'm having trouble connecting to my data sources right now. Please try again." }] });
@@ -233,10 +238,29 @@ export default function ScanPage() {
                   </div>
                   <PriceChart direction={result.direction} symbol={result.ticker} />
                 </div>
-                <div className="card-section" style={{ opacity: 1, transform: 'none' }}>
-                  <div className="card-section-inner">
-                    <div className="section-label"><ion-icon name="bulb-outline" class="sl-icon teal"></ion-icon> What Actually Happened</div>
-                    <div className="section-text">{result.what}</div>
+                <div className="card-section" style={{ opacity: 1, transform: 'none', background: 'var(--bg-main)', borderRadius: '12px', border: '1px solid var(--border-light)', padding: '16px', marginBottom: '16px' }}>
+                  <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+                    <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--text-secondary)', marginBottom: '4px', fontWeight: 600 }}>What Graham Would Do</div>
+                    <div style={{ 
+                      display: 'inline-block',
+                      fontSize: '28px', 
+                      fontWeight: 800, 
+                      color: result.graham_verdict === 'BUY' ? 'var(--accent-teal)' : result.graham_verdict === 'SELL' ? 'var(--accent-rose)' : 'var(--text-secondary)',
+                      background: result.graham_verdict === 'BUY' ? 'rgba(0, 255, 170, 0.1)' : result.graham_verdict === 'SELL' ? 'rgba(255, 59, 105, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+                      padding: '8px 24px',
+                      borderRadius: '100px',
+                      letterSpacing: '2px'
+                    }}>
+                      {result.graham_verdict}
+                    </div>
+                  </div>
+                  <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--text-primary)', fontSize: '14px', lineHeight: '1.6' }}>
+                    {result.graham_reasons?.map((reason, i) => (
+                      <li key={i} style={{ marginBottom: i < 2 ? '12px' : 0 }}>{reason}</li>
+                    ))}
+                  </ul>
+                  <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', textAlign: 'center', marginTop: '16px', fontStyle: 'italic' }}>
+                    *Graham's simulated portfolio decision. Not financial advice.
                   </div>
                 </div>
                 
@@ -246,11 +270,17 @@ export default function ScanPage() {
                   onClick={() => toggleAdvanced(idx)}
                 >
                   <ion-icon name={showAdvanced[idx] ? "chevron-up-outline" : "chevron-down-outline"}></ion-icon>
-                  {showAdvanced[idx] ? 'Hide Advanced Insights' : 'Show Advanced Insights'}
+                  {showAdvanced[idx] ? 'Hide Advanced Context' : 'Show Advanced Context'}
                 </button>
 
                 {showAdvanced[idx] && (
                   <>
+                    <div className="card-section" style={{ opacity: 1, transform: 'none' }}>
+                      <div className="card-section-inner">
+                        <div className="section-label"><ion-icon name="bulb-outline" class="sl-icon teal"></ion-icon> What Actually Happened</div>
+                        <div className="section-text">{result.what}</div>
+                      </div>
+                    </div>
                     <div className="card-section" style={{ opacity: 1, transform: 'none' }}>
                       <div className="card-section-inner bears">
                         <div className="section-label"><ion-icon name="help-circle-outline" class="sl-icon rose"></ion-icon> Why It Matters</div>
@@ -259,7 +289,7 @@ export default function ScanPage() {
                     </div>
                     <div className="card-section" style={{ opacity: 1, transform: 'none' }}>
                       <div className="card-section-inner action">
-                        <div className="section-label"><ion-icon name="compass-outline" class="sl-icon amber"></ion-icon> What You Should Do</div>
+                        <div className="section-label"><ion-icon name="compass-outline" class="sl-icon amber"></ion-icon> Strategy Notes</div>
                         <div className="section-text">{result.action}</div>
                       </div>
                     </div>
