@@ -105,10 +105,11 @@ export default function ScanPage() {
       if (newMessages.length === 1) {
         const baseText = inlineData 
           ? `Analyze this image. Identify the primary brand, product, company, or financial chart. Determine the relevant public asset (Stock Ticker or Crypto Symbol). Generates a simulated portfolio decision ("What Graham Would Do").`
-          : `Analyze the user's input: "${queryToUse}". The input might be a Stock Ticker, a Crypto Asset, or a general news query/URL.
-             Determine what it is. Provide the primary asset symbol (or a short topic name if it's general news), the current approximate price (if applicable, else "N/A").
-             Then, state what "you" (Graham) would do right now with this asset if you were managing a portfolio. Your verdict MUST be "BUY", "SELL", or "HOLD".
-             Provide exactly 3 short, jargon-free bullet points defending your verdict.
+          : `Analyze the user's input: "${queryToUse}". The input might be a Stock Ticker, a Crypto Asset, or a general news query/URL, and it might contain specific user context (e.g. capital constraints, risk tolerance, time horizon).
+             Determine what the asset is. Provide the primary asset symbol (or a short topic name if it's general news), the current approximate price (if applicable, else "N/A").
+             Then, state what "you" (Graham) would do right now with this asset IN THE SPECIFIC CONTEXT OF THE USER'S SITUATION. If the user mentions having limited capital, low risk tolerance, or a short timeframe, factor that directly into your decision.
+             Your verdict MUST be exactly "BUY", "SELL", or "HOLD".
+             Provide exactly 3 short, jargon-free bullet points defending your verdict, directly addressing the user's specific situation.
              Finally, provide the advanced insights: a short "what happened recently", "why it matters", and "actionable advice".`;
 
         const promptText = `${personaPrompt} \n\n ${baseText}`;
@@ -243,15 +244,15 @@ export default function ScanPage() {
                     <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--text-secondary)', marginBottom: '4px', fontWeight: 600 }}>What Graham Would Do</div>
                     <div style={{ 
                       display: 'inline-block',
-                      fontSize: '28px', 
+                      fontSize: '24px', 
                       fontWeight: 800, 
                       color: result.graham_verdict === 'BUY' ? 'var(--accent-teal)' : result.graham_verdict === 'SELL' ? 'var(--accent-rose)' : 'var(--text-secondary)',
                       background: result.graham_verdict === 'BUY' ? 'rgba(0, 255, 170, 0.1)' : result.graham_verdict === 'SELL' ? 'rgba(255, 59, 105, 0.1)' : 'rgba(255, 255, 255, 0.05)',
-                      padding: '8px 24px',
+                      padding: '12px 24px',
                       borderRadius: '100px',
-                      letterSpacing: '2px'
+                      letterSpacing: '0px'
                     }}>
-                      {result.graham_verdict}
+                      I would {result.graham_verdict} {result.ticker}.
                     </div>
                   </div>
                   <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--text-primary)', fontSize: '14px', lineHeight: '1.6' }}>
