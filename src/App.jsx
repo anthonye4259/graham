@@ -74,19 +74,21 @@ function AppShell() {
 
 export default function App() {
   return (
-    <UserProvider>
-      <Routes>
-        {/* On native mobile, skip landing page and go straight to app */}
-        <Route path="/" element={isNative ? <Navigate to="/app" replace /> : <LandingPage />} />
-        <Route path="/auth" element={<AuthPage />} />
-        <Route path="/about" element={<AboutPage />} />
-        <Route path="/privacy" element={<PrivacyPage />} />
-        <Route path="/terms" element={<TermsPage />} />
-        <Route path="/support" element={<SupportPage />} />
-        <Route path="/app/*" element={<AppShell />} />
-        <Route path="*" element={<Navigate to={isNative ? "/app" : "/"} replace />} />
-      </Routes>
-    </UserProvider>
+    <ErrorBoundary>
+      <UserProvider>
+        <Routes>
+          {/* On native mobile, skip landing page and go straight to app */}
+          <Route path="/" element={isNative ? <Navigate to="/app" replace /> : <LandingPage />} />
+          <Route path="/auth" element={<AuthPage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/support" element={<SupportPage />} />
+          <Route path="/app/*" element={<AppShell />} />
+          <Route path="*" element={<Navigate to={isNative ? "/app" : "/"} replace />} />
+        </Routes>
+      </UserProvider>
+    </ErrorBoundary>
   );
 }
 

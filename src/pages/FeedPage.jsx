@@ -13,16 +13,28 @@ export default function FeedPage() {
   const [macroData, setMacroData] = useState(null);
 
   useEffect(() => {
-    const unsubFund = onSnapshot(doc(db, 'global', 'graham_fund'), (docSnap) => {
-      if (docSnap.exists()) {
-        setGrahamFund(docSnap.data());
+    const unsubFund = onSnapshot(
+      doc(db, 'global', 'graham_fund'), 
+      (docSnap) => {
+        if (docSnap.exists()) {
+          setGrahamFund(docSnap.data());
+        }
+      },
+      (error) => {
+        console.warn('Graham Fund snapshot error:', error.message);
       }
-    });
-    const unsubMacro = onSnapshot(doc(db, 'global', 'macro_daily'), (docSnap) => {
-      if (docSnap.exists()) {
-        setMacroData(docSnap.data());
+    );
+    const unsubMacro = onSnapshot(
+      doc(db, 'global', 'macro_daily'), 
+      (docSnap) => {
+        if (docSnap.exists()) {
+          setMacroData(docSnap.data());
+        }
+      },
+      (error) => {
+        console.warn('Macro daily snapshot error:', error.message);
       }
-    });
+    );
     return () => {
       unsubFund();
       unsubMacro();
