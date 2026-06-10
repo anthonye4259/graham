@@ -201,12 +201,12 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
             </li>
           </ul>
 
-          <div className="paywall-footer">
-            <button className="paywall-upgrade-btn" onClick={handleSubscribe} disabled={loadingStripe}>
+          <div style={{ marginTop: '24px' }}>
+            <button className="paywall-cta" onClick={handleSubscribe} disabled={loadingStripe}>
               {loadingStripe ? 'Loading securely...' : (billing === 'annual' ? 'Start 7-Day Free Trial' : 'Subscribe Now')}
             </button>
-            <p className="secure-checkout">
-              <ion-icon name="lock-closed-outline"></ion-icon> Secure Stripe Checkout
+            <p style={{ textAlign: 'center', fontSize: '12px', color: 'var(--text-muted)', marginTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+              <ion-icon name="lock-closed-outline"></ion-icon> Secure checkout via Apple
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center', marginTop: '16px' }}>
               <button onClick={handleRestore} style={{ background: 'none', border: 'none', color: 'var(--text-tertiary)', fontSize: '14px', cursor: 'pointer', textDecoration: 'underline', padding: '12px 16px', minHeight: '44px' }}>
