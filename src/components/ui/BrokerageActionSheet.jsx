@@ -5,7 +5,7 @@ import { useUser } from '../../context/UserContext';
 export default function BrokerageActionSheet({ isOpen, onClose, assetId, assetName, assetPrice }) {
   const [isVisible, setIsVisible] = useState(false);
   const [showToast, setShowToast] = useState(false);
-  const { state, setState } = useUser();
+  const { state, setState, simulateBuy } = useUser();
 
   useEffect(() => {
     if (isOpen) {
@@ -23,7 +23,7 @@ export default function BrokerageActionSheet({ isOpen, onClose, assetId, assetNa
   const handlePaperTrade = () => {
     hapticSuccess();
     const priceToUse = assetPrice || '100.00'; // fallback
-    state.simulateBuy(assetId, assetName || assetId, priceToUse.toString());
+    simulateBuy(assetId, assetName || assetId, priceToUse.toString());
     
     setShowToast(true);
     setTimeout(() => {

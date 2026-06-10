@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -8,6 +9,7 @@ import StockOfTheDayCard from '../components/Feed/StockOfTheDayCard';
 
 export default function FeedPage() {
   const { state } = useUser();
+  const navigate = useNavigate();
   const [grahamFund, setGrahamFund] = useState(null);
   const [showFundModal, setShowFundModal] = useState(false);
   const [macroData, setMacroData] = useState(null);
@@ -131,31 +133,31 @@ export default function FeedPage() {
         })}
       </div>
 
-      {/* Sticky Chat Input */}
-      <div style={{
-        position: 'fixed',
-        bottom: '20px',
-        left: '20px',
-        right: '20px',
-        zIndex: 50,
-        background: 'rgba(255, 255, 255, 0.9)',
-        backdropFilter: 'blur(24px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-        border: '1px solid rgba(0,0,0,0.1)',
-        borderRadius: '32px',
-        display: 'flex',
-        alignItems: 'center',
-        padding: '8px 16px',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.08)'
-      }}>
-        <ion-icon name="mic" style={{ color: 'var(--accent-gold)', fontSize: '24px', marginRight: '12px' }}></ion-icon>
-        <input 
-          type="text" 
-          placeholder="Ask Graham anything..." 
-          style={{ flex: 1, background: 'transparent', border: 'none', color: '#1A1815', fontSize: '16px', outline: 'none', fontWeight: '500' }}
-          disabled
-        />
-        <ion-icon name="link-outline" style={{ color: '#A09890', fontSize: '20px', marginRight: '12px' }}></ion-icon>
+      {/* Sticky Chat Input — taps navigate to Advisor */}
+      <div 
+        onClick={() => navigate('/app/scan')}
+        style={{
+          position: 'fixed',
+          bottom: 'calc(90px + env(safe-area-inset-bottom))',
+          left: '20px',
+          right: '20px',
+          zIndex: 50,
+          maxWidth: '600px',
+          margin: '0 auto',
+          background: 'var(--bg-glass, rgba(250,247,242,0.9))',
+          backdropFilter: 'blur(24px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+          border: '1px solid var(--border-subtle, rgba(0,0,0,0.1))',
+          borderRadius: '32px',
+          display: 'flex',
+          alignItems: 'center',
+          padding: '8px 16px',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
+          cursor: 'pointer'
+        }}
+      >
+        <ion-icon name="chatbubbles" style={{ color: 'var(--accent-gold)', fontSize: '24px', marginRight: '12px' }}></ion-icon>
+        <span style={{ flex: 1, color: 'var(--text-secondary)', fontSize: '16px', fontWeight: '500' }}>Ask Graham anything...</span>
         <button style={{ background: 'var(--accent-teal)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
           <ion-icon name="send" style={{ color: '#000', fontSize: '14px', marginLeft: '2px' }}></ion-icon>
         </button>

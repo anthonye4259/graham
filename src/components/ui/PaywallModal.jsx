@@ -56,7 +56,10 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
           alert("Subscriptions are currently unavailable (StoreKit returned no products). If you are testing, please ensure In-App Purchases are approved in App Store Connect.");
         }
       } catch (e) {
-        if (!e.userCancelled) console.error("RC Purchase Error", e);
+        if (!e.userCancelled) {
+          console.error("RC Purchase Error", e);
+          alert('Purchase could not be completed. Please try again.');
+        }
       } finally {
         setLoadingStripe(false);
       }
@@ -100,8 +103,8 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
     if (Capacitor.isNativePlatform()) {
       try {
         setLoadingStripe(true);
-        const restore = await Purchases.restorePurchases();
-        if (typeof restore.entitlements.active["premium"] !== "undefined") {
+        const restoreResult = await Purchases.restorePurchases();
+        if (typeof restoreResult.customerInfo.entitlements.active["premium"] !== "undefined") {
           window.location.reload();
         } else {
           alert("No active premium subscription found.");

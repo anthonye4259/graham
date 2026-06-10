@@ -44,7 +44,7 @@ export default function DashboardLayout() {
           <ion-icon name="bar-chart-outline"></ion-icon>
           <span>Markets</span>
         </button>
-        <button onClick={() => { hapticSelection(); navigate('/app/scan'); }} className="nav-item">
+        <button onClick={() => { hapticSelection(); navigate('/app/scan'); }} className={`nav-item ${location.pathname === '/app/scan' ? 'active' : ''}`}>
           <ion-icon name="chatbubbles" class="nav-scan-icon"></ion-icon>
           <span>Advisor</span>
         </button>
@@ -68,9 +68,22 @@ export default function DashboardLayout() {
           z-index: 1000;
           border-top: 0.5px solid rgba(26,24,21,0.08);
           box-shadow: 0 -4px 24px rgba(26,24,21,0.02);
-          justify-content: space-around;
+          justify-content: center;
           padding-bottom: env(safe-area-inset-bottom);
           align-items: center;
+        }
+        .bottom-nav > button {
+          max-width: 120px;
+          flex: 1;
+        }
+        @media (min-width: 768px) {
+          .bottom-nav {
+            justify-content: center;
+            gap: 16px;
+          }
+          .bottom-nav > button {
+            max-width: 100px;
+          }
         }
         .nav-item {
           background: none;

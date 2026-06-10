@@ -16,16 +16,18 @@ export default class ErrorBoundary extends React.Component {
     
     // Log crash to Firestore for remote debugging
     try {
-      const { db } = require('../lib/firebase');
-      const { doc, setDoc } = require('firebase/firestore');
-      const errorId = `crash_${Date.now()}`;
-      setDoc(doc(db, 'crash_logs', errorId), {
-        message: error?.message || 'Unknown error',
-        stack: error?.stack?.substring(0, 1000) || '',
-        componentStack: errorInfo?.componentStack?.substring(0, 500) || '',
-        timestamp: new Date().toISOString(),
-        userAgent: navigator.userAgent
-      }).catch(() => {});
+      import('../lib/firebase').then(({ db }) => {
+        import('firebase/firestore').then(({ doc, setDoc }) => {
+          const errorId = `crash_${Date.now()}`;
+          setDoc(doc(db, 'crash_logs', errorId), {
+            message: error?.message || 'Unknown error',
+            stack: error?.stack?.substring(0, 1000) || '',
+            componentStack: errorInfo?.componentStack?.substring(0, 500) || '',
+            timestamp: new Date().toISOString(),
+            userAgent: navigator.userAgent
+          }).catch(() => {});
+        });
+      });
     } catch (e) { /* don't let logging crash the error boundary */ }
   }
 
