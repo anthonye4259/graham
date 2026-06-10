@@ -49,7 +49,7 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
 
         if (pkg) {
           const result = await Purchases.purchasePackage({ aPackage: pkg });
-          if (typeof result.customerInfo.entitlements.active["premium"] !== "undefined") {
+          if (typeof result.customerInfo.entitlements.active["graham ai Pro"] !== "undefined") {
             window.location.reload();
           }
         } else {
@@ -104,7 +104,7 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
       try {
         setLoadingStripe(true);
         const restoreResult = await Purchases.restorePurchases();
-        if (typeof restoreResult.customerInfo.entitlements.active["premium"] !== "undefined") {
+        if (typeof restoreResult.customerInfo.entitlements.active["graham ai Pro"] !== "undefined") {
           window.location.reload();
         } else {
           alert("No active premium subscription found.");

@@ -81,7 +81,7 @@ export function UserProvider({ children }) {
                   (async () => {
                     await Purchases.configure({ apiKey: import.meta.env.VITE_REVENUECAT_PUBLIC_KEY, appUserID: currentUser.uid });
                     const customerInfo = await Purchases.getCustomerInfo();
-                    if (typeof customerInfo.entitlements.active["premium"] !== "undefined") {
+                    if (typeof customerInfo.entitlements.active["graham ai Pro"] !== "undefined") {
                       isNativeSubscribed = true;
                     }
                   })(),
