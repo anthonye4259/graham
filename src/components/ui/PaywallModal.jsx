@@ -49,7 +49,14 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
 
         if (pkg) {
           const result = await Purchases.purchasePackage({ aPackage: pkg });
-          if (typeof result.customerInfo.entitlements.active["graham ai Pro"] !== "undefined") {
+          const info = result.customerInfo || result;
+          const activeEntitlements = info.entitlements?.active || {};
+          if (activeEntitlements["graham ai Pro"] || activeEntitlements["premium"] || Object.keys(activeEntitlements).length > 0) {
+            startTrial(); // persist subscribed=true to Firestore immediately
+            window.location.reload();
+          } else {
+            // Purchase went through but entitlement not found yet — still unlock
+            startTrial();
             window.location.reload();
           }
         } else {
@@ -104,7 +111,10 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
       try {
         setLoadingStripe(true);
         const restoreResult = await Purchases.restorePurchases();
-        if (typeof restoreResult.customerInfo.entitlements.active["graham ai Pro"] !== "undefined") {
+        const info = restoreResult.customerInfo || restoreResult;
+        const activeEntitlements = info.entitlements?.active || {};
+        if (activeEntitlements["graham ai Pro"] || activeEntitlements["premium"] || Object.keys(activeEntitlements).length > 0) {
+          startTrial(); // persist subscribed=true to Firestore
           window.location.reload();
         } else {
           alert("No active premium subscription found.");
