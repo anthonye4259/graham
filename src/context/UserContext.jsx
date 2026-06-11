@@ -33,7 +33,7 @@ const DEFAULT_STATE = {
   scanCount: 0,
   subscribed: false,
   trialStartDate: null,
-  trialDays: 7,
+  trialDays: 3,
   hasSeenOnboardingPaywall: false,
   hasSeenPostLessonPaywall: false,
   persona: 'Graham',

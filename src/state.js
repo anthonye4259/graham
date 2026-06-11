@@ -37,7 +37,7 @@ const DEFAULT_STATE = {
 
   // Trial & Paywall
   trialStartDate: null,     // ISO date string when trial began
-  trialDays: 7,
+  trialDays: 3,
   hasSeenPostLessonPaywall: false,
   hasSeenOnboardingPaywall: false,
 };

@@ -141,7 +141,7 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
   }
 
   const price = dynamicPrice || (billing === 'annual' ? '$39.99' : (billing === 'weekly' ? '$2.99' : '$7.99'));
-  const billedText = billing === 'annual' ? 'Billed annually (Includes 7-Day Free Trial)' : (billing === 'weekly' ? 'Billed weekly' : 'Billed monthly');
+  const billedText = billing === 'annual' ? 'Billed annually (Includes 3-Day Free Trial)' : (billing === 'weekly' ? 'Billed weekly' : 'Billed monthly');
   const periodText = billing === 'annual' ? 'yr' : (billing === 'weekly' ? 'wk' : 'mo');
 
   return (
@@ -156,7 +156,7 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
           <h2 className="paywall-title">Invest in Yourself</h2>
           <p className="paywall-subtitle">
             {source === 'hardwall'
-              ? 'Start your 3-Day Free Trial to unlock Graham.'
+              ? 'Start your free trial to unlock Graham.'
               : (source === 'scan' ? 'Unlock unlimited stock scans and full access.' : 'Master the markets with Graham Premium.')}
           </p>
 
@@ -216,7 +216,7 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
 
           <div style={{ marginTop: '24px' }}>
             <button className="paywall-cta" onClick={handleSubscribe} disabled={loadingStripe}>
-              {loadingStripe ? 'Loading securely...' : (billing === 'annual' ? 'Start 7-Day Free Trial' : 'Subscribe Now')}
+              {loadingStripe ? 'Loading securely...' : (billing === 'annual' ? 'Start 3-Day Free Trial' : 'Subscribe Now')}
             </button>
             <p style={{ textAlign: 'center', fontSize: '12px', color: 'var(--text-muted)', marginTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
               <ion-icon name="lock-closed-outline"></ion-icon> Secure checkout via Apple
