@@ -105,7 +105,7 @@ export function UserProvider({ children }) {
           }
 
           // App Store Review account bypass
-          const REVIEW_EMAIL = 'appreview@graham.ai';
+          const REVIEW_EMAIL = 'review@grahamai.com';
           const isReviewAccount = currentUser.email === REVIEW_EMAIL;
 
           // Load Firestore Data
