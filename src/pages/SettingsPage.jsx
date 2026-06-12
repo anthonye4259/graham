@@ -1,10 +1,13 @@
+import { useState } from 'react';
 import { useUser } from '../context/UserContext';
 import { useNavigate } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 
 export default function SettingsPage() {
-  const { state, setState, logout, isPremium, requestPushPermissions } = useUser();
+  const { state, setState, logout, deleteAccount, isPremium, requestPushPermissions } = useUser();
   const navigate = useNavigate();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
 
 
@@ -165,15 +168,61 @@ export default function SettingsPage() {
         <section style={{ background: 'var(--bg-card)', border: '1px solid var(--accent-rose)', borderRadius: '16px', padding: '24px' }}>
           <h2 style={{ fontSize: '18px', marginBottom: '8px', color: 'var(--accent-rose)' }}>Danger Zone</h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '16px' }}>Logging out will clear your session. You can sign back in at any time.</p>
-          <button 
-            onClick={logout}
-            style={{ background: 'transparent', color: 'var(--accent-rose)', border: '1px solid var(--accent-rose)', padding: '12px 24px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
-          >
-            Log Out
-          </button>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <button 
+              onClick={logout}
+              style={{ background: 'transparent', color: 'var(--accent-rose)', border: '1px solid var(--accent-rose)', padding: '12px 24px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
+            >
+              Log Out
+            </button>
+            <button 
+              onClick={() => setShowDeleteConfirm(true)}
+              style={{ background: 'var(--accent-rose)', color: '#fff', border: '1px solid var(--accent-rose)', padding: '12px 24px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
+            >
+              Delete Account
+            </button>
+          </div>
         </section>
 
       </div>
+
+      {/* Delete Account Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '24px' }}>
+          <div style={{ background: 'var(--bg-card)', borderRadius: '16px', padding: '32px', maxWidth: '400px', width: '100%', textAlign: 'center' }}>
+            <ion-icon name="warning-outline" style={{ fontSize: '48px', color: 'var(--accent-rose)', marginBottom: '16px' }}></ion-icon>
+            <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text-primary)', marginBottom: '12px' }}>Delete Your Account?</h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '24px', lineHeight: '1.5' }}>
+              This will permanently delete your account, all your progress, scan history, and personal data. This action cannot be undone.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                style={{ background: 'var(--bg-main)', color: 'var(--text-primary)', border: '1px solid var(--border-light)', padding: '12px 24px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', flex: 1 }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  setDeleting(true);
+                  try {
+                    await deleteAccount();
+                  } catch (err) {
+                    alert(err.message || 'Failed to delete account. Please try again.');
+                  } finally {
+                    setDeleting(false);
+                    setShowDeleteConfirm(false);
+                  }
+                }}
+                disabled={deleting}
+                style={{ background: 'var(--accent-rose)', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', flex: 1, opacity: deleting ? 0.6 : 1 }}
+              >
+                {deleting ? 'Deleting...' : 'Delete Forever'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

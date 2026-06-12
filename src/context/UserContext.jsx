@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { auth, db } from '../lib/firebase';
 import { signInAnonymously, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { Capacitor } from '@capacitor/core';
 import { Purchases } from '@revenuecat/purchases-capacitor';
 import { PushNotifications } from '@capacitor/push-notifications';
@@ -156,6 +156,25 @@ export function UserProvider({ children }) {
 
   const logout = async () => {
     await signOut(auth);
+  };
+
+  const deleteAccount = async () => {
+    try {
+      if (user) {
+        // Delete Firestore user document
+        await deleteDoc(doc(db, 'users', user.uid));
+        // Delete Firebase Auth account
+        await user.delete();
+      }
+    } catch (err) {
+      console.error("Account deletion error:", err);
+      // If re-authentication is needed, sign them out so they can sign back in and try again
+      if (err.code === 'auth/requires-recent-login') {
+        await signOut(auth);
+        throw new Error('Please sign in again and retry account deletion.');
+      }
+      throw err;
+    }
   };
 
   const requestPushPermissions = async () => {
@@ -343,7 +362,7 @@ export function UserProvider({ children }) {
     state, setState, addXP, completeLesson, markDailyGoal,
     isTrialActive, isPremium, startTrial, getScansRemaining,
     incrementScan, loseHeart, getGreeting, getLevelTitle, getXPProgress,
-    user, loadingAuth, simulateBuy, login, signup, logout, requestPushPermissions
+    user, loadingAuth, simulateBuy, login, signup, logout, deleteAccount, requestPushPermissions
   };
 
   if (loadingAuth) {
