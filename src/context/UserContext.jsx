@@ -80,8 +80,16 @@ export function UserProvider({ children }) {
                 await Promise.race([
                   (async () => {
                     await Purchases.configure({ apiKey: import.meta.env.VITE_REVENUECAT_PUBLIC_KEY, appUserID: currentUser.uid });
+                    
+                    // Listen for dynamic updates (crucial for Sandbox/delayed purchases)
+                    Purchases.addCustomerInfoUpdateListener((info) => {
+                      const active = info.entitlements?.active || {};
+                      if (active["graham ai Pro"] || active["premium"] || Object.keys(active).length > 0) {
+                        setStateRaw(s => ({ ...s, subscribed: true }));
+                      }
+                    });
+
                     const result = await Purchases.getCustomerInfo();
-                    // RC Capacitor plugin wraps response: { customerInfo: { entitlements: { active: {...} } } }
                     const info = result.customerInfo || result;
                     const activeEntitlements = info.entitlements?.active || {};
                     if (activeEntitlements["graham ai Pro"] || activeEntitlements["premium"] || Object.keys(activeEntitlements).length > 0) {
