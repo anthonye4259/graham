@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useUser } from '../../context/UserContext';
 import { analytics, trackEvent } from '../../lib/firebase';
@@ -11,22 +11,57 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
   const [billing, setBilling] = useState('annual'); // 'annual' | 'monthly'
   const [loadingStripe, setLoadingStripe] = useState(false);
   const [rcPackages, setRcPackages] = useState([]);
+  const [loadingOfferings, setLoadingOfferings] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
+
+  const fetchPackages = useCallback(async (retries = 5, delay = 2000) => {
+    setLoadingOfferings(true);
+    setFetchError(false);
+    
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        // Ensure RevenueCat is configured before fetching
+        if (attempt > 1) {
+          try {
+            const apiKey = import.meta.env.VITE_REVENUECAT_PUBLIC_KEY;
+            if (apiKey && user) {
+              await Purchases.configure({ apiKey, appUserID: user.uid });
+            }
+          } catch (configErr) {
+            // Already configured, that's fine
+          }
+        }
+        
+        const offerings = await Purchases.getOfferings();
+        if (offerings.current && offerings.current.availablePackages.length !== 0) {
+          setRcPackages(offerings.current.availablePackages);
+          setLoadingOfferings(false);
+          setFetchError(false);
+          return; // Success!
+        }
+      } catch (e) {
+        console.warn(`RC fetch attempt ${attempt}/${retries} failed:`, e.message);
+      }
+      
+      // Wait before retrying (skip wait on last attempt)
+      if (attempt < retries) {
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+    
+    // All retries exhausted
+    setLoadingOfferings(false);
+    setFetchError(true);
+    console.error("All RevenueCat fetch attempts exhausted");
+  }, [user]);
 
   useEffect(() => {
-    if (Capacitor.isNativePlatform()) {
-      const fetchPackages = async () => {
-        try {
-          const offerings = await Purchases.getOfferings();
-          if (offerings.current && offerings.current.availablePackages.length !== 0) {
-            setRcPackages(offerings.current.availablePackages);
-          }
-        } catch (e) {
-          console.error("RC fetch error", e);
-        }
-      };
+    if (Capacitor.isNativePlatform() && isOpen) {
       fetchPackages();
+    } else {
+      setLoadingOfferings(false);
     }
-  }, []);
+  }, [isOpen, fetchPackages]);
 
   useEffect(() => {
     if (isOpen) {
@@ -42,6 +77,13 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
     // RevenueCat Native Flow
     if (Capacitor.isNativePlatform()) {
       try {
+        // If packages haven't loaded yet, try one more time
+        if (rcPackages.length === 0) {
+          await fetchPackages(3, 1500);
+          setLoadingStripe(false);
+          return; // Let the user try again after packages load
+        }
+
         let pkg = rcPackages[0]; 
         if (billing === 'annual') pkg = rcPackages.find(p => p.packageType === "ANNUAL") || rcPackages[0];
         if (billing === 'monthly') pkg = rcPackages.find(p => p.packageType === "MONTHLY") || rcPackages[0];
@@ -60,7 +102,7 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
             window.location.reload();
           }
         } else {
-          alert("Subscriptions are currently unavailable (StoreKit returned no products). If you are testing, please ensure In-App Purchases are approved in App Store Connect.");
+          alert("Subscriptions are currently unavailable. Please check your internet connection and try again.");
         }
       } catch (e) {
         if (!e.userCancelled) {
@@ -215,9 +257,19 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
           </ul>
 
           <div style={{ marginTop: '24px' }}>
-            <button className="paywall-cta" onClick={handleSubscribe} disabled={loadingStripe}>
-              {loadingStripe ? 'Loading securely...' : (billing === 'annual' ? 'Start 3-Day Free Trial' : 'Subscribe Now')}
-            </button>
+            {Capacitor.isNativePlatform() && loadingOfferings ? (
+              <button className="paywall-cta" disabled style={{ opacity: 0.7 }}>
+                Loading subscription options...
+              </button>
+            ) : Capacitor.isNativePlatform() && fetchError && rcPackages.length === 0 ? (
+              <button className="paywall-cta" onClick={() => fetchPackages(3, 1500)}>
+                Retry Loading Subscriptions
+              </button>
+            ) : (
+              <button className="paywall-cta" onClick={handleSubscribe} disabled={loadingStripe}>
+                {loadingStripe ? 'Loading securely...' : (billing === 'annual' ? 'Start 3-Day Free Trial' : 'Subscribe Now')}
+              </button>
+            )}
             <p style={{ textAlign: 'center', fontSize: '12px', color: 'var(--text-muted)', marginTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
               <ion-icon name="lock-closed-outline"></ion-icon> Secure checkout via Apple
             </p>
