@@ -113,12 +113,12 @@ export function UserProvider({ children }) {
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
             const data = docSnap.data();
-            if (isNativeSubscribed || isReviewAccount) data.subscribed = true;
+            if (isNativeSubscribed) data.subscribed = true;
             if (isReviewAccount) { data.onboarded = true; data.name = data.name || 'App Reviewer'; data.investingGoal = data.investingGoal || 'learn_basics'; data.persona = data.persona || 'Graham'; data.hasSeenFeedTutorial = true; }
             if (isMounted) setStateRaw({ ...DEFAULT_STATE, ...data });
           } else {
             const defaultWithSub = { ...DEFAULT_STATE };
-            if (isNativeSubscribed || isReviewAccount) defaultWithSub.subscribed = true;
+            if (isNativeSubscribed) defaultWithSub.subscribed = true;
             if (isReviewAccount) { defaultWithSub.onboarded = true; defaultWithSub.name = 'App Reviewer'; defaultWithSub.investingGoal = 'learn_basics'; defaultWithSub.persona = 'Graham'; defaultWithSub.hasSeenFeedTutorial = true; }
             await setDoc(docRef, defaultWithSub);
             if (isMounted) setStateRaw(defaultWithSub);
