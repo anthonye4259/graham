@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import { hapticSelection, hapticImpactMedium } from '../lib/haptics';
 import PaywallModal from '../components/ui/PaywallModal';
+import AIConsentModal from '../components/ui/AIConsentModal';
 import PriceChart from '../components/ui/PriceChart';
 import MarketPulse from '../components/ui/MarketPulse';
 import DeepDiveModal from '../components/ui/DeepDiveModal';
@@ -28,6 +29,8 @@ export default function ScanPage() {
   const [simulated, setSimulated] = useState({}); // track by message index
   
   const [showPaywall, setShowPaywall] = useState(false);
+  const [showAIConsent, setShowAIConsent] = useState(false);
+  const [pendingScan, setPendingScan] = useState(null);
   const [showDeepDiveModal, setShowDeepDiveModal] = useState(false);
   const [deepDiveTicker, setDeepDiveTicker] = useState('');
   const chatContainerRef = useRef(null);
@@ -80,6 +83,14 @@ export default function ScanPage() {
         alert("You've reached the fair-use limit for today (50 scans). Please try again tomorrow.");
         return;
       }
+    }
+
+    // AI data consent check
+    const hasConsented = localStorage.getItem('graham_ai_consent') === 'true';
+    if (!hasConsented) {
+      setPendingScan({ query: queryToUse, image: imageToUse });
+      setShowAIConsent(true);
+      return;
     }
 
     const newUserMsg = { role: 'user', content: queryToUse, image: imagePreview };
@@ -195,6 +206,15 @@ export default function ScanPage() {
   const triggerDeepDive = (ticker) => {
     setDeepDiveTicker(ticker);
     setShowDeepDiveModal(true);
+  };
+
+  const handleAIConsentAccept = () => {
+    localStorage.setItem('graham_ai_consent', 'true');
+    setShowAIConsent(false);
+    if (pendingScan) {
+      handleScan(pendingScan.query, pendingScan.image);
+      setPendingScan(null);
+    }
   };
 
   return (
@@ -427,6 +447,12 @@ export default function ScanPage() {
         isOpen={showPaywall} 
         onClose={() => setShowPaywall(false)} 
         source="scan" 
+      />
+
+      <AIConsentModal
+        isOpen={showAIConsent}
+        onAccept={handleAIConsentAccept}
+        onDecline={() => { setShowAIConsent(false); setPendingScan(null); }}
       />
     </div>
   );

@@ -114,12 +114,19 @@ export function UserProvider({ children }) {
           if (docSnap.exists()) {
             const data = docSnap.data();
             if (isNativeSubscribed) data.subscribed = true;
-            if (isReviewAccount) { data.onboarded = true; data.name = data.name || 'App Reviewer'; data.investingGoal = data.investingGoal || 'learn_basics'; data.persona = data.persona || 'Graham'; data.hasSeenFeedTutorial = true; }
+            if (isReviewAccount) {
+              data.onboarded = true; data.name = data.name || 'App Reviewer'; data.investingGoal = data.investingGoal || 'learn_basics'; data.persona = data.persona || 'Graham'; data.hasSeenFeedTutorial = true;
+              // Force paywall for Apple Review unless they have a real StoreKit purchase
+              if (!isNativeSubscribed) data.subscribed = false;
+            }
             if (isMounted) setStateRaw({ ...DEFAULT_STATE, ...data });
           } else {
             const defaultWithSub = { ...DEFAULT_STATE };
             if (isNativeSubscribed) defaultWithSub.subscribed = true;
-            if (isReviewAccount) { defaultWithSub.onboarded = true; defaultWithSub.name = 'App Reviewer'; defaultWithSub.investingGoal = 'learn_basics'; defaultWithSub.persona = 'Graham'; defaultWithSub.hasSeenFeedTutorial = true; }
+            if (isReviewAccount) {
+              defaultWithSub.onboarded = true; defaultWithSub.name = 'App Reviewer'; defaultWithSub.investingGoal = 'learn_basics'; defaultWithSub.persona = 'Graham'; defaultWithSub.hasSeenFeedTutorial = true;
+              if (!isNativeSubscribed) defaultWithSub.subscribed = false;
+            }
             await setDoc(docRef, defaultWithSub);
             if (isMounted) setStateRaw(defaultWithSub);
           }
