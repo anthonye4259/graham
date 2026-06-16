@@ -277,9 +277,9 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
               <button onClick={handleRestore} style={{ background: 'none', border: 'none', color: 'var(--text-tertiary)', fontSize: '14px', cursor: 'pointer', textDecoration: 'underline', padding: '12px 16px', minHeight: '44px' }}>
                 Restore Purchases
               </button>
-              <div style={{ display: 'flex', gap: '16px', fontSize: '10px', color: 'var(--text-tertiary)' }}>
-                <Link to="/terms" style={{ color: 'inherit', textDecoration: 'none' }}>Terms of Use</Link>
-                <Link to="/privacy" style={{ color: 'inherit', textDecoration: 'none' }}>Privacy Policy</Link>
+              <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: 'var(--text-tertiary)' }}>
+                <Link to="/terms" style={{ color: 'var(--accent-gold, #A67C52)', textDecoration: 'underline' }}>Terms of Use (EULA)</Link>
+                <Link to="/privacy" style={{ color: 'var(--accent-gold, #A67C52)', textDecoration: 'underline' }}>Privacy Policy</Link>
               </div>
             </div>
           </div>
