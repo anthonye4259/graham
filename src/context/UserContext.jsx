@@ -125,6 +125,8 @@ export function UserProvider({ children }) {
               data.onboarded = true; data.name = data.name || 'App Reviewer'; data.investingGoal = data.investingGoal || 'learn_basics'; data.persona = data.persona || 'Graham'; data.hasSeenFeedTutorial = true;
               // ALWAYS force paywall for Apple Review — ignore RevenueCat existing entitlements
               data.subscribed = false; data.trialStartDate = null;
+              // Persist to Firestore so DB doesn't have stale subscribed:true
+              try { await updateDoc(docRef, { subscribed: false, trialStartDate: null, onboarded: true }); } catch(e) { console.warn('Review account Firestore update failed:', e); }
             }
             if (isMounted) setStateRaw({ ...DEFAULT_STATE, ...data });
           } else {
