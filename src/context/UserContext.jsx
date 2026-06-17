@@ -72,8 +72,13 @@ export function UserProvider({ children }) {
         if (currentUser) {
           setUser(currentUser);
           
-          // Configure RevenueCat if Native — with timeout
+           // Configure RevenueCat if Native — with timeout
           let isNativeSubscribed = false;
+          
+          // App Store Review account bypass — define early so listener can check
+          const REVIEW_EMAIL = 'review@grahamai.com';
+          const isReviewAccount = currentUser.email === REVIEW_EMAIL;
+          
           if (Capacitor.isNativePlatform()) {
             try {
               if (import.meta.env.VITE_REVENUECAT_PUBLIC_KEY) {
@@ -82,7 +87,13 @@ export function UserProvider({ children }) {
                     await Purchases.configure({ apiKey: import.meta.env.VITE_REVENUECAT_PUBLIC_KEY, appUserID: currentUser.uid });
                     
                     // Listen for dynamic updates (crucial for Sandbox/delayed purchases)
+                    // For review account: only enable after a NEW purchase (not existing entitlements)
+                    let reviewAccountInitialLoad = isReviewAccount;
                     Purchases.addCustomerInfoUpdateListener((info) => {
+                      if (reviewAccountInitialLoad) {
+                        reviewAccountInitialLoad = false; // Skip first callback (existing entitlements)
+                        return;
+                      }
                       const active = info.entitlements?.active || {};
                       if (active["graham ai Pro"] || active["premium"] || Object.keys(active).length > 0) {
                         setStateRaw(s => ({ ...s, subscribed: true }));
@@ -104,28 +115,24 @@ export function UserProvider({ children }) {
             }
           }
 
-          // App Store Review account bypass
-          const REVIEW_EMAIL = 'review@grahamai.com';
-          const isReviewAccount = currentUser.email === REVIEW_EMAIL;
-
           // Load Firestore Data
           const docRef = doc(db, 'users', currentUser.uid);
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
             const data = docSnap.data();
-            if (isNativeSubscribed) data.subscribed = true;
+            if (isNativeSubscribed && !isReviewAccount) data.subscribed = true;
             if (isReviewAccount) {
               data.onboarded = true; data.name = data.name || 'App Reviewer'; data.investingGoal = data.investingGoal || 'learn_basics'; data.persona = data.persona || 'Graham'; data.hasSeenFeedTutorial = true;
-              // Force paywall for Apple Review unless they have a real StoreKit purchase
-              if (!isNativeSubscribed) { data.subscribed = false; data.trialStartDate = null; }
+              // ALWAYS force paywall for Apple Review — ignore RevenueCat existing entitlements
+              data.subscribed = false; data.trialStartDate = null;
             }
             if (isMounted) setStateRaw({ ...DEFAULT_STATE, ...data });
           } else {
             const defaultWithSub = { ...DEFAULT_STATE };
-            if (isNativeSubscribed) defaultWithSub.subscribed = true;
+            if (isNativeSubscribed && !isReviewAccount) defaultWithSub.subscribed = true;
             if (isReviewAccount) {
               defaultWithSub.onboarded = true; defaultWithSub.name = 'App Reviewer'; defaultWithSub.investingGoal = 'learn_basics'; defaultWithSub.persona = 'Graham'; defaultWithSub.hasSeenFeedTutorial = true;
-              if (!isNativeSubscribed) { defaultWithSub.subscribed = false; defaultWithSub.trialStartDate = null; }
+              defaultWithSub.subscribed = false; defaultWithSub.trialStartDate = null;
             }
             await setDoc(docRef, defaultWithSub);
             if (isMounted) setStateRaw(defaultWithSub);
