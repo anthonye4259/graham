@@ -87,13 +87,9 @@ export function UserProvider({ children }) {
                     await Purchases.configure({ apiKey: import.meta.env.VITE_REVENUECAT_PUBLIC_KEY, appUserID: currentUser.uid });
                     
                     // Listen for dynamic updates (crucial for Sandbox/delayed purchases)
-                    // For review account: only enable after a NEW purchase (not existing entitlements)
-                    let reviewAccountInitialLoad = isReviewAccount;
                     Purchases.addCustomerInfoUpdateListener((info) => {
-                      if (reviewAccountInitialLoad) {
-                        reviewAccountInitialLoad = false; // Skip first callback (existing entitlements)
-                        return;
-                      }
+                      // Review account: never auto-enable from listener — paywall handles purchases directly
+                      if (isReviewAccount) return;
                       const active = info.entitlements?.active || {};
                       if (active["graham ai Pro"] || active["premium"] || Object.keys(active).length > 0) {
                         setStateRaw(s => ({ ...s, subscribed: true }));
