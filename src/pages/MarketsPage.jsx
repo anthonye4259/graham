@@ -47,7 +47,7 @@ export default function MarketsPage() {
   const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
 
   return (
-    <div className="markets-page fade-in-up" style={{ height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: 'transparent', color: 'var(--text-primary)', position: 'relative' }}>
+    <div className="markets-page fade-in-up" style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', backgroundColor: 'transparent', color: 'var(--text-primary)', position: 'relative' }}>
       
       {/* Header */}
       <div style={{ padding: '24px 20px 12px 20px' }}>

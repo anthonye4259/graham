@@ -1876,7 +1876,7 @@ button:active:not(:disabled), .btn:active:not(:disabled), .onboard-option:active
   100% { opacity: 1; transform: scale(1) translateY(0); }
 }
 .paywall-header {
-  padding: 32px 24px 24px; text-align: center;
+  padding: 24px 24px 16px; text-align: center;
   background: linear-gradient(180deg, #FAF7F2 0%, #FFFFFF 100%);
   position: relative;
 }
@@ -2101,11 +2101,29 @@ button:active:not(:disabled), .btn:active:not(:disabled), .onboard-option:active
     font-size: 1.6rem;
   }
 
-  /* Paywall modal - don't stretch full width on iPad */
+  /* Paywall modal - properly sized on iPad */
   .paywall-modal {
-    max-width: 560px;
+    max-width: 480px;
+    max-height: 80vh;
     margin: 0 auto;
     border-radius: 24px !important;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .paywall-header {
+    padding: 20px 24px 12px;
+  }
+  .paywall-title {
+    font-size: 24px;
+  }
+  .paywall-content {
+    padding: 0 24px 24px;
+  }
+  .price-amount {
+    font-size: 36px;
+  }
+  .perks-list {
+    margin-bottom: 20px;
   }
 
   /* Scan input */

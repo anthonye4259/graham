@@ -34,7 +34,7 @@ export default function JargonText({ text, style }) {
   if (escapedKeys.length === 0) return <span style={style}>{text}</span>;
 
   const regex = new RegExp(`(${escapedKeys.join('|')})`, 'gi');
-  const parts = text.split(regex);
+  const parts = text.split(regex).filter(part => part != null && part !== '');
 
   const handleWordClick = (word, e) => {
     e.stopPropagation();
