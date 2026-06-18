@@ -20,7 +20,7 @@ import AppleIntelligence from '../plugins/AppleIntelligence';
 export default function ScanPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { state, setState, getScansRemaining, incrementScan, simulateBuy, isPremium, isTrialActive } = useUser();
+  const { state, setState, getScansRemaining, incrementScan, simulateBuy, isPremium } = useUser();
   const [ticker, setTicker] = useState('');
   const [imagePreview, setImagePreview] = useState(null);
   const [showActionMenu, setShowActionMenu] = useState(false);
