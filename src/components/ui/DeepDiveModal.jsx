@@ -49,7 +49,7 @@ Write dense, highly informative paragraphs for each section. Format it beautiful
         } catch (appleErr) {
           console.log("Deep Dive using Gemini:", appleErr.message);
           const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-2.0-flash',
             contents: promptText,
           });
           resultText = response.text();

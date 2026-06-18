@@ -133,7 +133,7 @@ export default function ScanPage() {
         if (inlineData) {
           const contents = [promptText, { inlineData }];
           const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-2.0-flash',
             contents,
             config: {
               responseMimeType: "application/json",
@@ -169,7 +169,7 @@ export default function ScanPage() {
           } catch (appleErr) {
             console.log("Apple AI unavailable, using Gemini:", appleErr.message);
             const response = await ai.models.generateContent({
-              model: 'gemini-2.5-flash',
+              model: 'gemini-2.0-flash',
               contents: promptText,
               config: {
                 responseMimeType: "application/json",
@@ -223,7 +223,7 @@ export default function ScanPage() {
         } catch (appleErr) {
           console.log("Apple AI unavailable for chat, using Gemini:", appleErr.message);
           const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-2.0-flash',
             contents: followUpPrompt,
           });
           responseText = response.text();
