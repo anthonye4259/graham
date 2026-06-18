@@ -40,12 +40,20 @@ Write dense, highly informative paragraphs for each section. Format it beautiful
 
         let resultText = "";
         
-        // Deep Dive is premium — always use Gemini for best quality
-        const response = await ai.models.generateContent({
-          model: 'gemini-2.5-flash',
-          contents: promptText,
-        });
-        resultText = response.text();
+        // Apple Intelligence first ($0), Gemini fallback
+        try {
+          const { available } = await AppleIntelligence.checkAvailability();
+          if (!available) throw new Error("Apple Intelligence unavailable");
+          const response = await AppleIntelligence.generateText({ prompt: promptText });
+          resultText = response.text;
+        } catch (appleErr) {
+          console.log("Deep Dive using Gemini:", appleErr.message);
+          const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: promptText,
+          });
+          resultText = response.text();
+        }
 
         if (isMounted) {
           setReport(resultText);
