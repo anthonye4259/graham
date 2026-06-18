@@ -10,12 +10,25 @@ import DeepDiveModal from '../components/ui/DeepDiveModal';
 import ReactMarkdown from 'react-markdown';
 import { analytics, trackEvent } from '../lib/firebase';
 
-import { GoogleGenAI, Type } from '@google/genai';
-
-const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
+import { freeAI, Type } from '../lib/freeAI';
 
 import { getPersonaPrompt } from '../lib/personas';
-import AppleIntelligence from '../plugins/AppleIntelligence';
+
+const SCAN_SCHEMA = {
+  properties: {
+    name: { type: Type.STRING },
+    ticker: { type: Type.STRING },
+    price: { type: Type.STRING },
+    change: { type: Type.STRING },
+    direction: { type: Type.STRING },
+    graham_verdict: { type: Type.STRING, description: "Must be exactly BUY, SELL, or HOLD" },
+    graham_reasons: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Exactly 3 bullet points" },
+    what: { type: Type.STRING },
+    why: { type: Type.STRING },
+    action: { type: Type.STRING },
+  },
+  required: ["name", "ticker", "price", "change", "direction", "graham_verdict", "graham_reasons", "what", "why", "action"],
+};
 
 export default function ScanPage() {
   const location = useLocation();
@@ -79,11 +92,9 @@ export default function ScanPage() {
       return;
     }
     
-    if (state.subscribed || isPremium()) {
-      if (state.premiumScansToday >= 50 && state.lastPremiumScanDate === new Date().toDateString()) {
-        alert("You've reached the fair-use limit for today (50 scans). Please try again tomorrow.");
-        return;
-      }
+    if (state.premiumScansToday >= 50 && state.lastPremiumScanDate === new Date().toDateString()) {
+      alert("You've reached the daily limit (50 scans). Please try again tomorrow.");
+      return;
     }
 
     // AI data consent check
@@ -129,71 +140,12 @@ export default function ScanPage() {
 
         let data;
         
-        // Image scans must use Gemini (Apple models don't support images)
-        if (inlineData) {
-          const contents = [promptText, { inlineData }];
-          const response = await ai.models.generateContent({
-            model: 'gemini-2.0-flash',
-            contents,
-            config: {
-              responseMimeType: "application/json",
-              responseSchema: {
-                type: Type.OBJECT,
-                properties: {
-                  name: { type: Type.STRING },
-                  ticker: { type: Type.STRING },
-                  price: { type: Type.STRING },
-                  change: { type: Type.STRING },
-                  direction: { type: Type.STRING },
-                  graham_verdict: { type: Type.STRING, description: "Must be exactly BUY, SELL, or HOLD" },
-                  graham_reasons: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Exactly 3 bullet points" },
-                  what: { type: Type.STRING },
-                  why: { type: Type.STRING },
-                  action: { type: Type.STRING },
-                },
-                required: ["name", "ticker", "price", "change", "direction", "graham_verdict", "graham_reasons", "what", "why", "action"],
-              },
-            }
-          });
-          data = JSON.parse(response.text());
-        } else {
-          // Text scans: Apple Intelligence first ($0), Gemini fallback
-          try {
-            const { available } = await AppleIntelligence.checkAvailability();
-            if (!available) throw new Error("Apple Intelligence unavailable");
-            const response = await AppleIntelligence.generateText({ prompt: promptText });
-            const jsonMatch = response.text.match(/\{[\s\S]*\}/);
-            if (!jsonMatch) throw new Error("No JSON in Apple response");
-            data = JSON.parse(jsonMatch[0]);
-            if (!data.name || !data.ticker || !data.graham_verdict) throw new Error("Missing required fields");
-          } catch (appleErr) {
-            console.log("Apple AI unavailable, using Gemini:", appleErr.message);
-            const response = await ai.models.generateContent({
-              model: 'gemini-2.0-flash',
-              contents: promptText,
-              config: {
-                responseMimeType: "application/json",
-                responseSchema: {
-                  type: Type.OBJECT,
-                  properties: {
-                    name: { type: Type.STRING },
-                    ticker: { type: Type.STRING },
-                    price: { type: Type.STRING },
-                    change: { type: Type.STRING },
-                    direction: { type: Type.STRING },
-                    graham_verdict: { type: Type.STRING, description: "Must be exactly BUY, SELL, or HOLD" },
-                    graham_reasons: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Exactly 3 bullet points" },
-                    what: { type: Type.STRING },
-                    why: { type: Type.STRING },
-                    action: { type: Type.STRING },
-                  },
-                  required: ["name", "ticker", "price", "change", "direction", "graham_verdict", "graham_reasons", "what", "why", "action"],
-                },
-              }
-            });
-            data = JSON.parse(response.text());
-          }
-        }
+        const result = await freeAI(promptText, {
+          json: true,
+          schema: SCAN_SCHEMA,
+          image: inlineData || undefined,
+        });
+        data = result.data;
         
         let newMilestones = state.milestones || [];
         if (inlineData && !newMilestones.includes('first_screenshot')) {
@@ -214,22 +166,9 @@ export default function ScanPage() {
 
         const followUpPrompt = `${personaPrompt}\n\nHere is the chat history:\n${history}\n\nProvide a conversational, helpful, and insightful response. Your primary goal is to be an educational mentor and teach the user how to invest and trade. Break down complex concepts simply, use analogies, ask guiding questions to test their knowledge, and stay strictly in character. Keep it formatted nicely with markdown.`;
 
-        let responseText;
-        try {
-          const { available } = await AppleIntelligence.checkAvailability();
-          if (!available) throw new Error("Apple Intelligence unavailable");
-          const response = await AppleIntelligence.generateText({ prompt: followUpPrompt });
-          responseText = response.text;
-        } catch (appleErr) {
-          console.log("Apple AI unavailable for chat, using Gemini:", appleErr.message);
-          const response = await ai.models.generateContent({
-            model: 'gemini-2.0-flash',
-            contents: followUpPrompt,
-          });
-          responseText = response.text();
-        }
+        const result = await freeAI(followUpPrompt);
 
-        setState({ chatHistory: [...newMessages, { role: 'model', type: 'text', content: responseText }] });
+        setState({ chatHistory: [...newMessages, { role: 'model', type: 'text', content: result.data }] });
       }
 
     } catch (error) {

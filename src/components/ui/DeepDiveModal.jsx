@@ -1,10 +1,7 @@
 import { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { GoogleGenAI } from '@google/genai';
+import { freeAI } from '../../lib/freeAI';
 import { useUser } from '../../context/UserContext';
-import AppleIntelligence from '../../plugins/AppleIntelligence';
-
-const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
 
 export default function DeepDiveModal({ ticker, onClose }) {
   const { state } = useUser();
@@ -28,35 +25,24 @@ export default function DeepDiveModal({ ticker, onClose }) {
 
         const promptText = `${personaPrompt}
 
-Write a comprehensive "Institutional Grade" Deep Dive Research Report for the asset: "${ticker}".
+Generate a comprehensive "Deep Dive" investment research report on the company: ${ticker}.
 
-Structure the report using markdown with the following exactly 4 headers:
-## 1. Financial Health & Valuation
-## 2. Competitive Moat & Industry Position
-## 3. Key Risks & Bear Case
-## 4. Five-Year Outlook
+Include the following sections with H2 markdown headings:
+## Company Overview
+## Business Model & Revenue Streams
+## Competitive Advantages (Moat)
+## Financial Health (Key Metrics)
+## Growth Catalysts
+## Risk Factors
+## Technical Analysis Summary
+## Graham's Final Verdict
 
 Write dense, highly informative paragraphs for each section. Format it beautifully with bullet points where necessary. Make it feel incredibly premium and insightful.`;
 
-        let resultText = "";
-        
-        // Apple Intelligence first ($0), Gemini fallback
-        try {
-          const { available } = await AppleIntelligence.checkAvailability();
-          if (!available) throw new Error("Apple Intelligence unavailable");
-          const response = await AppleIntelligence.generateText({ prompt: promptText });
-          resultText = response.text;
-        } catch (appleErr) {
-          console.log("Deep Dive using Gemini:", appleErr.message);
-          const response = await ai.models.generateContent({
-            model: 'gemini-2.0-flash',
-            contents: promptText,
-          });
-          resultText = response.text();
-        }
+        const result = await freeAI(promptText);
 
         if (isMounted) {
-          setReport(resultText);
+          setReport(result.data);
           setLoading(false);
         }
       } catch (err) {
