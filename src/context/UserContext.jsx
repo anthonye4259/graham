@@ -333,18 +333,29 @@ export function UserProvider({ children }) {
   }, [setState]);
 
   const getScansRemaining = useCallback(() => {
-    return isPremium() ? Infinity : 0;
-  }, [isPremium]);
+    if (isPremium()) return Infinity;
+    // Free users get 10 scans per day (Apple AI is free)
+    const today = new Date().toDateString();
+    if (state.lastFreeScansDate !== today) return 10;
+    return Math.max(0, 10 - (state.freeScansToday || 0));
+  }, [isPremium, state.lastFreeScansDate, state.freeScansToday]);
 
   const incrementScan = useCallback(() => {
     setStateRaw(prev => {
       let patch = {};
+      const today = new Date().toDateString();
       if (isPremium()) {
-        const today = new Date().toDateString();
         if (prev.lastPremiumScanDate !== today) {
           patch = { lastPremiumScanDate: today, premiumScansToday: 1 };
         } else {
           patch = { premiumScansToday: (prev.premiumScansToday || 0) + 1 };
+        }
+      } else {
+        // Track free user scans
+        if (prev.lastFreeScansDate !== today) {
+          patch = { lastFreeScansDate: today, freeScansToday: 1 };
+        } else {
+          patch = { freeScansToday: (prev.freeScansToday || 0) + 1 };
         }
       }
       if (user && Object.keys(patch).length > 0) {
