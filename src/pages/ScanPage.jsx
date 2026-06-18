@@ -157,18 +157,8 @@ export default function ScanPage() {
           });
           data = JSON.parse(response.text());
         } else {
-          // Text scans: try Apple Intelligence first, fallback to Gemini
-          try {
-            const { available } = await AppleIntelligence.checkAvailability();
-            if (!available) throw new Error("Apple Intelligence unavailable");
-            const response = await AppleIntelligence.generateText({ prompt: promptText });
-            const jsonMatch = response.text.match(/\{[\s\S]*\}/);
-            if (!jsonMatch) throw new Error("No JSON in Apple response");
-            data = JSON.parse(jsonMatch[0]);
-            // Validate required fields
-            if (!data.name || !data.ticker || !data.graham_verdict) throw new Error("Missing required fields");
-          } catch (appleErr) {
-            console.log("Scan falling back to Gemini:", appleErr.message);
+          // Text scans: Premium → Gemini (quality), Free → Apple Intelligence (free) → Gemini fallback
+          if (isPremium()) {
             const response = await ai.models.generateContent({
               model: 'gemini-2.5-flash',
               contents: promptText,
@@ -193,6 +183,42 @@ export default function ScanPage() {
               }
             });
             data = JSON.parse(response.text());
+          } else {
+            try {
+              const { available } = await AppleIntelligence.checkAvailability();
+              if (!available) throw new Error("Apple Intelligence unavailable");
+              const response = await AppleIntelligence.generateText({ prompt: promptText });
+              const jsonMatch = response.text.match(/\{[\s\S]*\}/);
+              if (!jsonMatch) throw new Error("No JSON in Apple response");
+              data = JSON.parse(jsonMatch[0]);
+              if (!data.name || !data.ticker || !data.graham_verdict) throw new Error("Missing required fields");
+            } catch (appleErr) {
+              console.log("Free scan falling back to Gemini:", appleErr.message);
+              const response = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: promptText,
+                config: {
+                  responseMimeType: "application/json",
+                  responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                      name: { type: Type.STRING },
+                      ticker: { type: Type.STRING },
+                      price: { type: Type.STRING },
+                      change: { type: Type.STRING },
+                      direction: { type: Type.STRING },
+                      graham_verdict: { type: Type.STRING, description: "Must be exactly BUY, SELL, or HOLD" },
+                      graham_reasons: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Exactly 3 bullet points" },
+                      what: { type: Type.STRING },
+                      why: { type: Type.STRING },
+                      action: { type: Type.STRING },
+                    },
+                    required: ["name", "ticker", "price", "change", "direction", "graham_verdict", "graham_reasons", "what", "why", "action"],
+                  },
+                }
+              });
+              data = JSON.parse(response.text());
+            }
           }
         }
         
@@ -216,18 +242,26 @@ export default function ScanPage() {
         const followUpPrompt = `${personaPrompt}\n\nHere is the chat history:\n${history}\n\nProvide a conversational, helpful, and insightful response. Your primary goal is to be an educational mentor and teach the user how to invest and trade. Break down complex concepts simply, use analogies, ask guiding questions to test their knowledge, and stay strictly in character. Keep it formatted nicely with markdown.`;
 
         let responseText;
-        try {
-          const { available } = await AppleIntelligence.checkAvailability();
-          if (!available) throw new Error("Apple Intelligence unavailable");
-          const response = await AppleIntelligence.generateText({ prompt: followUpPrompt });
-          responseText = response.text;
-        } catch (appleErr) {
-          console.log("Chat falling back to Gemini:", appleErr.message);
+        if (isPremium()) {
           const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
             contents: followUpPrompt,
           });
           responseText = response.text();
+        } else {
+          try {
+            const { available } = await AppleIntelligence.checkAvailability();
+            if (!available) throw new Error("Apple Intelligence unavailable");
+            const response = await AppleIntelligence.generateText({ prompt: followUpPrompt });
+            responseText = response.text;
+          } catch (appleErr) {
+            console.log("Free chat falling back to Gemini:", appleErr.message);
+            const response = await ai.models.generateContent({
+              model: 'gemini-2.5-flash',
+              contents: followUpPrompt,
+            });
+            responseText = response.text();
+          }
         }
 
         setState({ chatHistory: [...newMessages, { role: 'model', type: 'text', content: responseText }] });

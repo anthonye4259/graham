@@ -40,27 +40,12 @@ Write dense, highly informative paragraphs for each section. Format it beautiful
 
         let resultText = "";
         
-        try {
-          // Attempt to use free on-device/private cloud compute first
-          const { available } = await AppleIntelligence.checkAvailability();
-          if (available) {
-            const response = await AppleIntelligence.generateText({
-              prompt: promptText,
-              model: 'afm-3-cloud-pro' // Use server model for complex reasoning
-            });
-            resultText = response.text;
-          } else {
-            throw new Error("Apple Intelligence unavailable");
-          }
-        } catch (appleErr) {
-          // Fallback to Gemini if unavailable or errored
-          console.log("Falling back to Gemini:", appleErr);
-          const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: promptText,
-          });
-          resultText = response.text();
-        }
+        // Deep Dive is premium — always use Gemini for best quality
+        const response = await ai.models.generateContent({
+          model: 'gemini-2.5-flash',
+          contents: promptText,
+        });
+        resultText = response.text();
 
         if (isMounted) {
           setReport(resultText);
