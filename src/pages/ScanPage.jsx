@@ -15,6 +15,7 @@ import { GoogleGenAI, Type } from '@google/genai';
 const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
 
 import { getPersonaPrompt } from '../lib/personas';
+import AppleIntelligence from '../plugins/AppleIntelligence';
 
 export default function ScanPage() {
   const location = useLocation();
@@ -123,34 +124,77 @@ export default function ScanPage() {
              Provide exactly 3 short, jargon-free bullet points defending your verdict, directly addressing the user's specific situation.
              Finally, provide the advanced insights: a short "what happened recently", "why it matters", and "actionable advice".`;
 
-        const promptText = `${personaPrompt} \n\n ${baseText}`;
-        const contents = inlineData ? [promptText, { inlineData }] : promptText;
+        const jsonInstruction = `\n\nYou MUST return ONLY a valid JSON object with these exact keys: name (string), ticker (string), price (string), change (string), direction (string), graham_verdict (string, exactly "BUY", "SELL", or "HOLD"), graham_reasons (array of exactly 3 strings), what (string), why (string), action (string). No other text, no markdown, ONLY the JSON object.`;
+        const promptText = `${personaPrompt} \n\n ${baseText}${jsonInstruction}`;
 
-        const response = await ai.models.generateContent({
-          model: 'gemini-2.5-flash',
-          contents,
-          config: {
-            responseMimeType: "application/json",
-            responseSchema: {
-              type: Type.OBJECT,
-              properties: {
-                name: { type: Type.STRING },
-                ticker: { type: Type.STRING },
-                price: { type: Type.STRING },
-                change: { type: Type.STRING },
-                direction: { type: Type.STRING },
-                graham_verdict: { type: Type.STRING, description: "Must be exactly BUY, SELL, or HOLD" },
-                graham_reasons: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Exactly 3 bullet points" },
-                what: { type: Type.STRING },
-                why: { type: Type.STRING },
-                action: { type: Type.STRING },
-              },
-              required: ["name", "ticker", "price", "change", "direction", "graham_verdict", "graham_reasons", "what", "why", "action"],
-            },
-          }
-        });
+        let data;
         
-        const data = JSON.parse(response.text());
+        // Image scans must use Gemini (Apple models don't support images)
+        if (inlineData) {
+          const contents = [promptText, { inlineData }];
+          const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents,
+            config: {
+              responseMimeType: "application/json",
+              responseSchema: {
+                type: Type.OBJECT,
+                properties: {
+                  name: { type: Type.STRING },
+                  ticker: { type: Type.STRING },
+                  price: { type: Type.STRING },
+                  change: { type: Type.STRING },
+                  direction: { type: Type.STRING },
+                  graham_verdict: { type: Type.STRING, description: "Must be exactly BUY, SELL, or HOLD" },
+                  graham_reasons: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Exactly 3 bullet points" },
+                  what: { type: Type.STRING },
+                  why: { type: Type.STRING },
+                  action: { type: Type.STRING },
+                },
+                required: ["name", "ticker", "price", "change", "direction", "graham_verdict", "graham_reasons", "what", "why", "action"],
+              },
+            }
+          });
+          data = JSON.parse(response.text());
+        } else {
+          // Text scans: try Apple Intelligence first, fallback to Gemini
+          try {
+            const { available } = await AppleIntelligence.checkAvailability();
+            if (!available) throw new Error("Apple Intelligence unavailable");
+            const response = await AppleIntelligence.generateText({ prompt: promptText });
+            const jsonMatch = response.text.match(/\{[\s\S]*\}/);
+            if (!jsonMatch) throw new Error("No JSON in Apple response");
+            data = JSON.parse(jsonMatch[0]);
+            // Validate required fields
+            if (!data.name || !data.ticker || !data.graham_verdict) throw new Error("Missing required fields");
+          } catch (appleErr) {
+            console.log("Scan falling back to Gemini:", appleErr.message);
+            const response = await ai.models.generateContent({
+              model: 'gemini-2.5-flash',
+              contents: promptText,
+              config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                  type: Type.OBJECT,
+                  properties: {
+                    name: { type: Type.STRING },
+                    ticker: { type: Type.STRING },
+                    price: { type: Type.STRING },
+                    change: { type: Type.STRING },
+                    direction: { type: Type.STRING },
+                    graham_verdict: { type: Type.STRING, description: "Must be exactly BUY, SELL, or HOLD" },
+                    graham_reasons: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Exactly 3 bullet points" },
+                    what: { type: Type.STRING },
+                    why: { type: Type.STRING },
+                    action: { type: Type.STRING },
+                  },
+                  required: ["name", "ticker", "price", "change", "direction", "graham_verdict", "graham_reasons", "what", "why", "action"],
+                },
+              }
+            });
+            data = JSON.parse(response.text());
+          }
+        }
         
         let newMilestones = state.milestones || [];
         if (inlineData && !newMilestones.includes('first_screenshot')) {
@@ -171,12 +215,22 @@ export default function ScanPage() {
 
         const followUpPrompt = `${personaPrompt}\n\nHere is the chat history:\n${history}\n\nProvide a conversational, helpful, and insightful response. Your primary goal is to be an educational mentor and teach the user how to invest and trade. Break down complex concepts simply, use analogies, ask guiding questions to test their knowledge, and stay strictly in character. Keep it formatted nicely with markdown.`;
 
-        const response = await ai.models.generateContent({
-          model: 'gemini-2.5-flash',
-          contents: followUpPrompt,
-        });
+        let responseText;
+        try {
+          const { available } = await AppleIntelligence.checkAvailability();
+          if (!available) throw new Error("Apple Intelligence unavailable");
+          const response = await AppleIntelligence.generateText({ prompt: followUpPrompt });
+          responseText = response.text;
+        } catch (appleErr) {
+          console.log("Chat falling back to Gemini:", appleErr.message);
+          const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: followUpPrompt,
+          });
+          responseText = response.text();
+        }
 
-        setState({ chatHistory: [...newMessages, { role: 'model', type: 'text', content: response.text() }] });
+        setState({ chatHistory: [...newMessages, { role: 'model', type: 'text', content: responseText }] });
       }
 
     } catch (error) {
