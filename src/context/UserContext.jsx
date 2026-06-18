@@ -333,12 +333,8 @@ export function UserProvider({ children }) {
   }, [setState]);
 
   const getScansRemaining = useCallback(() => {
-    if (isPremium()) return Infinity;
-    // Free users get 10 scans per day (Apple AI is free)
-    const today = new Date().toDateString();
-    if (state.lastFreeScansDate !== today) return 10;
-    return Math.max(0, 10 - (state.freeScansToday || 0));
-  }, [isPremium, state.lastFreeScansDate, state.freeScansToday]);
+    return isPremium() ? Infinity : 0;
+  }, [isPremium]);
 
   const incrementScan = useCallback(() => {
     setStateRaw(prev => {

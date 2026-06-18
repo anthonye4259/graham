@@ -20,7 +20,7 @@ import AppleIntelligence from '../plugins/AppleIntelligence';
 export default function ScanPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { state, setState, getScansRemaining, incrementScan, simulateBuy, isPremium } = useUser();
+  const { state, setState, getScansRemaining, incrementScan, simulateBuy, isPremium, isTrialActive } = useUser();
   const [ticker, setTicker] = useState('');
   const [imagePreview, setImagePreview] = useState(null);
   const [showActionMenu, setShowActionMenu] = useState(false);
@@ -157,8 +157,8 @@ export default function ScanPage() {
           });
           data = JSON.parse(response.text());
         } else {
-          // Text scans: Premium → Gemini (quality), Free → Apple Intelligence (free) → Gemini fallback
-          if (isPremium()) {
+          // Text scans: Paid subscribers → Gemini (quality), Trial → Apple Intelligence (free) → Gemini fallback
+          if (state.subscribed && !isTrialActive()) {
             const response = await ai.models.generateContent({
               model: 'gemini-2.5-flash',
               contents: promptText,
@@ -193,7 +193,7 @@ export default function ScanPage() {
               data = JSON.parse(jsonMatch[0]);
               if (!data.name || !data.ticker || !data.graham_verdict) throw new Error("Missing required fields");
             } catch (appleErr) {
-              console.log("Free scan falling back to Gemini:", appleErr.message);
+              console.log("Trial scan using Apple AI, falling back to Gemini:", appleErr.message);
               const response = await ai.models.generateContent({
                 model: 'gemini-2.5-flash',
                 contents: promptText,
@@ -242,7 +242,7 @@ export default function ScanPage() {
         const followUpPrompt = `${personaPrompt}\n\nHere is the chat history:\n${history}\n\nProvide a conversational, helpful, and insightful response. Your primary goal is to be an educational mentor and teach the user how to invest and trade. Break down complex concepts simply, use analogies, ask guiding questions to test their knowledge, and stay strictly in character. Keep it formatted nicely with markdown.`;
 
         let responseText;
-        if (isPremium()) {
+        if (state.subscribed && !isTrialActive()) {
           const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
             contents: followUpPrompt,
@@ -255,7 +255,7 @@ export default function ScanPage() {
             const response = await AppleIntelligence.generateText({ prompt: followUpPrompt });
             responseText = response.text;
           } catch (appleErr) {
-            console.log("Free chat falling back to Gemini:", appleErr.message);
+            console.log("Trial chat using Apple AI, falling back to Gemini:", appleErr.message);
             const response = await ai.models.generateContent({
               model: 'gemini-2.5-flash',
               contents: followUpPrompt,
