@@ -5,10 +5,6 @@ export default function TrialPaywall({ step, totalSteps, onTrial, onSkip }) {
     <div className="onboard-step ob-trial-wall">
       <div className="ob-pw-glow" />
       <div className="ob-pw-logo">graham.</div>
-      <div className="ob-pw-stars">
-        {[1,2,3,4,5].map(i => <ion-icon key={i} name="star" class="ob-star"></ion-icon>)}
-        <span>4.9 · App Store</span>
-      </div>
       <div className="ob-pw-headline">Find your investing<br/>edge, <em>today.</em></div>
       <div className="ob-pw-sub">For less than a coffee a day...<br/>learn to invest with confidence. Cancel anytime.</div>
 
@@ -24,7 +20,7 @@ export default function TrialPaywall({ step, totalSteps, onTrial, onSkip }) {
         </div>
         <div className="ob-tl-point locked">
           <div className="ob-tl-dot"><ion-icon name="lock-closed-outline"></ion-icon></div>
-          <div className="ob-tl-label">Day 7</div><div className="ob-tl-sub">Billed $89.99</div>
+          <div className="ob-tl-label">Day 7</div><div className="ob-tl-sub">Billed $39.99</div>
         </div>
       </div>
 
@@ -35,9 +31,9 @@ export default function TrialPaywall({ step, totalSteps, onTrial, onSkip }) {
         <li><span className="ob-feat-icon"><ion-icon name="diamond-outline"></ion-icon></span> Exclusive access to Graham AI</li>
       </ul>
 
-      <div className="ob-pw-price">Free for 7 days, then<br/><span className="ob-pw-amount">$89.99/year</span>  ($7.49/month)</div>
+      <div className="ob-pw-price">Free for 7 days, then<br/><span className="ob-pw-amount">$39.99/year</span>  ($3.33/month)</div>
       <button className="ob-pw-cta" onClick={onTrial}>Start your FREE week—no payment now</button>
-      <button className="ob-pw-alt" onClick={onTrial}>or $9.99/month</button>
+      <button className="ob-pw-alt" onClick={onTrial}>or $7.99/month</button>
       <button className="ob-trial-skip" onClick={onSkip}>Maybe later</button>
       <div className="ob-pw-legal">
         <Link to="/terms" style={{ color: 'inherit', textDecoration: 'none' }}>Terms of Use</Link>
