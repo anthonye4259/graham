@@ -1,7 +1,13 @@
 import { GoogleGenAI, Type } from '@google/genai';
 import AppleIntelligence from '../plugins/AppleIntelligence';
 
-const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
+let ai = null;
+function getAI() {
+  if (!ai && import.meta.env.VITE_GEMINI_API_KEY) {
+    try { ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY }); } catch(e) { console.warn('GoogleGenAI init failed:', e.message); }
+  }
+  return ai;
+}
 
 // OpenAI-compatible API call (works with Groq, Cerebras, OpenRouter, etc.)
 async function callOpenAICompatible(url, apiKey, model, prompt, json) {
@@ -52,21 +58,24 @@ export async function freeAI(prompt, { json, schema, image } = {}) {
   }
 
   // === 2-3. Gemini chain (each model = separate free quota) ===
-  const geminiModels = ['gemini-2.0-flash', 'gemini-2.5-flash'];
-  for (const model of geminiModels) {
-    try {
-      const contents = image ? [prompt, { inlineData: image }] : prompt;
-      const config = json && schema ? {
-        responseMimeType: "application/json",
-        responseSchema: { type: Type.OBJECT, ...schema },
-      } : {};
-      const response = await ai.models.generateContent({ model, contents, config });
-      if (json) {
-        return { type: 'json', data: JSON.parse(response.text()) };
+  const geminiClient = getAI();
+  if (geminiClient) {
+    const geminiModels = ['gemini-2.0-flash', 'gemini-2.5-flash'];
+    for (const model of geminiModels) {
+      try {
+        const contents = image ? [prompt, { inlineData: image }] : prompt;
+        const config = json && schema ? {
+          responseMimeType: "application/json",
+          responseSchema: { type: Type.OBJECT, ...schema },
+        } : {};
+        const response = await geminiClient.models.generateContent({ model, contents, config });
+        if (json) {
+          return { type: 'json', data: JSON.parse(response.text()) };
+        }
+        return { type: 'text', data: response.text() };
+      } catch (e) {
+        console.log(`${model} failed:`, e.message);
       }
-      return { type: 'text', data: response.text() };
-    } catch (e) {
-      console.log(`${model} failed:`, e.message);
     }
   }
 

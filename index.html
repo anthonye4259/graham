@@ -8,12 +8,19 @@
   <title>Graham — Your AI Investing Companion</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
   <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
   <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+  <style>
+    .app-loading{display:flex;align-items:center;justify-content:center;height:100vh;background:linear-gradient(180deg,#FAF7F2 0%,#EEF1F6 50%,#D6E2EF 100%);font-family:-apple-system,sans-serif}
+    .app-loading-spinner{width:32px;height:32px;border:3px solid rgba(166,124,82,0.2);border-top-color:#A67C52;border-radius:50%;animation:spin .8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+  </style>
 </head>
 <body ontouchstart="">
-  <div id="root"></div>
+  <div id="root">
+    <div class="app-loading"><div class="app-loading-spinner"></div></div>
+  </div>
   <script type="module" src="/src/main.jsx"></script>
 </body>
 </html>

@@ -7,12 +7,12 @@ import { getFunctions } from 'firebase/functions';
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyD2w0Tvtxr24TVlrT_QZUiSH1u9LOlGo1M",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "graham-222a4.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "graham-222a4",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "graham-222a4.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "750305876759",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:750305876759:web:86f5502c7f89251e633552",
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 

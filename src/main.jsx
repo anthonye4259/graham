@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
+import { HashRouter } from 'react-router-dom';
 import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
 import './index.css';
@@ -16,12 +16,18 @@ window.addEventListener('error', (event) => {
   console.warn('Unhandled error:', event.message);
 });
 
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <ErrorBoundary>
-        <App />
-      </ErrorBoundary>
-    </BrowserRouter>
-  </React.StrictMode>
-);
+// Wrap in try-catch so if any module fails to load, user sees an error instead of white screen
+try {
+  ReactDOM.createRoot(document.getElementById('root')).render(
+    <React.StrictMode>
+      <HashRouter>
+        <ErrorBoundary>
+          <App />
+        </ErrorBoundary>
+      </HashRouter>
+    </React.StrictMode>
+  );
+} catch (e) {
+  console.error('Fatal render error:', e);
+  document.getElementById('root').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Inter,sans-serif;text-align:center;padding:24px"><div><h2>Something went wrong</h2><p style="color:#666">Please close and reopen the app.</p><p style="font-size:12px;color:#999">' + (e.message || '') + '</p></div></div>';
+}
