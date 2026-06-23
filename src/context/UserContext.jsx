@@ -346,8 +346,12 @@ export function UserProvider({ children }) {
   }, [setState]);
 
   const getScansRemaining = useCallback(() => {
-    return isPremium() ? Infinity : 0;
-  }, [isPremium]);
+    if (isPremium()) return Infinity;
+    // Free users get 3 scans per day
+    const today = new Date().toDateString();
+    const todayScans = state.lastFreeScansDate === today ? (state.freeScansToday || 0) : 0;
+    return Math.max(0, 3 - todayScans);
+  }, [isPremium, state.lastFreeScansDate, state.freeScansToday]);
 
   const incrementScan = useCallback(() => {
     setStateRaw(prev => {

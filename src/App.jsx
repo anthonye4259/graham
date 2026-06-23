@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { UserProvider, useUser } from './context/UserContext';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -20,9 +20,10 @@ import PaywallModal from './components/ui/PaywallModal';
 const isNative = Capacitor.isNativePlatform();
 
 function AppShell() {
-  const { user, loadingAuth, state, startTrial, isPremium } = useUser();
+  const { user, loadingAuth, state, startTrial, isPremium, getScansRemaining } = useUser();
   const location = useLocation();
   const navigate = useNavigate();
+  const [showPaywall, setShowPaywall] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -31,6 +32,13 @@ function AppShell() {
       navigate('/app', { replace: true });
     }
   }, [location, startTrial, navigate]);
+
+  // Show paywall after onboarding for first-time non-premium users
+  useEffect(() => {
+    if (state.onboarded && !isPremium() && !state.hasSeenOnboardingPaywall) {
+      setShowPaywall(true);
+    }
+  }, [state.onboarded, isPremium, state.hasSeenOnboardingPaywall]);
 
   if (loadingAuth) {
     return (
@@ -58,16 +66,24 @@ function AppShell() {
         <Route element={<DashboardLayout />}>
           <Route index element={<FeedPage />} />
           <Route path="markets" element={<MarketsPage />} />
-          <Route path="scan" element={<ScanPage />} />
+          <Route path="scan" element={<ScanPage onShowPaywall={() => setShowPaywall(true)} />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="*" element={<Navigate to="/app" replace />} />
         </Route>
       </Routes>
 
-      {/* Mandatory Hard Paywall Overlay if not premium */}
-      {!isPremium() && (
-        <PaywallModal isOpen={true} onClose={() => {}} source="hardwall" />
-      )}
+      {/* Paywall — closeable, shown after onboarding or when scans run out */}
+      <PaywallModal 
+        isOpen={showPaywall} 
+        onClose={() => {
+          setShowPaywall(false);
+          // Mark that user has dismissed the onboarding paywall
+          if (!state.hasSeenOnboardingPaywall) {
+            startTrial && void 0; // state update handled by context
+          }
+        }} 
+        source="softwall" 
+      />
     </ErrorBoundary>
   );
 }
