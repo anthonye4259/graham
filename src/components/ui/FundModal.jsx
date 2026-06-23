@@ -34,7 +34,7 @@ export default function FundModal({ isOpen, onClose, fundData }) {
       }}>
         {/* Header & Drag Handle */}
         <div style={{ padding: '16px', display: 'flex', justifyContent: 'center', position: 'relative' }}>
-          <div style={{ width: '40px', height: '4px', background: 'rgba(255,255,255,0.2)', borderRadius: '2px' }}></div>
+          <div style={{ width: '40px', height: '4px', background: 'rgba(26,24,21,0.15)', borderRadius: '2px' }}></div>
           <button 
             onClick={onClose}
             style={{ position: 'absolute', right: '16px', top: '12px', background: 'none', border: 'none', color: 'var(--text-secondary)', fontSize: '24px', cursor: 'pointer' }}
@@ -51,7 +51,7 @@ export default function FundModal({ isOpen, onClose, fundData }) {
           <div style={{ fontSize: '42px', fontWeight: '800', color: 'var(--text-primary)', lineHeight: 1.1 }}>
             ${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '8px', padding: '6px 12px', borderRadius: '16px', background: isPositive ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)', color: isPositive ? '#4ade80' : '#f87171', fontWeight: 'bold' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '8px', padding: '6px 12px', borderRadius: '16px', background: isPositive ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)', color: isPositive ? 'var(--accent-green)' : 'var(--accent-rose)', fontWeight: 'bold' }}>
             <ion-icon name={isPositive ? "trending-up" : "trending-down"}></ion-icon>
             {isPositive ? '+' : ''}{returnPct.toFixed(2)}% All-Time
           </div>
@@ -64,13 +64,13 @@ export default function FundModal({ isOpen, onClose, fundData }) {
         <div style={{ display: 'flex', padding: '16px 24px', gap: '16px', borderBottom: '1px solid var(--border-light)' }}>
           <button 
             onClick={() => setActiveTab('holdings')}
-            style={{ flex: 1, padding: '12px', background: activeTab === 'holdings' ? 'rgba(255,255,255,0.1)' : 'transparent', border: 'none', borderRadius: '12px', color: activeTab === 'holdings' ? 'var(--text-primary)' : 'var(--text-secondary)', fontWeight: 'bold', transition: 'all 0.2s', cursor: 'pointer' }}
+            style={{ flex: 1, padding: '12px', background: activeTab === 'holdings' ? 'var(--bg-tertiary)' : 'transparent', border: 'none', borderRadius: '12px', color: activeTab === 'holdings' ? 'var(--text-primary)' : 'var(--text-secondary)', fontWeight: 'bold', transition: 'all 0.2s', cursor: 'pointer' }}
           >
             Current Holdings
           </button>
           <button 
             onClick={() => setActiveTab('log')}
-            style={{ flex: 1, padding: '12px', background: activeTab === 'log' ? 'rgba(255,255,255,0.1)' : 'transparent', border: 'none', borderRadius: '12px', color: activeTab === 'log' ? 'var(--text-primary)' : 'var(--text-secondary)', fontWeight: 'bold', transition: 'all 0.2s', cursor: 'pointer' }}
+            style={{ flex: 1, padding: '12px', background: activeTab === 'log' ? 'var(--bg-tertiary)' : 'transparent', border: 'none', borderRadius: '12px', color: activeTab === 'log' ? 'var(--text-primary)' : 'var(--text-secondary)', fontWeight: 'bold', transition: 'all 0.2s', cursor: 'pointer' }}
           >
             Trade Log
           </button>
@@ -118,8 +118,8 @@ export default function FundModal({ isOpen, onClose, fundData }) {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <span style={{ 
-                          background: trade.type === 'BUY' ? 'rgba(34,197,94,0.2)' : trade.type === 'SELL' ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.1)',
-                          color: trade.type === 'BUY' ? '#4ade80' : trade.type === 'SELL' ? '#f87171' : 'var(--text-secondary)',
+                          background: trade.type === 'BUY' ? 'rgba(34,197,94,0.15)' : trade.type === 'SELL' ? 'rgba(239,68,68,0.15)' : 'var(--bg-tertiary)',
+                          color: trade.type === 'BUY' ? 'var(--accent-green)' : trade.type === 'SELL' ? 'var(--accent-rose)' : 'var(--text-secondary)',
                           padding: '4px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold' 
                         }}>
                           {trade.type}
@@ -135,7 +135,7 @@ export default function FundModal({ isOpen, onClose, fundData }) {
                     <div style={{ fontSize: '14px', color: 'var(--text-primary)', marginBottom: '8px' }}>
                       {trade.shares} shares @ ${trade.price.toFixed(2)}
                     </div>
-                    <div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.5, fontStyle: 'italic', background: 'rgba(0,0,0,0.2)', padding: '12px', borderRadius: '8px' }}>
+                    <div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.5, fontStyle: 'italic', background: 'var(--bg-secondary)', padding: '12px', borderRadius: '8px' }}>
                       "{trade.rationale}"
                     </div>
                   </div>

@@ -41,21 +41,21 @@ export default class ErrorBoundary extends React.Component {
           alignItems: 'center',
           justifyContent: 'center',
           padding: '40px 24px',
-          background: 'linear-gradient(180deg, #FAF7F2 0%, #EEF1F6 50%, #D6E2EF 100%)',
+          background: 'linear-gradient(180deg, var(--bg-main, #FAF7F2) 0%, #EEF1F6 50%, #D6E2EF 100%)',
           textAlign: 'center',
-          fontFamily: "'Inter', -apple-system, sans-serif"
+          fontFamily: "var(--font-sans, 'Inter'), -apple-system, sans-serif"
         }}>
           <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔄</div>
-          <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#1A1815', marginBottom: '8px' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: '700', color: 'var(--text-primary, #1A1815)', marginBottom: '8px' }}>
             Something went wrong
           </h2>
-          <p style={{ fontSize: '15px', color: '#6B6560', marginBottom: '24px', maxWidth: '320px', lineHeight: '1.5' }}>
+          <p style={{ fontSize: '15px', color: 'var(--text-secondary, #6B6560)', marginBottom: '24px', maxWidth: '320px', lineHeight: '1.5' }}>
             Graham encountered an unexpected error. Please restart the app.
           </p>
           
           {/* Show error details for debugging */}
           <div style={{ 
-            background: 'rgba(0,0,0,0.05)', 
+            background: 'var(--bg-secondary, rgba(0,0,0,0.05))', 
             borderRadius: '12px', 
             padding: '12px 16px', 
             maxWidth: '320px', 
@@ -63,7 +63,7 @@ export default class ErrorBoundary extends React.Component {
             marginBottom: '24px',
             textAlign: 'left',
             fontSize: '11px',
-            color: '#6B6560',
+            color: 'var(--text-secondary, #6B6560)',
             fontFamily: 'monospace',
             wordBreak: 'break-word',
             maxHeight: '120px',
@@ -81,7 +81,7 @@ export default class ErrorBoundary extends React.Component {
               padding: '14px 32px',
               borderRadius: '14px',
               border: 'none',
-              background: '#A67C52',
+              background: 'var(--accent-warm, #A67C52)',
               color: '#FFF',
               fontSize: '16px',
               fontWeight: '600',

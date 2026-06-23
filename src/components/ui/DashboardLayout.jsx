@@ -88,7 +88,7 @@ export default function DashboardLayout() {
         .nav-item {
           background: none;
           border: none;
-          color: #A09890;
+          color: var(--text-muted);
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -101,7 +101,7 @@ export default function DashboardLayout() {
           transition: var(--transition-spring);
         }
         .nav-item.active {
-          color: #1A1815;
+          color: var(--text-primary);
           transform: scale(1.05);
         }
         .nav-item ion-icon { font-size: 24px; }

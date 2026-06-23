@@ -74,7 +74,7 @@ export default function MarketsPage() {
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             {data?.assets?.map((asset, i) => {
               const isUp = asset.change >= 0;
-              const color = isUp ? '#34C759' : '#FF3B30';
+              const color = isUp ? 'var(--accent-green)' : 'var(--accent-rose)';
               
               return (
                 <div 

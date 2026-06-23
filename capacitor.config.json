@@ -1,5 +1,13 @@
 {
   "appId": "com.graham.ai",
   "appName": "Graham AI",
-  "webDir": "dist"
+  "webDir": "dist",
+  "plugins": {
+    "SplashScreen": {
+      "backgroundColor": "#FAF7F2",
+      "launchShowDuration": 2000,
+      "launchAutoHide": true,
+      "showSpinner": false
+    }
+  }
 }

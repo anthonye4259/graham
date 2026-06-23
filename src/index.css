@@ -863,56 +863,6 @@ button:active:not(:disabled), .btn:active:not(:disabled), .onboard-option:active
   to { opacity: 1; }
 }
 
-/* ============================================================
-   BOTTOM TAB BAR
-   ============================================================ */
-.tab-bar {
-  position: fixed;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 680px;
-  display: flex;
-  padding: 8px 16px 24px;
-  background: rgba(255,255,255,0.92);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(0,0,0,0.06);
-  z-index: 50;
-}
-.tab-item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 8px 0;
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  font-family: var(--font-body);
-  font-size: 10px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: color 0.2s;
-  position: relative;
-}
-.tab-item.active { color: var(--accent-gold); }
-.tab-item-icon { font-size: 22px; display: flex; align-items: center; justify-content: center; }
-.tab-item-icon ion-icon { font-size: 22px; }
-.tab-item.active::after {
-  content: '';
-  position: absolute;
-  top: -8px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 24px;
-  height: 3px;
-  background: var(--accent-gold);
-  border-radius: 0 0 3px 3px;
-}
-
 /* Tab screens need bottom padding for tab bar */
 .tab-screen { padding-bottom: 90px !important; }
 
@@ -1086,7 +1036,7 @@ button:active:not(:disabled), .btn:active:not(:disabled), .onboard-option:active
 .shake { animation: shake 0.3s ease; }
 
 .archetype-card {
-  background: linear-gradient(145deg, var(--bg-card) 0%, rgba(30,30,30,0.8) 100%);
+  background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
   border: 1px solid var(--accent-gold);
   border-radius: 24px;
   padding: 32px 24px;
@@ -1169,7 +1119,7 @@ button:active:not(:disabled), .btn:active:not(:disabled), .onboard-option:active
 .ob-question { text-align: left; align-items: stretch; padding-top: 0 !important; }
 .ob-bar-wrap { width: calc(100% + 40px); margin: 0 -20px 32px; padding: 0 20px; }
 .ob-bar { width: 100%; height: 4px; background: rgba(0,0,0,0.06); border-radius: 2px; overflow: hidden; }
-.ob-bar-fill { height: 100%; background: linear-gradient(90deg, #4DD0E1, #00BCD4); border-radius: 2px; transition: width 0.4s ease; }
+.ob-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent-gold), var(--accent-warm)); border-radius: 2px; transition: width 0.4s ease; }
 .ob-q-title {
   font-family: var(--font-display); font-size: 26px; font-weight: 400;
   line-height: 1.3; letter-spacing: -0.3px; margin-bottom: 28px;
@@ -1177,7 +1127,7 @@ button:active:not(:disabled), .btn:active:not(:disabled), .onboard-option:active
 .ob-question .onboard-options { gap: 12px; }
 .ob-question .onboard-option {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 18px 20px; border: 1px solid rgba(255,255,255,0.12);
+  padding: 18px 20px; border: 1px solid var(--border-subtle);
   border-radius: 14px; background: transparent; font-size: 15px;
   text-align: left; transition: all 0.2s ease;
 }
@@ -1282,9 +1232,9 @@ button:active:not(:disabled), .btn:active:not(:disabled), .onboard-option:active
 }
 .ob-pw-amount { color: var(--accent-warm); font-weight: 700; }
 .ob-pw-cta {
-  width: 100%; padding: 18px; border: none; border-radius: 50px;
-  background: linear-gradient(135deg, var(--accent-warm), #B8976A, #D4B896);
-  color: #1a1a1a; font-family: var(--font-sans); font-size: 15px; font-weight: 700;
+  width: 100%; padding: 18px; border: none; border-radius: var(--radius-btn);
+  background: linear-gradient(135deg, var(--accent-warm), #B8722A);
+  color: #FFFFFF; font-family: var(--font-sans); font-size: 15px; font-weight: 700;
   cursor: pointer; transition: var(--transition-spring);
   animation: ctaPulse 2s ease-in-out infinite; position: relative; z-index: 1;
 }
@@ -1943,14 +1893,7 @@ button:active:not(:disabled), .btn:active:not(:disabled), .onboard-option:active
 }
 .perk-icon { color: var(--accent-warm); font-size: 18px; }
 
-.paywall-cta {
-  width: 100%; padding: 16px;
-  background: var(--text-primary); color: #FFFFFF;
-  border: none; border-radius: 16px; font-size: 16px; font-weight: 600;
-  cursor: pointer; transition: var(--transition-base);
-  min-height: 48px;
-}
-.paywall-cta:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
 
 /* Viral Share Hook */
 .share-insight-btn {
