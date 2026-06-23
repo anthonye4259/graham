@@ -21,7 +21,7 @@ const SCAN_SCHEMA = {
     price: { type: Type.STRING },
     change: { type: Type.STRING },
     direction: { type: Type.STRING },
-    graham_verdict: { type: Type.STRING, description: "Must be exactly BUY, SELL, or HOLD" },
+    graham_verdict: { type: Type.STRING, description: "Must be exactly Bullish, Bearish, or Neutral" },
     graham_reasons: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Exactly 3 bullet points" },
     what: { type: Type.STRING },
     why: { type: Type.STRING },
@@ -130,12 +130,12 @@ export default function ScanPage() {
           ? `Analyze this image. Identify the primary brand, product, company, or financial chart. Determine the relevant public asset (Stock Ticker or Crypto Symbol). Generates a simulated portfolio decision ("What Graham Would Do").`
           : `Analyze the user's input: "${queryToUse}". The input might be a Stock Ticker, a Crypto Asset, or a general news query/URL, and it might contain specific user context (e.g. capital constraints, risk tolerance, time horizon).
              Determine what the asset is. Provide the primary asset symbol (or a short topic name if it's general news), the current approximate price (if applicable, else "N/A").
-             Then, state what "you" (Graham) would do right now with this asset IN THE SPECIFIC CONTEXT OF THE USER'S SITUATION. If the user mentions having limited capital, low risk tolerance, or a short timeframe, factor that directly into your decision.
-             Your verdict MUST be exactly "BUY", "SELL", or "HOLD".
+             Then, provide Graham's perspective on this asset IN THE SPECIFIC CONTEXT OF THE USER'S SITUATION. If the user mentions having limited capital, low risk tolerance, or a short timeframe, factor that directly into your analysis.
+             Your verdict MUST be exactly "Bullish" (worth researching further), "Bearish" (exercise caution), or "Neutral" (monitor for now).
              Provide exactly 3 short, jargon-free bullet points defending your verdict, directly addressing the user's specific situation.
              Finally, provide the advanced insights: a short "what happened recently", "why it matters", and "actionable advice".`;
 
-        const jsonInstruction = `\n\nYou MUST return ONLY a valid JSON object with these exact keys: name (string), ticker (string), price (string), change (string), direction (string), graham_verdict (string, exactly "BUY", "SELL", or "HOLD"), graham_reasons (array of exactly 3 strings), what (string), why (string), action (string). No other text, no markdown, ONLY the JSON object.`;
+        const jsonInstruction = `\n\nYou MUST return ONLY a valid JSON object with these exact keys: name (string), ticker (string), price (string), change (string), direction (string), graham_verdict (string, exactly "Bullish", "Bearish", or "Neutral"), graham_reasons (array of exactly 3 strings), what (string), why (string), action (string). No other text, no markdown, ONLY the JSON object.`;
         const promptText = `${personaPrompt} \n\n ${baseText}${jsonInstruction}`;
 
         let data;
@@ -176,7 +176,7 @@ export default function ScanPage() {
       if (newMessages.length === 1) {
         setState({ chatHistory: [...newMessages, { 
           role: 'model', type: 'rich', 
-          data: { name: queryToUse, ticker: queryToUse, price: '—', change: '0.0%', direction: 'neutral', graham_verdict: 'HOLD', graham_reasons: ['Unable to fetch data.', 'AI service unavailable.', 'Please try again later.'], what: 'Unable to fetch recent data right now.', why: 'The AI service might be temporarily unavailable.', action: 'Please try again later or verify your API key.' }
+          data: { name: queryToUse, ticker: queryToUse, price: '—', change: '0.0%', direction: 'neutral', graham_verdict: 'Neutral', graham_reasons: ['Unable to fetch data.', 'AI service unavailable.', 'Please try again later.'], what: 'Unable to fetch recent data right now.', why: 'The AI service might be temporarily unavailable.', action: 'Please try again later or verify your API key.' }
         }] });
       } else {
         setState({ chatHistory: [...newMessages, { role: 'model', type: 'text', content: "I'm having trouble connecting to my data sources right now. Please try again." }] });
@@ -253,18 +253,18 @@ export default function ScanPage() {
                 </div>
                 <div className="card-section" style={{ opacity: 1, transform: 'none', background: 'var(--bg-main)', borderRadius: '12px', border: '1px solid var(--border-light)', padding: '16px', marginBottom: '16px' }}>
                   <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-                    <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--text-secondary)', marginBottom: '4px', fontWeight: 600 }}>What Graham Would Do</div>
+                    <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--text-secondary)', marginBottom: '4px', fontWeight: 600 }}>Graham's Take</div>
                     <div style={{ 
                       display: 'inline-block',
                       fontSize: '24px', 
                       fontWeight: 800, 
-                      color: result.graham_verdict === 'BUY' ? 'var(--accent-teal)' : result.graham_verdict === 'SELL' ? 'var(--accent-rose)' : 'var(--text-secondary)',
-                      background: result.graham_verdict === 'BUY' ? 'rgba(0, 255, 170, 0.1)' : result.graham_verdict === 'SELL' ? 'rgba(255, 59, 105, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+                      color: result.graham_verdict === 'Bullish' ? 'var(--accent-teal)' : result.graham_verdict === 'Bearish' ? 'var(--accent-rose)' : 'var(--text-secondary)',
+                      background: result.graham_verdict === 'Bullish' ? 'rgba(0, 255, 170, 0.1)' : result.graham_verdict === 'Bearish' ? 'rgba(255, 59, 105, 0.1)' : 'rgba(255, 255, 255, 0.05)',
                       padding: '12px 24px',
                       borderRadius: '100px',
                       letterSpacing: '0px'
                     }}>
-                      I would {result.graham_verdict} {result.ticker}.
+                      {result.graham_verdict} on {result.ticker}
                     </div>
                   </div>
                   <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--text-primary)', fontSize: '14px', lineHeight: '1.6' }}>
@@ -272,8 +272,8 @@ export default function ScanPage() {
                       <li key={i} style={{ marginBottom: i < 2 ? '12px' : 0 }}>{reason}</li>
                     ))}
                   </ul>
-                  <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', textAlign: 'center', marginTop: '16px', fontStyle: 'italic' }}>
-                    *Graham's simulated portfolio decision. Not financial advice.
+                  <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', textAlign: 'center', marginTop: '16px', padding: '8px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', lineHeight: '1.4' }}>
+                    ⚠️ For educational purposes only. This is not financial advice, a recommendation to buy or sell, or an offer of securities. Always do your own research and consult a licensed financial advisor before making investment decisions.
                   </div>
                 </div>
                 

@@ -95,11 +95,11 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
           const activeEntitlements = info.entitlements?.active || {};
           if (activeEntitlements["graham ai Pro"] || activeEntitlements["premium"] || Object.keys(activeEntitlements).length > 0) {
             startTrial(); // persist subscribed=true to Firestore immediately
-            window.location.reload();
+            onClose();
           } else {
             // Purchase went through but entitlement not found yet — still unlock
             startTrial();
-            window.location.reload();
+            onClose();
           }
         } else {
           alert("Subscriptions are currently unavailable. Please check your internet connection and try again.");
@@ -157,7 +157,7 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
         const activeEntitlements = info.entitlements?.active || {};
         if (activeEntitlements["graham ai Pro"] || activeEntitlements["premium"] || Object.keys(activeEntitlements).length > 0) {
           startTrial(); // persist subscribed=true to Firestore
-          window.location.reload();
+          onClose();
         } else {
           alert("No active premium subscription found.");
         }
@@ -271,7 +271,7 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
               </button>
             )}
             <p style={{ textAlign: 'center', fontSize: '12px', color: 'var(--text-muted)', marginTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-              <ion-icon name="lock-closed-outline"></ion-icon> Secure checkout via Apple
+              <ion-icon name="lock-closed-outline"></ion-icon> {Capacitor.isNativePlatform() ? 'Secure checkout via Apple' : 'Secure checkout'}
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center', marginTop: '16px' }}>
               <button onClick={handleRestore} style={{ background: 'none', border: 'none', color: 'var(--text-tertiary)', fontSize: '14px', cursor: 'pointer', textDecoration: 'underline', padding: '12px 16px', minHeight: '44px' }}>

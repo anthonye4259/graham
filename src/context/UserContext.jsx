@@ -217,15 +217,28 @@ export function UserProvider({ children }) {
 
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
-      PushNotifications.addListener('registration', (token) => {
-        if (user) {
-          updateDoc(doc(db, 'users', user.uid), { pushToken: token.value, pushEnabled: true });
-          setStateRaw(s => ({ ...s, pushToken: token.value, pushEnabled: true }));
-        }
-      });
-      PushNotifications.addListener('registrationError', (error) => {
-        console.error('Error on registration: ' + JSON.stringify(error));
-      });
+      const listeners = [];
+      listeners.push(
+        PushNotifications.addListener('registration', (token) => {
+          if (user) {
+            updateDoc(doc(db, 'users', user.uid), { pushToken: token.value, pushEnabled: true });
+            setStateRaw(s => ({ ...s, pushToken: token.value, pushEnabled: true }));
+          }
+        })
+      );
+      listeners.push(
+        PushNotifications.addListener('registrationError', (error) => {
+          console.error('Error on registration: ' + JSON.stringify(error));
+        })
+      );
+      return () => {
+        listeners.forEach(async (listenerPromise) => {
+          try {
+            const handle = await listenerPromise;
+            if (handle && handle.remove) handle.remove();
+          } catch (e) { /* listener already cleaned up */ }
+        });
+      };
     }
   }, [user]);
 

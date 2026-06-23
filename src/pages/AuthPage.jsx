@@ -20,7 +20,7 @@ const SLIDES = [
     icon: 'people',
     color: 'var(--accent-amber)',
     title: 'Multiple Personas',
-    desc: 'Switch AI personalities from Warren Buffett to Patrick Bateman depending on your mood.'
+    desc: 'Switch AI personalities — from The Financial Genius to The Wall Street Wolf — depending on your mood.'
   }
 ];
 

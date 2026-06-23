@@ -53,7 +53,7 @@ export async function freeAI(prompt, { json, schema, image } = {}) {
         return { type: 'text', data: response.text };
       }
     } catch (e) {
-      console.log("Apple AI failed:", e.message);
+      console.warn("Apple AI failed:", e.message);
     }
   }
 
@@ -74,7 +74,7 @@ export async function freeAI(prompt, { json, schema, image } = {}) {
         }
         return { type: 'text', data: response.text() };
       } catch (e) {
-        console.log(`${model} failed:`, e.message);
+        console.warn(`${model} failed:`, e.message);
       }
     }
   }
@@ -100,7 +100,7 @@ export async function freeAI(prompt, { json, schema, image } = {}) {
       }
       return { type: 'text', data: text };
     } catch (e) {
-      console.log("Groq failed:", e.message);
+      console.warn("Groq failed:", e.message);
     }
   }
 
@@ -125,7 +125,7 @@ export async function freeAI(prompt, { json, schema, image } = {}) {
       }
       return { type: 'text', data: text };
     } catch (e) {
-      console.log("Cerebras failed:", e.message);
+      console.warn("Cerebras failed:", e.message);
     }
   }
 

@@ -9,7 +9,7 @@ export default function SupportPage() {
           Need help with your account, billing, or the app? Our team is here to assist you.
         </p>
         <p style={{ fontWeight: 'bold' }}>
-          Email: <a href="mailto:support@graham.ai" style={{ color: 'var(--accent-blue)' }}>support@graham.ai</a>
+          Email: <a href="mailto:support@grahamai.com" style={{ color: 'var(--accent-blue)' }}>support@grahamai.com</a>
         </p>
       </div>
 
