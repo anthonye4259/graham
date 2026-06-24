@@ -1,39 +1,56 @@
-import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 import { Capacitor } from '@capacitor/core';
 
 const isNative = Capacitor.isNativePlatform();
 
+async function getHaptics() {
+  if (!isNative) return null;
+  try {
+    const m = await import('@capacitor/haptics');
+    return m.Haptics;
+  } catch (e) {
+    return null;
+  }
+}
+
+// Map styles locally so we don't need top-level imports
+const ImpactStyleLight = 'LIGHT';
+const ImpactStyleMedium = 'MEDIUM';
+const ImpactStyleHeavy = 'HEAVY';
+const NotificationTypeSuccess = 'SUCCESS';
+const NotificationTypeError = 'ERROR';
+const NotificationTypeWarning = 'WARNING';
+
 export const hapticImpactLight = async () => {
-  if (!isNative) return;
-  try { await Haptics.impact({ style: ImpactStyle.Light }); } catch (e) {}
+  const H = await getHaptics();
+  if (H) try { await H.impact({ style: ImpactStyleLight }); } catch (e) {}
 };
 
 export const hapticImpactMedium = async () => {
-  if (!isNative) return;
-  try { await Haptics.impact({ style: ImpactStyle.Medium }); } catch (e) {}
+  const H = await getHaptics();
+  if (H) try { await H.impact({ style: ImpactStyleMedium }); } catch (e) {}
 };
 
 export const hapticImpactHeavy = async () => {
-  if (!isNative) return;
-  try { await Haptics.impact({ style: ImpactStyle.Heavy }); } catch (e) {}
+  const H = await getHaptics();
+  if (H) try { await H.impact({ style: ImpactStyleHeavy }); } catch (e) {}
 };
 
 export const hapticSelection = async () => {
-  if (!isNative) return;
-  try { await Haptics.selectionStart(); await Haptics.selectionChanged(); await Haptics.selectionEnd(); } catch (e) {}
+  const H = await getHaptics();
+  if (H) try { await H.selectionStart(); await H.selectionChanged(); await H.selectionEnd(); } catch (e) {}
 };
 
 export const hapticSuccess = async () => {
-  if (!isNative) return;
-  try { await Haptics.notification({ type: NotificationType.Success }); } catch (e) {}
+  const H = await getHaptics();
+  if (H) try { await H.notification({ type: NotificationTypeSuccess }); } catch (e) {}
 };
 
 export const hapticError = async () => {
-  if (!isNative) return;
-  try { await Haptics.notification({ type: NotificationType.Error }); } catch (e) {}
+  const H = await getHaptics();
+  if (H) try { await H.notification({ type: NotificationTypeError }); } catch (e) {}
 };
 
 export const hapticWarning = async () => {
-  if (!isNative) return;
-  try { await Haptics.notification({ type: NotificationType.Warning }); } catch (e) {}
+  const H = await getHaptics();
+  if (H) try { await H.notification({ type: NotificationTypeWarning }); } catch (e) {}
 };
