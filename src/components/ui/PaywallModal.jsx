@@ -3,9 +3,14 @@ import { Link } from 'react-router-dom';
 import { useUser } from '../../context/UserContext';
 import { analytics, trackEvent } from '../../lib/firebase';
 
-import { loadStripe } from '@stripe/stripe-js';
 import { Capacitor } from '@capacitor/core';
-import { Purchases } from '@revenuecat/purchases-capacitor';
+
+// SAFE: dynamic import to prevent crash on iPad
+async function getPurchases() {
+  try { const m = await import('@revenuecat/purchases-capacitor'); return m.Purchases; }
+  catch (e) { console.warn('Purchases not available:', e.message); return null; }
+}
+
 export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
   const { user, startTrial } = useUser();
   const [billing, setBilling] = useState('annual'); // 'annual' | 'monthly'
@@ -18,6 +23,13 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
     setLoadingOfferings(true);
     setFetchError(false);
     
+    const Purchases = await getPurchases();
+    if (!Purchases) {
+      setLoadingOfferings(false);
+      setFetchError(true);
+      return;
+    }
+
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
         // Ensure RevenueCat is configured before fetching
@@ -65,7 +77,7 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
 
   useEffect(() => {
     if (isOpen) {
-      trackEvent('begin_checkout');
+      try { trackEvent('begin_checkout'); } catch(e) {}
     }
   }, [isOpen]);
 
@@ -77,6 +89,9 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
     // RevenueCat Native Flow
     if (Capacitor.isNativePlatform()) {
       try {
+        const Purchases = await getPurchases();
+        if (!Purchases) { alert('Purchase system not available. Please try again.'); setLoadingStripe(false); return; }
+
         // If packages haven't loaded yet, try one more time
         if (rcPackages.length === 0) {
           await fetchPackages(3, 1500);
@@ -152,6 +167,8 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
     if (Capacitor.isNativePlatform()) {
       try {
         setLoadingStripe(true);
+        const Purchases = await getPurchases();
+        if (!Purchases) { alert('Purchase system not available.'); setLoadingStripe(false); return; }
         const restoreResult = await Purchases.restorePurchases();
         const info = restoreResult.customerInfo || restoreResult;
         const activeEntitlements = info.entitlements?.active || {};
@@ -190,16 +207,13 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="paywall-modal" onClick={e => e.stopPropagation()}>
         <div className="paywall-header">
-          {source !== 'hardwall' && (
-            <button className="close-modal" onClick={onClose}>
-              <ion-icon name="close-outline"></ion-icon>
-            </button>
-          )}
+          {/* ALWAYS show close button — user must never be trapped */}
+          <button className="close-modal" onClick={onClose}>
+            <ion-icon name="close-outline"></ion-icon>
+          </button>
           <h2 className="paywall-title">Invest in Yourself</h2>
           <p className="paywall-subtitle">
-            {source === 'hardwall'
-              ? 'Start your free trial to unlock Graham.'
-              : (source === 'scan' ? 'Unlock unlimited stock scans and full access.' : 'Master the markets with Graham Premium.')}
+            {source === 'scan' ? 'Unlock unlimited stock scans and full access.' : 'Master the markets with Graham Premium.'}
           </p>
 
           <div className="billing-toggle" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px', background: 'var(--bg-secondary)', padding: '4px', borderRadius: '12px' }}>
@@ -276,6 +290,9 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center', marginTop: '16px' }}>
               <button onClick={handleRestore} style={{ background: 'none', border: 'none', color: 'var(--text-tertiary)', fontSize: '14px', cursor: 'pointer', textDecoration: 'underline', padding: '12px 16px', minHeight: '44px' }}>
                 Restore Purchases
+              </button>
+              <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-tertiary)', fontSize: '14px', cursor: 'pointer', padding: '12px 16px', minHeight: '44px' }}>
+                Skip for now
               </button>
               <div style={{ display: 'flex', gap: '16px', fontSize: '13px', color: 'var(--text-tertiary)' }}>
                 <a href="https://grahamapp.web.app/terms" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-gold, #A67C52)', textDecoration: 'underline', padding: '4px 0', minHeight: '44px', display: 'flex', alignItems: 'center' }}>Terms of Use (EULA)</a>

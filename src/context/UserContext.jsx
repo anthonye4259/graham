@@ -3,8 +3,16 @@ import { auth, db } from '../lib/firebase';
 import { signInAnonymously, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { Capacitor } from '@capacitor/core';
-import { Purchases } from '@revenuecat/purchases-capacitor';
-import { PushNotifications } from '@capacitor/push-notifications';
+
+// SAFE: dynamic imports to prevent crash on iPad when plugins aren't registered
+async function getPurchases() {
+  try { const m = await import('@revenuecat/purchases-capacitor'); return m.Purchases; }
+  catch (e) { console.warn('Purchases not available:', e.message); return null; }
+}
+async function getPushNotifications() {
+  try { const m = await import('@capacitor/push-notifications'); return m.PushNotifications; }
+  catch (e) { console.warn('PushNotifications not available:', e.message); return null; }
+}
 
 const XP_LEVELS = [0, 100, 250, 500, 1000, 2000, 3500, 5500, 8000, 12000, 20000];
 
@@ -81,14 +89,15 @@ export function UserProvider({ children }) {
           
           if (Capacitor.isNativePlatform()) {
             try {
-              if (import.meta.env.VITE_REVENUECAT_PUBLIC_KEY) {
+              const Purchases = await getPurchases();
+              if (import.meta.env.VITE_REVENUECAT_PUBLIC_KEY && Purchases) {
                 await Promise.race([
                   (async () => {
                     await Purchases.configure({ apiKey: import.meta.env.VITE_REVENUECAT_PUBLIC_KEY, appUserID: currentUser.uid });
                     
                     // Listen for dynamic updates (crucial for Sandbox/delayed purchases)
                     Purchases.addCustomerInfoUpdateListener((info) => {
-                      // Review account: never auto-enable from listener — paywall handles purchases directly
+                      // Review account: never auto-enable from listener
                       if (isReviewAccount) return;
                       const active = info.entitlements?.active || {};
                       if (active["graham ai Pro"] || active["premium"] || Object.keys(active).length > 0) {
@@ -200,14 +209,16 @@ export function UserProvider({ children }) {
   const requestPushPermissions = async () => {
     try {
       if (Capacitor.isNativePlatform()) {
-        let permStatus = await PushNotifications.checkPermissions();
+        const PN = await getPushNotifications();
+        if (!PN) return;
+        let permStatus = await PN.checkPermissions();
 
         if (permStatus.receive === 'prompt') {
-          permStatus = await PushNotifications.requestPermissions();
+          permStatus = await PN.requestPermissions();
         }
 
         if (permStatus.receive === 'granted') {
-          await PushNotifications.register();
+          await PN.register();
         }
       }
     } catch (e) {
@@ -217,20 +228,24 @@ export function UserProvider({ children }) {
 
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
-      const listeners = [];
-      listeners.push(
-        PushNotifications.addListener('registration', (token) => {
-          if (user) {
-            updateDoc(doc(db, 'users', user.uid), { pushToken: token.value, pushEnabled: true });
-            setStateRaw(s => ({ ...s, pushToken: token.value, pushEnabled: true }));
-          }
-        })
-      );
-      listeners.push(
-        PushNotifications.addListener('registrationError', (error) => {
-          console.error('Error on registration: ' + JSON.stringify(error));
-        })
-      );
+      let listeners = [];
+      (async () => {
+        const PN = await getPushNotifications();
+        if (!PN) return;
+        listeners.push(
+          PN.addListener('registration', (token) => {
+            if (user) {
+              updateDoc(doc(db, 'users', user.uid), { pushToken: token.value, pushEnabled: true });
+              setStateRaw(s => ({ ...s, pushToken: token.value, pushEnabled: true }));
+            }
+          })
+        );
+        listeners.push(
+          PN.addListener('registrationError', (error) => {
+            console.error('Error on registration: ' + JSON.stringify(error));
+          })
+        );
+      })();
       return () => {
         listeners.forEach(async (listenerPromise) => {
           try {
