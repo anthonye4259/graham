@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useUser } from '../../context/UserContext';
 
 export default function BuildingPlan({ onDone }) {
   const { state } = useUser();
   const [progress, setProgress] = useState(0);
   const [logs, setLogs] = useState(['Initializing AI Core...']);
+  const currentPhaseRef = useRef(0);
+  const doneCalledRef = useRef(false);
 
   useEffect(() => {
     const phases = [
@@ -18,19 +20,26 @@ export default function BuildingPlan({ onDone }) {
       { p: 100, text: '> AI AGENT READY.' }
     ];
 
-    let currentPhase = 0;
+    currentPhaseRef.current = 0;
+    doneCalledRef.current = false;
+
     const interval = setInterval(() => {
       setProgress(prev => {
         const next = prev + (Math.random() * 3);
         
-        if (currentPhase < phases.length && next >= phases[currentPhase].p) {
-          setLogs(l => [...l, phases[currentPhase].text].slice(-5));
-          currentPhase++;
+        // Safe: use ref to avoid closure issues with React batching/replaying
+        while (currentPhaseRef.current < phases.length && next >= phases[currentPhaseRef.current].p) {
+          const phaseText = phases[currentPhaseRef.current].text;
+          setLogs(l => [...l, phaseText].slice(-5));
+          currentPhaseRef.current++;
         }
 
         if (next >= 100) {
           clearInterval(interval);
-          setTimeout(onDone, 1200);
+          if (!doneCalledRef.current) {
+            doneCalledRef.current = true;
+            setTimeout(onDone, 1200);
+          }
           return 100;
         }
         return next;
