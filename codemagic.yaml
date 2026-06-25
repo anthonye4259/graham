@@ -21,10 +21,11 @@ workflows:
         script: npx cap sync ios
       - name: Set up code signing
         script: xcode-project use-profiles
-      - name: Increment build number
+      - name: Log build number
         script: |
           cd ios/App
-          agvtool new-version -all $PROJECT_BUILD_NUMBER
+          echo "Build number from pbxproj:"
+          grep CURRENT_PROJECT_VERSION App.xcodeproj/project.pbxproj
       - name: Build IPA
         script: |
           xcode-project build-ipa \
