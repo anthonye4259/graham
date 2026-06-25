@@ -159,7 +159,7 @@ export default function FeedPage() {
       `You are a concise financial analyst. Give a 2-sentence investment thesis for ${dailyStock.name} (${dailyStock.ticker}) as of today. Include one bullish point and one risk. Keep it factual and educational. Do not give buy/sell advice. Return JSON: {"thesis": "...", "sentiment": "bullish|bearish|neutral", "priceEstimate": number}`,
       { json: true }
     ).then(result => {
-      const data = typeof result === 'string' ? JSON.parse(result) : result;
+      const data = result?.data || (typeof result === 'string' ? JSON.parse(result) : result);
       setStockInsight(data);
       localStorage.setItem(cacheKey, JSON.stringify(data));
     }).catch(e => {

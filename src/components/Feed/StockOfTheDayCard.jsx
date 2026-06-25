@@ -64,11 +64,11 @@ export default function StockOfTheDayCard({ stock, insight, onTrade }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '24px', marginBottom: '32px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
             <div style={{ fontSize: '28px', fontWeight: '800', color: 'var(--text-primary)' }}>
-              ${stock.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+              ${Number(stock.price || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
             </div>
             <div style={{ fontSize: '16px', fontWeight: '700', color: color, display: 'flex', alignItems: 'center', gap: '4px' }}>
               <ion-icon name={isUp ? 'caret-up' : 'caret-down'}></ion-icon>
-              {Math.abs(stock.change).toFixed(2)}% Today
+              {Math.abs(Number(stock.change) || 0).toFixed(2)}% Today
             </div>
           </div>
           

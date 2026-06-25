@@ -79,7 +79,7 @@ function AppShell() {
           setShowPaywall(false);
           // Mark that user has dismissed the onboarding paywall
           if (!state.hasSeenOnboardingPaywall) {
-            startTrial && void 0; // state update handled by context
+            setState({ hasSeenOnboardingPaywall: true });
           }
         }} 
         source="softwall" 

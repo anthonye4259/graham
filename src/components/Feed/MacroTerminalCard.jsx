@@ -67,7 +67,7 @@ export default function MacroTerminalCard({ data }) {
         <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase' }}>Auto-Generated Trade Ideas</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {data.tradeIdeas?.map((idea, i) => {
-            const isLong = idea.type.includes('LONG') || idea.type.includes('BUY');
+            const isLong = (idea.type || '').includes('LONG') || (idea.type || '').includes('BUY');
             const color = isLong ? 'var(--accent-green)' : 'var(--accent-rose)';
             return (
               <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>

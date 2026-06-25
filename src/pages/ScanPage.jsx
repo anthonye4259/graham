@@ -146,6 +146,7 @@ export default function ScanPage() {
           image: inlineData || undefined,
         });
         data = result.data;
+        if (!data || !data.ticker) throw new Error('Invalid AI response');
         
         let newMilestones = state.milestones || [];
         if (inlineData && !newMilestones.includes('first_screenshot')) {
@@ -160,7 +161,7 @@ export default function ScanPage() {
         // Follow up chat
         const history = newMessages.map(m => {
           if (m.role === 'user') return `User: ${m.content}`;
-          if (m.type === 'rich') return `Graham: Analyzed ${m.data.ticker} - ${m.data.what}`;
+          if (m.type === 'rich') return `Graham: Analyzed ${m.data?.ticker || 'asset'} - ${m.data?.what || ''}`;
           return `Graham: ${m.content}`;
         }).join('\n\n');
 

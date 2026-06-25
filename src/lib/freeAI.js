@@ -22,7 +22,7 @@ async function callOpenAICompatible(url, apiKey, model, prompt, json) {
   });
   if (!response.ok) throw new Error(`${model}: ${response.status}`);
   const data = await response.json();
-  return data.choices[0].message.content;
+  return data?.choices?.[0]?.message?.content || '';
 }
 
 // Chain of ALL free AI models — each has separate free quota
@@ -40,7 +40,7 @@ export async function freeAI(prompt, { json, schema, image } = {}) {
       if (available) {
         const response = await AppleIntelligence.generateText({ prompt });
         if (json) {
-          const match = response.text.match(/\{[\s\S]*\}/);
+          const match = (response?.text || '').match(/\{[\s\S]*\}/);
           if (!match) throw new Error("No JSON in Apple response");
           const parsed = JSON.parse(match[0]);
           if (schema) {

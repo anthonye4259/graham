@@ -335,8 +335,8 @@ export function UserProvider({ children }) {
 
   const simulateBuy = useCallback((ticker, name, currentPrice) => {
     setStateRaw(prev => {
-      // price might be a string like "$150.20", we need to parse it
-      const numPrice = parseFloat(currentPrice.replace(/[^0-9.-]+/g,""));
+      // price might be a string like "$150.20" or a number
+      const numPrice = typeof currentPrice === 'number' ? currentPrice : parseFloat(String(currentPrice).replace(/[^0-9.-]+/g,""));
       const newHolding = {
         ticker,
         name,
@@ -414,6 +414,7 @@ export function UserProvider({ children }) {
   const getXPProgress = useCallback(() => {
     const curr = XP_LEVELS[state.level - 1] || 0;
     const next = XP_LEVELS[state.level] || XP_LEVELS[XP_LEVELS.length - 1];
+    if (next === curr) return 100;
     return ((state.xp - curr) / (next - curr)) * 100;
   }, [state.xp, state.level]);
 
