@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useUser } from '../../context/UserContext';
 import { analytics, trackEvent } from '../../lib/firebase';
 
@@ -12,6 +12,7 @@ async function getPurchases() {
 }
 
 export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
+  const navigate = useNavigate();
   const { user, startTrial } = useUser();
   const [billing, setBilling] = useState('annual'); // 'annual' | 'monthly'
   const [loadingStripe, setLoadingStripe] = useState(false);
@@ -32,21 +33,23 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
 
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
-        // Ensure RevenueCat is configured before fetching
-        if (attempt > 1) {
-          try {
-            const apiKey = import.meta.env.VITE_REVENUECAT_PUBLIC_KEY;
-            if (apiKey && user) {
-              await Purchases.configure({ apiKey, appUserID: user.uid });
-            }
-          } catch (configErr) {
-            // Already configured, that's fine
+        // Ensure RevenueCat is configured before fetching (safe to call multiple times)
+        try {
+          const apiKey = import.meta.env.VITE_REVENUECAT_PUBLIC_KEY;
+          if (apiKey) {
+            const configObj = { apiKey };
+            if (user && user.uid) configObj.appUserID = user.uid;
+            await Purchases.configure(configObj);
           }
+        } catch (configErr) {
+          // Already configured, that's fine
         }
         
         const offerings = await Purchases.getOfferings();
-        if (offerings.current && offerings.current.availablePackages.length !== 0) {
-          setRcPackages(offerings.current.availablePackages);
+        const currentOffering = offerings.current;
+
+        if (currentOffering && currentOffering.availablePackages && currentOffering.availablePackages.length > 0) {
+          setRcPackages(currentOffering.availablePackages);
           setLoadingOfferings(false);
           setFetchError(false);
           return; // Success!
@@ -84,6 +87,13 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
   if (!isOpen) return null;
 
   const handleSubscribe = async () => {
+    if (!user) {
+      alert("Please create an account before subscribing.");
+      onClose();
+      navigate('/auth');
+      return;
+    }
+
     setLoadingStripe(true);
     
     // RevenueCat Native Flow

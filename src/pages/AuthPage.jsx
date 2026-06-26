@@ -51,15 +51,21 @@ export default function AuthPage() {
     setError(null);
     setLoading(true);
     try {
-      if (isLogin) {
-        await login(email, password);
-      } else {
-        await signup(email, password);
+      const authPromise = isLogin ? login(email, password) : signup(email, password);
+      
+      // Race auth against a 10-second timeout so the app NEVER hangs on iOS
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Connection timed out. Please check your internet connection and try again.')), 10000)
+      );
+      
+      await Promise.race([authPromise, timeoutPromise]);
+      
+      if (!isLogin) {
         trackEvent('sign_up');
       }
       navigate('/app');
     } catch (err) {
-      setError(err.message || "Authentication failed.");
+      setError(err.message.replace('Firebase: ', '').replace(/\(auth\/.*\)/, '').trim() || "Authentication failed.");
     } finally {
       setLoading(false);
     }

@@ -20,7 +20,7 @@ import PaywallModal from './components/ui/PaywallModal';
 const isNative = Capacitor.isNativePlatform();
 
 function AppShell() {
-  const { user, loadingAuth, state, startTrial, isPremium, getScansRemaining } = useUser();
+  const { user, loadingAuth, state, setState, startTrial, isPremium, getScansRemaining } = useUser();
   const location = useLocation();
   const navigate = useNavigate();
   const [showPaywall, setShowPaywall] = useState(false);
