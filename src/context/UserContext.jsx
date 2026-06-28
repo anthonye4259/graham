@@ -87,6 +87,9 @@ export function UserProvider({ children }) {
           const REVIEW_EMAIL = 'review@grahamai.com';
           const isReviewAccount = currentUser.email === REVIEW_EMAIL;
           
+          const EXPIRED_REVIEW_EMAIL = 'expired@grahamai.com';
+          const isExpiredReviewAccount = currentUser.email === EXPIRED_REVIEW_EMAIL;
+          
           if (Capacitor.isNativePlatform()) {
             try {
               const Purchases = await getPurchases();
@@ -97,8 +100,8 @@ export function UserProvider({ children }) {
                     
                     // Listen for dynamic updates (crucial for Sandbox/delayed purchases)
                     Purchases.addCustomerInfoUpdateListener((info) => {
-                      // Review account: never auto-enable from listener
-                      if (isReviewAccount) return;
+                      // Review accounts: never auto-enable from listener
+                      if (isReviewAccount || isExpiredReviewAccount) return;
                       const active = info.entitlements?.active || {};
                       if (active["graham ai Pro"] || active["premium"] || Object.keys(active).length > 0) {
                         setStateRaw(s => ({ ...s, subscribed: true }));
@@ -123,9 +126,13 @@ export function UserProvider({ children }) {
           // Load Firestore Data
           const docRef = doc(db, 'users', currentUser.uid);
           const docSnap = await getDoc(docRef);
+          
+          const expiredTrialDate = new Date();
+          expiredTrialDate.setDate(expiredTrialDate.getDate() - 10); // 10 days ago
+          
           if (docSnap.exists()) {
             const data = docSnap.data();
-            if (isNativeSubscribed && !isReviewAccount) data.subscribed = true;
+            if (isNativeSubscribed && !isReviewAccount && !isExpiredReviewAccount) data.subscribed = true;
             if (isReviewAccount) {
               data.onboarded = true; data.name = data.name || 'App Reviewer'; data.investingGoal = data.investingGoal || 'learn_basics'; data.persona = data.persona || 'Graham'; data.hasSeenFeedTutorial = true;
               // ALWAYS force paywall for Apple Review — ignore RevenueCat existing entitlements
@@ -133,13 +140,22 @@ export function UserProvider({ children }) {
               // Persist to Firestore so DB doesn't have stale subscribed:true
               try { await updateDoc(docRef, { subscribed: false, trialStartDate: null, onboarded: true }); } catch(e) { console.warn('Review account Firestore update failed:', e); }
             }
+            if (isExpiredReviewAccount) {
+              data.onboarded = true; data.name = data.name || 'App Reviewer (Expired)'; data.investingGoal = data.investingGoal || 'learn_basics'; data.persona = data.persona || 'Graham'; data.hasSeenFeedTutorial = true;
+              data.subscribed = false; data.trialStartDate = expiredTrialDate.toISOString();
+              try { await updateDoc(docRef, { subscribed: false, trialStartDate: expiredTrialDate.toISOString(), onboarded: true }); } catch(e) { console.warn('Review account Firestore update failed:', e); }
+            }
             if (isMounted) setStateRaw({ ...DEFAULT_STATE, ...data });
           } else {
             const defaultWithSub = { ...DEFAULT_STATE };
-            if (isNativeSubscribed && !isReviewAccount) defaultWithSub.subscribed = true;
+            if (isNativeSubscribed && !isReviewAccount && !isExpiredReviewAccount) defaultWithSub.subscribed = true;
             if (isReviewAccount) {
               defaultWithSub.onboarded = true; defaultWithSub.name = 'App Reviewer'; defaultWithSub.investingGoal = 'learn_basics'; defaultWithSub.persona = 'Graham'; defaultWithSub.hasSeenFeedTutorial = true;
               defaultWithSub.subscribed = false; defaultWithSub.trialStartDate = null;
+            }
+            if (isExpiredReviewAccount) {
+              defaultWithSub.onboarded = true; defaultWithSub.name = 'App Reviewer (Expired)'; defaultWithSub.investingGoal = 'learn_basics'; defaultWithSub.persona = 'Graham'; defaultWithSub.hasSeenFeedTutorial = true;
+              defaultWithSub.subscribed = false; defaultWithSub.trialStartDate = expiredTrialDate.toISOString();
             }
             await setDoc(docRef, defaultWithSub);
             if (isMounted) setStateRaw(defaultWithSub);
@@ -418,9 +434,13 @@ export function UserProvider({ children }) {
     return ((state.xp - curr) / (next - curr)) * 100;
   }, [state.xp, state.level]);
 
+  const hasUsedTrial = useCallback(() => {
+    return !!state.trialStartDate;
+  }, [state.trialStartDate]);
+
   const value = {
     state, setState, addXP, completeLesson, markDailyGoal,
-    isTrialActive, isPremium, startTrial, getScansRemaining,
+    isTrialActive, isPremium, startTrial, getScansRemaining, hasUsedTrial,
     incrementScan, loseHeart, getGreeting, getLevelTitle, getXPProgress,
     user, loadingAuth, simulateBuy, login, signup, logout, deleteAccount, requestPushPermissions
   };

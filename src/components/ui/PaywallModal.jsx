@@ -13,7 +13,7 @@ async function getPurchases() {
 
 export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
   const navigate = useNavigate();
-  const { user, startTrial } = useUser();
+  const { user, startTrial, hasUsedTrial } = useUser();
   const [billing, setBilling] = useState('annual'); // 'annual' | 'monthly'
   const [loadingStripe, setLoadingStripe] = useState(false);
   const [rcPackages, setRcPackages] = useState([]);
@@ -210,7 +210,7 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
   }
 
   const price = dynamicPrice || (billing === 'annual' ? '$39.99' : (billing === 'weekly' ? '$2.99' : '$7.99'));
-  const billedText = billing === 'annual' ? 'Billed annually (Includes 3-Day Free Trial)' : (billing === 'weekly' ? 'Billed weekly' : 'Billed monthly');
+  const billedText = billing === 'annual' ? (hasUsedTrial() ? 'Billed annually' : 'Billed annually (Includes 3-Day Free Trial)') : (billing === 'weekly' ? 'Billed weekly' : 'Billed monthly');
   const periodText = billing === 'annual' ? 'yr' : (billing === 'weekly' ? 'wk' : 'mo');
 
   return (
@@ -291,7 +291,7 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
               </button>
             ) : (
               <button className="paywall-cta" onClick={handleSubscribe} disabled={loadingStripe}>
-                {loadingStripe ? 'Loading securely...' : (billing === 'annual' ? 'Start 3-Day Free Trial' : 'Subscribe Now')}
+                {loadingStripe ? 'Loading securely...' : (billing === 'annual' && !hasUsedTrial() ? 'Start 3-Day Free Trial' : 'Subscribe Now')}
               </button>
             )}
             <p style={{ textAlign: 'center', fontSize: '12px', color: 'var(--text-muted)', marginTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
