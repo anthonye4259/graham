@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { useUser } from '../context/UserContext';
 import { useNavigate } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
+import PaywallModal from '../components/ui/PaywallModal';
 
 export default function SettingsPage() {
   const { state, setState, logout, deleteAccount, isPremium, requestPushPermissions } = useUser();
   const navigate = useNavigate();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
 
 
 
@@ -56,12 +58,20 @@ export default function SettingsPage() {
                 {state.subscribed || isPremium() ? 'Graham Premium' : 'Free Tier'}
               </div>
               <div style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
-                {state.subscribed || isPremium() ? 'You have access to unlimited scans and advanced AI analysis.' : 'You are currently on the free trial tier.'}
+                {state.subscribed || isPremium() ? 'You have access to unlimited scans and advanced AI analysis.' : 'You are currently on the free tier.'}
               </div>
             </div>
             {state.subscribed || isPremium() ? (
               <div style={{ background: 'rgba(16, 185, 129, 0.1)', color: 'var(--accent-teal)', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold' }}>ACTIVE</div>
-            ) : null}
+            ) : (
+              <button 
+                onClick={() => setShowPaywall(true)}
+                style={{ background: 'var(--accent-gold)', color: '#1a1a1a', padding: '8px 16px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold', border: 'none', cursor: 'pointer', boxShadow: '0 4px 12px rgba(212, 175, 55, 0.3)' }}
+                className="hover-scale"
+              >
+                Upgrade
+              </button>
+            )}
           </div>
         </section>
 
@@ -222,6 +232,14 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {showPaywall && (
+        <PaywallModal 
+          isOpen={showPaywall} 
+          onClose={() => setShowPaywall(false)} 
+          source="settings" 
+        />
       )}
     </div>
   );
