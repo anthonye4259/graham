@@ -20,7 +20,11 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
   const [loadingOfferings, setLoadingOfferings] = useState(true);
   const [fetchError, setFetchError] = useState(false);
 
-  const fetchPackages = useCallback(async (retries = 3, delay = 1500) => {
+  // Hardcoded App Store Connect product IDs as fallback
+  const PRODUCT_IDS = { weekly: 'G1', monthly: 'G2', annual: 'G3' };
+  const [directProducts, setDirectProducts] = useState([]);
+
+  const fetchPackages = useCallback(async (retries = 2, delay = 1500) => {
     setLoadingOfferings(true);
     setFetchError(false);
     
@@ -31,20 +35,21 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
       return;
     }
 
+    // Ensure RevenueCat is configured
+    try {
+      const apiKey = import.meta.env.VITE_REVENUECAT_PUBLIC_KEY;
+      if (apiKey) {
+        const configObj = { apiKey };
+        if (user && user.uid) configObj.appUserID = user.uid;
+        await Purchases.configure(configObj);
+      }
+    } catch (configErr) {
+      // Already configured, that's fine
+    }
+
+    // Try offerings first
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
-        // Ensure RevenueCat is configured before fetching (safe to call multiple times)
-        try {
-          const apiKey = import.meta.env.VITE_REVENUECAT_PUBLIC_KEY;
-          if (apiKey) {
-            const configObj = { apiKey };
-            if (user && user.uid) configObj.appUserID = user.uid;
-            await Purchases.configure(configObj);
-          }
-        } catch (configErr) {
-          // Already configured, that's fine
-        }
-        
         const offerings = await Purchases.getOfferings();
         const currentOffering = offerings.current;
 
@@ -52,22 +57,35 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
           setRcPackages(currentOffering.availablePackages);
           setLoadingOfferings(false);
           setFetchError(false);
-          return; // Success!
+          return; // Success with offerings!
         }
       } catch (e) {
-        console.warn(`RC fetch attempt ${attempt}/${retries} failed:`, e.message);
+        console.warn(`RC offerings attempt ${attempt}/${retries} failed:`, e.message);
       }
-      
-      // Wait before retrying (skip wait on last attempt)
-      if (attempt < retries) {
-        await new Promise(resolve => setTimeout(resolve, delay));
+      if (attempt < retries) await new Promise(resolve => setTimeout(resolve, delay));
+    }
+
+    // Fallback: fetch products directly by hardcoded App Store product IDs
+    console.log('[Paywall] Offerings empty — falling back to direct product fetch');
+    try {
+      const productResult = await Purchases.getProducts({ 
+        productIdentifiers: [PRODUCT_IDS.weekly, PRODUCT_IDS.monthly, PRODUCT_IDS.annual] 
+      });
+      if (productResult && productResult.products && productResult.products.length > 0) {
+        setDirectProducts(productResult.products);
+        setLoadingOfferings(false);
+        setFetchError(false);
+        console.log('[Paywall] Direct products loaded:', productResult.products.map(p => p.identifier));
+        return; // Success with direct products!
       }
+    } catch (e) {
+      console.warn('Direct product fetch failed:', e.message);
     }
     
-    // All retries exhausted
+    // All methods exhausted
     setLoadingOfferings(false);
     setFetchError(true);
-    console.error("All RevenueCat fetch attempts exhausted");
+    console.error("All RevenueCat fetch attempts exhausted (offerings + direct products)");
   }, [user]);
 
   useEffect(() => {
@@ -107,33 +125,67 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
         const Purchases = await getPurchases();
         if (!Purchases) { alert('Purchase system not available. Please try again.'); setLoadingStripe(false); return; }
 
-        // If packages haven't loaded yet, try one more time
-        if (rcPackages.length === 0) {
-          await fetchPackages(3, 1500);
-          setLoadingStripe(false);
-          return; // Let the user try again after packages load
+        // METHOD 1: Use RC packages (offerings) if available
+        if (rcPackages.length > 0) {
+          let pkg = rcPackages[0]; 
+          if (billing === 'annual') pkg = rcPackages.find(p => p.packageType === "ANNUAL") || rcPackages[0];
+          if (billing === 'monthly') pkg = rcPackages.find(p => p.packageType === "MONTHLY") || rcPackages[0];
+          if (billing === 'weekly') pkg = rcPackages.find(p => p.packageType === "WEEKLY") || rcPackages[0];
+
+          if (pkg) {
+            const result = await Purchases.purchasePackage({ aPackage: pkg });
+            const info = result.customerInfo || result;
+            const activeEntitlements = info.entitlements?.active || {};
+            if (activeEntitlements["graham ai Pro"] || activeEntitlements["premium"] || Object.keys(activeEntitlements).length > 0) {
+              startTrial();
+              onClose();
+            } else {
+              startTrial();
+              onClose();
+            }
+            return;
+          }
         }
 
-        let pkg = rcPackages[0]; 
-        if (billing === 'annual') pkg = rcPackages.find(p => p.packageType === "ANNUAL") || rcPackages[0];
-        if (billing === 'monthly') pkg = rcPackages.find(p => p.packageType === "MONTHLY") || rcPackages[0];
-        if (billing === 'weekly') pkg = rcPackages.find(p => p.packageType === "WEEKLY") || rcPackages[0];
+        // METHOD 2: Use direct StoreKit products if available
+        if (directProducts.length > 0) {
+          const targetId = PRODUCT_IDS[billing] || PRODUCT_IDS.annual;
+          const product = directProducts.find(p => p.identifier === targetId) || directProducts[0];
+          
+          if (product) {
+            console.log('[Paywall] Purchasing direct product:', product.identifier);
+            const result = await Purchases.purchaseStoreProduct({ product });
+            const info = result.customerInfo || result;
+            const activeEntitlements = info.entitlements?.active || {};
+            if (activeEntitlements["graham ai Pro"] || activeEntitlements["premium"] || Object.keys(activeEntitlements).length > 0) {
+              startTrial();
+              onClose();
+            } else {
+              startTrial();
+              onClose();
+            }
+            return;
+          }
+        }
 
-        if (pkg) {
-          const result = await Purchases.purchasePackage({ aPackage: pkg });
-          const info = result.customerInfo || result;
-          const activeEntitlements = info.entitlements?.active || {};
-          if (activeEntitlements["graham ai Pro"] || activeEntitlements["premium"] || Object.keys(activeEntitlements).length > 0) {
-            startTrial(); // persist subscribed=true to Firestore immediately
-            onClose();
-          } else {
-            // Purchase went through but entitlement not found yet — still unlock
+        // METHOD 3: Last resort — try to fetch products on the fly and purchase
+        console.log('[Paywall] No cached products — fetching on the fly');
+        try {
+          const targetId = PRODUCT_IDS[billing] || PRODUCT_IDS.annual;
+          const productResult = await Purchases.getProducts({ productIdentifiers: [targetId] });
+          if (productResult && productResult.products && productResult.products.length > 0) {
+            const product = productResult.products[0];
+            const result = await Purchases.purchaseStoreProduct({ product });
+            const info = result.customerInfo || result;
             startTrial();
             onClose();
+            return;
           }
-        } else {
-          alert("Subscriptions are currently unavailable. Please check your internet connection and try again.");
+        } catch (e) {
+          console.error('On-the-fly product fetch failed:', e.message);
         }
+
+        alert("Subscriptions are currently unavailable. Please check your internet connection and try again.");
       } catch (e) {
         if (!e.userCancelled) {
           console.error("RC Purchase Error", e);
@@ -204,13 +256,19 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
     }
   };
 
-  // Calculate dynamic price based on RevenueCat packages if available
+  // Calculate dynamic price based on RevenueCat packages or direct products
   let dynamicPrice = null;
   if (rcPackages.length > 0) {
     const targetType = billing === 'annual' ? 'ANNUAL' : (billing === 'weekly' ? 'WEEKLY' : 'MONTHLY');
     const pkg = rcPackages.find(p => p.packageType === targetType);
     if (pkg && pkg.product) {
       dynamicPrice = pkg.product.priceString;
+    }
+  } else if (directProducts.length > 0) {
+    const targetId = PRODUCT_IDS[billing] || PRODUCT_IDS.annual;
+    const product = directProducts.find(p => p.identifier === targetId);
+    if (product) {
+      dynamicPrice = product.priceString;
     }
   }
 
