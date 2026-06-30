@@ -20,7 +20,7 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
   const [loadingOfferings, setLoadingOfferings] = useState(true);
   const [fetchError, setFetchError] = useState(false);
 
-  const fetchPackages = useCallback(async (retries = 5, delay = 2000) => {
+  const fetchPackages = useCallback(async (retries = 3, delay = 1500) => {
     setLoadingOfferings(true);
     setFetchError(false);
     
@@ -73,6 +73,11 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
   useEffect(() => {
     if (Capacitor.isNativePlatform() && isOpen) {
       fetchPackages();
+      // HARD TIMEOUT: Never show "Loading subscription options..." for more than 6 seconds
+      const hardTimeout = setTimeout(() => {
+        setLoadingOfferings(false);
+      }, 6000);
+      return () => clearTimeout(hardTimeout);
     } else {
       setLoadingOfferings(false);
     }
@@ -210,7 +215,7 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
   }
 
   const price = dynamicPrice || (billing === 'annual' ? '$39.99' : (billing === 'weekly' ? '$2.99' : '$7.99'));
-  const billedText = billing === 'annual' ? (hasUsedTrial() ? 'Billed annually' : 'Billed annually (Includes 3-Day Free Trial)') : (billing === 'weekly' ? 'Billed weekly' : 'Billed monthly');
+  const billedText = billing === 'annual' ? 'Billed annually' : (billing === 'weekly' ? 'Billed weekly' : 'Billed monthly');
   const periodText = billing === 'annual' ? 'yr' : (billing === 'weekly' ? 'wk' : 'mo');
 
   return (
@@ -285,13 +290,9 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
               <button className="paywall-cta" disabled style={{ opacity: 0.7 }}>
                 Loading subscription options...
               </button>
-            ) : Capacitor.isNativePlatform() && fetchError && rcPackages.length === 0 ? (
-              <button className="paywall-cta" onClick={() => fetchPackages(3, 1500)}>
-                Retry Loading Subscriptions
-              </button>
             ) : (
               <button className="paywall-cta" onClick={handleSubscribe} disabled={loadingStripe}>
-                {loadingStripe ? 'Loading securely...' : (billing === 'annual' && !hasUsedTrial() ? 'Start 3-Day Free Trial' : 'Subscribe Now')}
+                {loadingStripe ? 'Processing...' : 'Subscribe Now'}
               </button>
             )}
             <p style={{ textAlign: 'center', fontSize: '12px', color: 'var(--text-muted)', marginTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
