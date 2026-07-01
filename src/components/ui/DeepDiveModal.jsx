@@ -11,6 +11,16 @@ export default function DeepDiveModal({ ticker, onClose }) {
   useEffect(() => {
     let isMounted = true;
     async function generateReport() {
+      // Check AI consent before sending data
+      const hasConsented = localStorage.getItem('graham_ai_consent') === 'true';
+      if (!hasConsented) {
+        if (isMounted) {
+          setReport("## AI Consent Required\n\nPlease use the Scan feature first to accept AI data sharing, then try again.");
+          setLoading(false);
+        }
+        return;
+      }
+
       try {
         let personaPrompt = "Adopt the persona of an elite, extremely thorough Wall Street analyst.";
         if (state.persona === 'Patrick Bateman') {

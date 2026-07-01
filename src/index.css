@@ -654,7 +654,7 @@ button:active:not(:disabled), .btn:active:not(:disabled), .onboard-option:active
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
-.paywall-content {
+.paywall-overlay .paywall-content {
   position: relative;
   z-index: 1;
   width: 100%;

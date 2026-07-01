@@ -146,8 +146,18 @@ export default function FeedPage() {
     return () => { unsubFund(); unsubMacro(); };
   }, []);
 
-  // Generate AI insight for stock of the day (cached per day)
+  // Generate AI insight for stock of the day (cached per day, requires consent)
   useEffect(() => {
+    // Only call AI if user has consented to data sharing
+    const hasConsented = localStorage.getItem('graham_ai_consent') === 'true';
+    if (!hasConsented) {
+      setStockInsight({ 
+        thesis: `${dailyStock.name} is a leading ${dailyStock.sector} company worth analyzing. Research the fundamentals, check recent earnings, and consider how it fits your investment strategy.`,
+        sentiment: 'neutral' 
+      });
+      return;
+    }
+
     const cacheKey = `sotd_insight_${dailyStock.ticker}_${new Date().toDateString()}`;
     const cached = localStorage.getItem(cacheKey);
     if (cached) {

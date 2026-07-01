@@ -2,12 +2,31 @@ import { useState, useRef } from 'react';
 import { functions } from '../../lib/firebase';
 import { httpsCallable } from 'firebase/functions';
 import ProgressDots from '../ui/ProgressDots';
+import AIConsentModal from '../ui/AIConsentModal';
 
 export default function PortfolioUploadStep({ step, totalSteps, onNext }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [synced, setSynced] = useState(false);
+  const [showAIConsent, setShowAIConsent] = useState(false);
   const fileInputRef = useRef(null);
+
+  const handleUploadClick = () => {
+    // Check AI consent before allowing upload
+    const hasConsented = localStorage.getItem('graham_ai_consent') === 'true';
+    if (!hasConsented) {
+      setShowAIConsent(true);
+      return;
+    }
+    fileInputRef.current?.click();
+  };
+
+  const handleAIConsentAccept = () => {
+    localStorage.setItem('graham_ai_consent', 'true');
+    setShowAIConsent(false);
+    // Now open file picker
+    fileInputRef.current?.click();
+  };
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -62,7 +81,7 @@ export default function PortfolioUploadStep({ step, totalSteps, onNext }) {
             />
             <button 
               className="onboard-next" 
-              onClick={() => fileInputRef.current?.click()} 
+              onClick={handleUploadClick} 
               disabled={loading}
             >
               {loading ? "Graham AI is Scanning..." : "Upload Screenshot"}
@@ -83,6 +102,12 @@ export default function PortfolioUploadStep({ step, totalSteps, onNext }) {
       <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
         <ion-icon name="shield-checkmark"></ion-icon> 100% Private & Secure
       </div>
+
+      <AIConsentModal
+        isOpen={showAIConsent}
+        onAccept={handleAIConsentAccept}
+        onDecline={() => setShowAIConsent(false)}
+      />
     </div>
   );
 }
