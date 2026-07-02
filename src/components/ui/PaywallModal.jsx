@@ -35,17 +35,7 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
       return;
     }
 
-    // Ensure RevenueCat is configured
-    try {
-      const apiKey = import.meta.env.VITE_REVENUECAT_PUBLIC_KEY;
-      if (apiKey) {
-        const configObj = { apiKey };
-        if (user && user.uid) configObj.appUserID = user.uid;
-        await Purchases.configure(configObj);
-      }
-    } catch (configErr) {
-      // Already configured, that's fine
-    }
+    // RevenueCat is already configured in UserContext on login — do NOT re-configure here
 
     // Try offerings first
     for (let attempt = 1; attempt <= retries; attempt++) {
@@ -125,6 +115,12 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
         const Purchases = await getPurchases();
         if (!Purchases) { alert('Purchase system not available. Please try again.'); setLoadingStripe(false); return; }
 
+        // Helper: race any purchase call against a 45-second timeout
+        const withTimeout = (promise, label) => Promise.race([
+          promise,
+          new Promise((_, reject) => setTimeout(() => reject(new Error(`${label} timed out. Please try again.`)), 45000))
+        ]);
+
         // METHOD 1: Use RC packages (offerings) if available
         if (rcPackages.length > 0) {
           let pkg = rcPackages[0]; 
@@ -133,16 +129,9 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
           if (billing === 'weekly') pkg = rcPackages.find(p => p.packageType === "WEEKLY") || rcPackages[0];
 
           if (pkg) {
-            const result = await Purchases.purchasePackage({ aPackage: pkg });
-            const info = result.customerInfo || result;
-            const activeEntitlements = info.entitlements?.active || {};
-            if (activeEntitlements["graham ai Pro"] || activeEntitlements["premium"] || Object.keys(activeEntitlements).length > 0) {
-              startTrial();
-              onClose();
-            } else {
-              startTrial();
-              onClose();
-            }
+            const result = await withTimeout(Purchases.purchasePackage({ aPackage: pkg }), 'Purchase');
+            startTrial();
+            onClose();
             return;
           }
         }
@@ -154,16 +143,9 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
           
           if (product) {
             console.log('[Paywall] Purchasing direct product:', product.identifier);
-            const result = await Purchases.purchaseStoreProduct({ product });
-            const info = result.customerInfo || result;
-            const activeEntitlements = info.entitlements?.active || {};
-            if (activeEntitlements["graham ai Pro"] || activeEntitlements["premium"] || Object.keys(activeEntitlements).length > 0) {
-              startTrial();
-              onClose();
-            } else {
-              startTrial();
-              onClose();
-            }
+            const result = await withTimeout(Purchases.purchaseStoreProduct({ product }), 'Purchase');
+            startTrial();
+            onClose();
             return;
           }
         }
@@ -172,11 +154,10 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
         console.log('[Paywall] No cached products — fetching on the fly');
         try {
           const targetId = PRODUCT_IDS[billing] || PRODUCT_IDS.annual;
-          const productResult = await Purchases.getProducts({ productIdentifiers: [targetId] });
+          const productResult = await withTimeout(Purchases.getProducts({ productIdentifiers: [targetId] }), 'Product fetch');
           if (productResult && productResult.products && productResult.products.length > 0) {
             const product = productResult.products[0];
-            const result = await Purchases.purchaseStoreProduct({ product });
-            const info = result.customerInfo || result;
+            const result = await withTimeout(Purchases.purchaseStoreProduct({ product }), 'Purchase');
             startTrial();
             onClose();
             return;
@@ -187,9 +168,10 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
 
         alert("Subscriptions are currently unavailable. Please check your internet connection and try again.");
       } catch (e) {
-        if (!e.userCancelled) {
+        const isCancelled = e.userCancelled || e.code === 1 || (e.message && e.message.includes('cancelled'));
+        if (!isCancelled) {
           console.error("RC Purchase Error", e);
-          alert('Purchase could not be completed. Please try again.');
+          alert('Purchase could not be completed: ' + (e.message || 'Unknown error. Please try again.'));
         }
       } finally {
         setLoadingStripe(false);
