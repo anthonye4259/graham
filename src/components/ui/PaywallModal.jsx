@@ -37,10 +37,16 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
 
     // RevenueCat is already configured in UserContext on login — do NOT re-configure here
 
+    // Helper: race any async call against a timeout
+    const fetchWithTimeout = (promise, ms, label) => Promise.race([
+      promise,
+      new Promise((_, reject) => setTimeout(() => reject(new Error(`${label} timed out.`)), ms))
+    ]);
+
     // Try offerings first
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
-        const offerings = await Purchases.getOfferings();
+        const offerings = await fetchWithTimeout(Purchases.getOfferings(), 5000, 'getOfferings');
         const currentOffering = offerings.current;
 
         if (currentOffering && currentOffering.availablePackages && currentOffering.availablePackages.length > 0) {
@@ -58,9 +64,9 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
     // Fallback: fetch products directly by hardcoded App Store product IDs
     console.log('[Paywall] Offerings empty — falling back to direct product fetch');
     try {
-      const productResult = await Purchases.getProducts({ 
+      const productResult = await fetchWithTimeout(Purchases.getProducts({ 
         productIdentifiers: [PRODUCT_IDS.weekly, PRODUCT_IDS.monthly, PRODUCT_IDS.annual] 
-      });
+      }), 5000, 'getProducts');
       if (productResult && productResult.products && productResult.products.length > 0) {
         setDirectProducts(productResult.products);
         setLoadingOfferings(false);
