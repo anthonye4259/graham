@@ -15,16 +15,44 @@ const PRODUCT_IDS = { weekly: 'G1', monthly: 'G2', annual: 'G3' };
 const ENTITLEMENT_IDS = ['graham ai Pro', 'premium'];
 
 function withTimeout(promise, ms, label) {
-  return Promise.race([
-    promise,
-    new Promise((_, reject) => setTimeout(() => reject(new Error(`${label} timed out. Please try again.`)), ms))
-  ]);
+  let timeoutId;
+  const timeout = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(`${label} timed out. Please try again.`)), ms);
+  });
+
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
 }
 
 function hasActiveEntitlement(result) {
   const info = result?.customerInfo || result;
   const activeEntitlements = info?.entitlements?.active || {};
   return ENTITLEMENT_IDS.some(id => activeEntitlements[id]) || Object.keys(activeEntitlements).length > 0;
+}
+
+async function ensurePurchasesConfigured(Purchases, user) {
+  const apiKey = import.meta.env.VITE_REVENUECAT_PUBLIC_KEY;
+  if (!apiKey) throw new Error('RevenueCat API key is missing.');
+
+  const configured = await withTimeout(Purchases.isConfigured(), 3000, 'Purchase setup');
+  if (!configured?.isConfigured) {
+    await withTimeout(
+      Purchases.configure({ apiKey, appUserID: user?.uid }),
+      5000,
+      'Purchase setup'
+    );
+    return;
+  }
+
+  if (user?.uid) {
+    try {
+      const current = await withTimeout(Purchases.getAppUserID(), 3000, 'Purchase account check');
+      if (current?.appUserID !== user.uid) {
+        await withTimeout(Purchases.logIn({ appUserID: user.uid }), 5000, 'Purchase account setup');
+      }
+    } catch (e) {
+      console.warn('RevenueCat app user check skipped:', e.message);
+    }
+  }
 }
 
 export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
@@ -39,12 +67,10 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
   const [directProducts, setDirectProducts] = useState([]);
   const hasLoadedProductsRef = useRef(false);
 
-  const fetchPackages = useCallback(async (retries = 2, delay = 1500) => {
+  const fetchPackages = useCallback(async (retries = 1, delay = 1000) => {
     setLoadingOfferings(true);
     setFetchError(false);
     setPurchaseError('');
-    setRcPackages([]);
-    setDirectProducts([]);
     hasLoadedProductsRef.current = false;
     
     const Purchases = await getPurchases();
@@ -55,12 +81,20 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
       return;
     }
 
-    // RevenueCat is already configured in UserContext on login — do NOT re-configure here
+    try {
+      await ensurePurchasesConfigured(Purchases, user);
+    } catch (e) {
+      console.warn('RevenueCat setup failed:', e.message);
+      setLoadingOfferings(false);
+      setFetchError(true);
+      setPurchaseError('Apple subscriptions could not be prepared. Please try again.');
+      return;
+    }
 
     // Try offerings first
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
-        const offerings = await withTimeout(Purchases.getOfferings(), 6000, 'Subscription loading');
+        const offerings = await withTimeout(Purchases.getOfferings(), 4000, 'Subscription loading');
         const currentOffering = offerings.current;
 
         if (currentOffering && currentOffering.availablePackages && currentOffering.availablePackages.length > 0) {
@@ -81,7 +115,7 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
     try {
       const productResult = await withTimeout(Purchases.getProducts({
         productIdentifiers: [PRODUCT_IDS.weekly, PRODUCT_IDS.monthly, PRODUCT_IDS.annual] 
-      }), 6000, 'Product loading');
+      }), 4000, 'Product loading');
       if (productResult && productResult.products && productResult.products.length > 0) {
         hasLoadedProductsRef.current = true;
         setDirectProducts(productResult.products);
@@ -97,21 +131,21 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
     // All methods exhausted
     setLoadingOfferings(false);
     setFetchError(true);
-    setPurchaseError('Subscription options could not be loaded. Please check your connection and try again.');
+    setPurchaseError('Apple subscription options could not be loaded. You can retry or continue later.');
     console.error("All RevenueCat fetch attempts exhausted (offerings + direct products)");
-  }, [user]);
+  }, [user?.uid]);
 
   useEffect(() => {
     if (Capacitor.isNativePlatform() && isOpen) {
       fetchPackages();
-      // HARD TIMEOUT: Never show a disabled loading button indefinitely.
+      // HARD TIMEOUT: Never leave the paywall in a loading-only state.
       const hardTimeout = setTimeout(() => {
         if (!hasLoadedProductsRef.current) {
           setLoadingOfferings(false);
           setFetchError(true);
-          setPurchaseError(current => current || 'Subscription options are taking too long to load. Please try again.');
+          setPurchaseError(current => current || 'Apple subscription options are taking too long to load. You can retry or continue later.');
         }
-      }, 9000);
+      }, 5000);
       return () => clearTimeout(hardTimeout);
     } else {
       setLoadingOfferings(false);
@@ -145,6 +179,7 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
           setPurchaseError('Purchase system is not available. Please try again.');
           return;
         }
+        await ensurePurchasesConfigured(Purchases, user);
 
         // METHOD 1: Use RC packages (offerings) if available
         if (rcPackages.length > 0) {
@@ -179,7 +214,7 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
         console.log('[Paywall] No cached products — fetching on the fly');
         try {
           const targetId = PRODUCT_IDS[billing] || PRODUCT_IDS.annual;
-          const productResult = await withTimeout(Purchases.getProducts({ productIdentifiers: [targetId] }), 10000, 'Product fetch');
+          const productResult = await withTimeout(Purchases.getProducts({ productIdentifiers: [targetId] }), 7000, 'Product fetch');
           if (productResult && productResult.products && productResult.products.length > 0) {
             const product = productResult.products[0];
             const result = await withTimeout(Purchases.purchaseStoreProduct({ product }), 45000, 'Purchase');
@@ -191,7 +226,7 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
           console.error('On-the-fly product fetch failed:', e.message);
         }
 
-        setPurchaseError('Subscriptions are currently unavailable. Please check your connection and try again.');
+        setPurchaseError('Apple subscriptions are currently unavailable. Please check your connection and try again.');
       } catch (e) {
         const isCancelled = e.userCancelled || e.code === 1 || (e.message && e.message.includes('cancelled'));
         if (!isCancelled) {
@@ -247,6 +282,7 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
           setPurchaseError('Purchase system is not available. Please try again.');
           return;
         }
+        await ensurePurchasesConfigured(Purchases, user);
         const restoreResult = await withTimeout(Purchases.restorePurchases(), 30000, 'Restore purchases');
         if (hasActiveEntitlement(restoreResult)) {
           startTrial(); // persist subscribed=true to Firestore
@@ -353,17 +389,21 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
           </ul>
 
           <div style={{ marginTop: '24px' }}>
-            {Capacitor.isNativePlatform() && loadingOfferings ? (
-              <button className="paywall-cta" disabled style={{ opacity: 0.7 }}>
-                Loading subscription options...
-              </button>
-            ) : Capacitor.isNativePlatform() && fetchError && rcPackages.length === 0 && directProducts.length === 0 ? (
-              <button className="paywall-cta" onClick={() => fetchPackages()} disabled={loadingStripe}>
-                Retry Subscription Options
-              </button>
-            ) : (
-              <button className="paywall-cta" onClick={handleSubscribe} disabled={loadingStripe}>
-                {loadingStripe ? 'Processing...' : 'Subscribe Now'}
+            <button className="paywall-cta" onClick={handleSubscribe} disabled={loadingStripe}>
+              {loadingStripe ? 'Processing...' : (billing === 'annual' ? 'Start 3-Day Free Trial' : 'Subscribe Now')}
+            </button>
+            {Capacitor.isNativePlatform() && loadingOfferings && (
+              <p style={{ textAlign: 'center', fontSize: '12px', color: 'var(--text-muted)', marginTop: '10px', lineHeight: 1.4 }}>
+                Loading latest Apple subscription details...
+              </p>
+            )}
+            {Capacitor.isNativePlatform() && fetchError && rcPackages.length === 0 && directProducts.length === 0 && (
+              <button
+                onClick={() => fetchPackages()}
+                disabled={loadingStripe || loadingOfferings}
+                style={{ background: 'none', border: 'none', color: 'var(--accent-gold, #A67C52)', fontSize: '13px', cursor: 'pointer', textDecoration: 'underline', display: 'block', margin: '10px auto 0', padding: '8px 12px' }}
+              >
+                Retry loading Apple subscriptions
               </button>
             )}
             {purchaseError && (
