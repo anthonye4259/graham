@@ -12,7 +12,9 @@ async function getPurchases() {
 }
 
 const PRODUCT_IDS = { weekly: 'G1', monthly: 'G2', annual: 'G3' };
+const PRODUCT_ID_LIST = Object.values(PRODUCT_IDS);
 const ENTITLEMENT_IDS = ['graham ai Pro', 'premium'];
+const FALLBACK_PRICES = { weekly: '$2.99', monthly: '$7.99', annual: '$39.99' };
 
 function withTimeout(promise, ms, label) {
   let timeoutId;
@@ -55,6 +57,20 @@ async function ensurePurchasesConfigured(Purchases, user) {
   }
 }
 
+function getProductIdForBilling(billing) {
+  return PRODUCT_IDS[billing] || PRODUCT_IDS.annual;
+}
+
+function getPackageForBilling(packages, billing) {
+  const targetType = billing === 'annual' ? 'ANNUAL' : (billing === 'weekly' ? 'WEEKLY' : 'MONTHLY');
+  return packages.find(p => p.packageType === targetType) || packages[0];
+}
+
+function getStoreProductForBilling(products, billing) {
+  const targetId = getProductIdForBilling(billing);
+  return products.find(p => p.identifier === targetId) || products[0];
+}
+
 export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
   const navigate = useNavigate();
   const { user, startTrial, hasUsedTrial } = useUser();
@@ -66,11 +82,24 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
   const [purchaseError, setPurchaseError] = useState('');
   const [directProducts, setDirectProducts] = useState([]);
   const hasLoadedProductsRef = useRef(false);
+  const purchasingRef = useRef(false);
+
+  const recordIAPDiagnostic = useCallback((eventName, params = {}) => {
+    const payload = {
+      product_ids: PRODUCT_ID_LIST.join(','),
+      billing,
+      ...params
+    };
+    console.warn(`[Paywall] ${eventName}`, payload);
+    try { trackEvent(eventName, payload); } catch(e) {}
+  }, [billing]);
 
   const fetchPackages = useCallback(async (retries = 1, delay = 1000) => {
     setLoadingOfferings(true);
     setFetchError(false);
     setPurchaseError('');
+    setRcPackages([]);
+    setDirectProducts([]);
     hasLoadedProductsRef.current = false;
     
     const Purchases = await getPurchases();
@@ -78,6 +107,7 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
       setLoadingOfferings(false);
       setFetchError(true);
       setPurchaseError('Purchases are temporarily unavailable. Please try again.');
+      recordIAPDiagnostic('iap_product_load_failed', { reason: 'purchases_plugin_unavailable' });
       return;
     }
 
@@ -88,6 +118,7 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
       setLoadingOfferings(false);
       setFetchError(true);
       setPurchaseError('Apple subscriptions could not be prepared. Please try again.');
+      recordIAPDiagnostic('iap_product_load_failed', { reason: 'revenuecat_setup_failed', message: e.message });
       return;
     }
 
@@ -102,10 +133,16 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
           setRcPackages(currentOffering.availablePackages);
           setLoadingOfferings(false);
           setFetchError(false);
+          try { trackEvent('iap_products_loaded', { source: 'revenuecat_offering', count: currentOffering.availablePackages.length }); } catch(e) {}
           return; // Success with offerings!
         }
+        recordIAPDiagnostic('iap_product_load_failed', {
+          reason: 'empty_revenuecat_offering',
+          offering: currentOffering?.identifier || 'none'
+        });
       } catch (e) {
         console.warn(`RC offerings attempt ${attempt}/${retries} failed:`, e.message);
+        recordIAPDiagnostic('iap_product_load_failed', { reason: 'offerings_error', attempt, message: e.message });
       }
       if (attempt < retries) await new Promise(resolve => setTimeout(resolve, delay));
     }
@@ -114,7 +151,7 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
     console.log('[Paywall] Offerings empty — falling back to direct product fetch');
     try {
       const productResult = await withTimeout(Purchases.getProducts({
-        productIdentifiers: [PRODUCT_IDS.weekly, PRODUCT_IDS.monthly, PRODUCT_IDS.annual] 
+        productIdentifiers: PRODUCT_ID_LIST
       }), 4000, 'Product loading');
       if (productResult && productResult.products && productResult.products.length > 0) {
         hasLoadedProductsRef.current = true;
@@ -122,30 +159,36 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
         setLoadingOfferings(false);
         setFetchError(false);
         console.log('[Paywall] Direct products loaded:', productResult.products.map(p => p.identifier));
+        try { trackEvent('iap_products_loaded', { source: 'direct_storekit_products', count: productResult.products.length }); } catch(e) {}
         return; // Success with direct products!
       }
+      recordIAPDiagnostic('iap_product_load_failed', {
+        reason: 'empty_direct_storekit_products',
+        returned_count: productResult?.products?.length || 0
+      });
     } catch (e) {
       console.warn('Direct product fetch failed:', e.message);
+      recordIAPDiagnostic('iap_product_load_failed', { reason: 'direct_storekit_error', message: e.message });
     }
     
     // All methods exhausted
     setLoadingOfferings(false);
     setFetchError(true);
-    setPurchaseError('Apple subscription options could not be loaded. You can retry or continue later.');
+    setPurchaseError('Apple subscription options could not be loaded yet. You can retry or tap Subscribe to request checkout directly from Apple.');
     console.error("All RevenueCat fetch attempts exhausted (offerings + direct products)");
-  }, [user?.uid]);
+  }, [recordIAPDiagnostic, user?.uid]);
 
   useEffect(() => {
     if (Capacitor.isNativePlatform() && isOpen) {
       fetchPackages();
       // HARD TIMEOUT: Never leave the paywall in a loading-only state.
       const hardTimeout = setTimeout(() => {
-        if (!hasLoadedProductsRef.current) {
+        if (!hasLoadedProductsRef.current && !purchasingRef.current) {
           setLoadingOfferings(false);
           setFetchError(true);
-          setPurchaseError(current => current || 'Apple subscription options are taking too long to load. You can retry or continue later.');
+          setPurchaseError(current => current || 'Apple subscription options are taking longer than expected. You can retry or tap Subscribe to request checkout directly from Apple.');
         }
-      }, 5000);
+      }, 12000);
       return () => clearTimeout(hardTimeout);
     } else {
       setLoadingOfferings(false);
@@ -160,6 +203,28 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
 
   if (!isOpen) return null;
 
+  const finishPurchase = async (Purchases, result) => {
+    if (hasActiveEntitlement(result)) {
+      startTrial();
+      onClose();
+      return true;
+    }
+
+    try {
+      const customerInfo = await withTimeout(Purchases.getCustomerInfo(), 10000, 'Purchase verification');
+      if (hasActiveEntitlement(customerInfo)) {
+        startTrial();
+        onClose();
+        return true;
+      }
+    } catch (e) {
+      recordIAPDiagnostic('iap_purchase_verification_failed', { message: e.message });
+    }
+
+    setPurchaseError('Purchase completed, but premium access could not be verified. Please tap Restore Purchases.');
+    return false;
+  };
+
   const handleSubscribe = async () => {
     if (!user) {
       alert("Please create an account before subscribing.");
@@ -169,7 +234,9 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
     }
 
     setLoadingStripe(true);
+    purchasingRef.current = true;
     setPurchaseError('');
+    setLoadingOfferings(false);
     
     // RevenueCat Native Flow
     if (Capacitor.isNativePlatform()) {
@@ -181,60 +248,60 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
         }
         await ensurePurchasesConfigured(Purchases, user);
 
+        const targetId = getProductIdForBilling(billing);
+
         // METHOD 1: Use RC packages (offerings) if available
         if (rcPackages.length > 0) {
-          let pkg = rcPackages[0]; 
-          if (billing === 'annual') pkg = rcPackages.find(p => p.packageType === "ANNUAL") || rcPackages[0];
-          if (billing === 'monthly') pkg = rcPackages.find(p => p.packageType === "MONTHLY") || rcPackages[0];
-          if (billing === 'weekly') pkg = rcPackages.find(p => p.packageType === "WEEKLY") || rcPackages[0];
+          const pkg = getPackageForBilling(rcPackages, billing);
 
           if (pkg) {
+            console.log('[Paywall] Purchasing RevenueCat package:', pkg.identifier || pkg.packageType);
             const result = await withTimeout(Purchases.purchasePackage({ aPackage: pkg }), 45000, 'Purchase');
-            startTrial();
-            onClose();
+            await finishPurchase(Purchases, result);
             return;
           }
         }
 
         // METHOD 2: Use direct StoreKit products if available
         if (directProducts.length > 0) {
-          const targetId = PRODUCT_IDS[billing] || PRODUCT_IDS.annual;
-          const product = directProducts.find(p => p.identifier === targetId) || directProducts[0];
+          const product = getStoreProductForBilling(directProducts, billing);
           
           if (product) {
             console.log('[Paywall] Purchasing direct product:', product.identifier);
             const result = await withTimeout(Purchases.purchaseStoreProduct({ product }), 45000, 'Purchase');
-            startTrial();
-            onClose();
+            await finishPurchase(Purchases, result);
             return;
           }
         }
 
-        // METHOD 3: Last resort — try to fetch products on the fly and purchase
-        console.log('[Paywall] No cached products — fetching on the fly');
+        // METHOD 3: RevenueCat's native bridge only needs an identifier on iOS.
+        // This still uses Apple's IAP sheet, but avoids blocking checkout on slow product preloading.
+        console.log('[Paywall] No cached products — requesting direct checkout by product ID:', targetId);
+        recordIAPDiagnostic('iap_direct_product_id_purchase_attempt', { product_id: targetId });
         try {
-          const targetId = PRODUCT_IDS[billing] || PRODUCT_IDS.annual;
-          const productResult = await withTimeout(Purchases.getProducts({ productIdentifiers: [targetId] }), 7000, 'Product fetch');
-          if (productResult && productResult.products && productResult.products.length > 0) {
-            const product = productResult.products[0];
-            const result = await withTimeout(Purchases.purchaseStoreProduct({ product }), 45000, 'Purchase');
-            startTrial();
-            onClose();
-            return;
-          }
+          const result = await withTimeout(
+            Purchases.purchaseStoreProduct({ product: { identifier: targetId } }),
+            60000,
+            'Purchase'
+          );
+          await finishPurchase(Purchases, result);
+          return;
         } catch (e) {
-          console.error('On-the-fly product fetch failed:', e.message);
+          console.error('Direct product ID purchase failed:', e.message);
+          recordIAPDiagnostic('iap_purchase_failed', { product_id: targetId, message: e.message });
         }
 
-        setPurchaseError('Apple subscriptions are currently unavailable. Please check your connection and try again.');
+        setPurchaseError('Apple checkout could not start for this subscription. Please try again, or contact support if this continues.');
       } catch (e) {
         const isCancelled = e.userCancelled || e.code === 1 || (e.message && e.message.includes('cancelled'));
         if (!isCancelled) {
           console.error("RC Purchase Error", e);
+          recordIAPDiagnostic('iap_purchase_failed', { message: e.message || 'Unknown purchase error' });
           setPurchaseError(e.message || 'Purchase could not be completed. Please try again.');
         }
       } finally {
         setLoadingStripe(false);
+        purchasingRef.current = false;
       }
       return;
     }
@@ -269,6 +336,7 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
       console.error("Stripe Checkout Error", e);
     } finally {
       setLoadingStripe(false);
+      purchasingRef.current = false;
     }
   };
 
@@ -301,23 +369,12 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
     }
   };
 
-  // Calculate dynamic price based on RevenueCat packages or direct products
-  let dynamicPrice = null;
-  if (rcPackages.length > 0) {
-    const targetType = billing === 'annual' ? 'ANNUAL' : (billing === 'weekly' ? 'WEEKLY' : 'MONTHLY');
-    const pkg = rcPackages.find(p => p.packageType === targetType);
-    if (pkg && pkg.product) {
-      dynamicPrice = pkg.product.priceString;
-    }
-  } else if (directProducts.length > 0) {
-    const targetId = PRODUCT_IDS[billing] || PRODUCT_IDS.annual;
-    const product = directProducts.find(p => p.identifier === targetId);
-    if (product) {
-      dynamicPrice = product.priceString;
-    }
-  }
-
-  const price = dynamicPrice || (billing === 'annual' ? '$39.99' : (billing === 'weekly' ? '$2.99' : '$7.99'));
+  // Calculate dynamic price based on RevenueCat packages or direct products.
+  // Fallback prices are display-only; checkout always goes through Apple's IAP APIs.
+  const selectedPackage = rcPackages.length > 0 ? getPackageForBilling(rcPackages, billing) : null;
+  const selectedDirectProduct = directProducts.length > 0 ? getStoreProductForBilling(directProducts, billing) : null;
+  const dynamicPrice = selectedPackage?.product?.priceString || selectedDirectProduct?.priceString || null;
+  const price = dynamicPrice || FALLBACK_PRICES[billing] || FALLBACK_PRICES.annual;
   const billedText = billing === 'annual' ? 'Billed annually' : (billing === 'weekly' ? 'Billed weekly' : 'Billed monthly');
   const periodText = billing === 'annual' ? 'yr' : (billing === 'weekly' ? 'wk' : 'mo');
 
@@ -392,12 +449,12 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
             <button className="paywall-cta" onClick={handleSubscribe} disabled={loadingStripe}>
               {loadingStripe ? 'Processing...' : (billing === 'annual' ? 'Start 3-Day Free Trial' : 'Subscribe Now')}
             </button>
-            {Capacitor.isNativePlatform() && loadingOfferings && (
+            {Capacitor.isNativePlatform() && loadingOfferings && !loadingStripe && (
               <p style={{ textAlign: 'center', fontSize: '12px', color: 'var(--text-muted)', marginTop: '10px', lineHeight: 1.4 }}>
                 Loading latest Apple subscription details...
               </p>
             )}
-            {Capacitor.isNativePlatform() && fetchError && rcPackages.length === 0 && directProducts.length === 0 && (
+            {Capacitor.isNativePlatform() && fetchError && rcPackages.length === 0 && directProducts.length === 0 && !loadingStripe && (
               <button
                 onClick={() => fetchPackages()}
                 disabled={loadingStripe || loadingOfferings}
