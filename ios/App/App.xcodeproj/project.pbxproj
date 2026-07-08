@@ -18,6 +18,8 @@
 		AA1234560000000000000001 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = AA1234560000000000000002 /* GoogleService-Info.plist */; };
 		BB0000000000000000000001 /* AppleIntelligencePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000003 /* AppleIntelligencePlugin.swift */; };
 		BB0000000000000000000002 /* AppleIntelligencePlugin.m in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000004 /* AppleIntelligencePlugin.m */; };
+		CC0000000000000000000001 /* GrahamStoreKitPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000000000000000000003 /* GrahamStoreKitPlugin.swift */; };
+		CC0000000000000000000002 /* GrahamStoreKitPlugin.m in Sources */ = {isa = PBXBuildFile; fileRef = CC0000000000000000000004 /* GrahamStoreKitPlugin.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -34,6 +36,8 @@
 		AA1234560000000000000002 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		BB0000000000000000000003 /* AppleIntelligencePlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleIntelligencePlugin.swift; sourceTree = "<group>"; };
 		BB0000000000000000000004 /* AppleIntelligencePlugin.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppleIntelligencePlugin.m; sourceTree = "<group>"; };
+		CC0000000000000000000003 /* GrahamStoreKitPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrahamStoreKitPlugin.swift; sourceTree = "<group>"; };
+		CC0000000000000000000004 /* GrahamStoreKitPlugin.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GrahamStoreKitPlugin.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -79,6 +83,8 @@
 				AA1234560000000000000002 /* GoogleService-Info.plist */,
 				BB0000000000000000000003 /* AppleIntelligencePlugin.swift */,
 				BB0000000000000000000004 /* AppleIntelligencePlugin.m */,
+				CC0000000000000000000003 /* GrahamStoreKitPlugin.swift */,
+				CC0000000000000000000004 /* GrahamStoreKitPlugin.m */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -173,6 +179,8 @@
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 				BB0000000000000000000001 /* AppleIntelligencePlugin.swift in Sources */,
 				BB0000000000000000000002 /* AppleIntelligencePlugin.m in Sources */,
+				CC0000000000000000000001 /* GrahamStoreKitPlugin.swift in Sources */,
+				CC0000000000000000000002 /* GrahamStoreKitPlugin.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -313,7 +321,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 69;
+				CURRENT_PROJECT_VERSION = 70;
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -335,7 +343,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 69;
+				CURRENT_PROJECT_VERSION = 70;
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
