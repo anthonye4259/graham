@@ -10,6 +10,12 @@ export interface GrahamStoreKitProduct {
 
 export interface GrahamStoreKitPlugin {
   products(options: { productIdentifiers: string[] }): Promise<{ products: GrahamStoreKitProduct[] }>;
+  purchaseLegacy(options: { productIdentifier: string }): Promise<{
+    purchased: boolean;
+    pending?: boolean;
+    productIdentifier?: string;
+    transactionId?: string;
+  }>;
   purchase(options: { productIdentifier: string }): Promise<{
     purchased: boolean;
     pending?: boolean;
