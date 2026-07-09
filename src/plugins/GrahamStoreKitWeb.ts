@@ -6,6 +6,10 @@ export class GrahamStoreKitWeb extends WebPlugin implements GrahamStoreKitPlugin
     throw new Error('Apple in-app purchases are only available in the iOS app.');
   }
 
+  async purchaseLegacy(): Promise<{ purchased: boolean }> {
+    throw new Error('Apple in-app purchases are only available in the iOS app.');
+  }
+
   async purchase(): Promise<{ purchased: boolean }> {
     throw new Error('Apple in-app purchases are only available in the iOS app.');
   }

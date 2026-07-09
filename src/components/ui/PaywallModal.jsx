@@ -21,7 +21,7 @@ const PRODUCT_IDS = { weekly: 'G1', monthly: 'G2', annual: 'G3' };
 const PRODUCT_ID_LIST = Object.values(PRODUCT_IDS);
 const ENTITLEMENT_IDS = ['graham ai Pro', 'premium'];
 const FALLBACK_PRICES = { weekly: '$2.99', monthly: '$7.99', annual: '$39.99' };
-const PURCHASE_WATCHDOG_MS = 30000;
+const PURCHASE_WATCHDOG_MS = 15000;
 
 function withTimeout(promise, ms, label) {
   let timeoutId;
@@ -89,6 +89,17 @@ function normalizeStoreProduct(product) {
 function isUserCancelledPurchase(error) {
   const message = String(error?.message || '').toLowerCase();
   return error?.userCancelled || error?.code === 1 || error?.code === 'USER_CANCELLED' || message.includes('cancelled');
+}
+
+function applePurchaseUnavailableMessage(error) {
+  const code = error?.code || '';
+  if (code === 'PRODUCT_NOT_AVAILABLE' || code === 'PRODUCT_NOT_FOUND') {
+    return 'Apple says this subscription is not available for this build. Please try again later.';
+  }
+  if (code === 'PAYMENTS_DISABLED') {
+    return 'In-app purchases are disabled on this device.';
+  }
+  return error?.message || 'Apple checkout could not be started. Please try again.';
 }
 
 export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
@@ -281,6 +292,23 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
     syncRevenueCatAfterStoreKitPurchase(productId);
   };
 
+  const handleStoreKitPurchaseResult = (result, targetId) => {
+    if (result?.purchased) {
+      completeStoreKitPurchase(result.productIdentifier || targetId);
+      return true;
+    }
+
+    if (result?.pending) {
+      setPurchaseError('Your purchase is pending Apple approval. Premium access will unlock when Apple completes it.');
+      recordIAPDiagnostic('iap_storekit_purchase_pending', { product_id: targetId });
+      return true;
+    }
+
+    setPurchaseError('Apple checkout did not complete. Please try again.');
+    recordIAPDiagnostic('iap_storekit_purchase_incomplete', { product_id: targetId });
+    return true;
+  };
+
   const finishPurchase = async (Purchases, result) => {
     if (hasActiveEntitlement(result)) {
       startTrial();
@@ -335,60 +363,50 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
         const targetId = getProductIdForBilling(billing);
         const StoreKit = await getNativeStoreKit();
 
-        if (StoreKit) {
-          console.log('[Paywall] Purchasing with native StoreKit:', targetId);
-          recordIAPDiagnostic('iap_storekit_purchase_attempt', { product_id: targetId });
-          const result = await withTimeout(
-            StoreKit.purchase({ productIdentifier: targetId }),
-            PURCHASE_WATCHDOG_MS + 5000,
-            'Apple checkout'
-          );
-
-          if (result?.purchased) {
-            completeStoreKitPurchase(result.productIdentifier || targetId);
-            return;
-          }
-
-          if (result?.pending) {
-            setPurchaseError('Your purchase is pending Apple approval. Premium access will unlock when Apple completes it.');
-            recordIAPDiagnostic('iap_storekit_purchase_pending', { product_id: targetId });
-            return;
-          }
-
-          setPurchaseError('Apple checkout did not complete. Please try again.');
-          recordIAPDiagnostic('iap_storekit_purchase_incomplete', { product_id: targetId });
+        if (!StoreKit) {
+          setPurchaseError('Apple checkout is not available in this build. Please try again later.');
+          recordIAPDiagnostic('iap_storekit_purchase_unavailable', { product_id: targetId });
           return;
         }
 
-        recordIAPDiagnostic('iap_storekit_purchase_unavailable_falling_back', { product_id: targetId });
-        const Purchases = await getPurchases();
-        if (!Purchases) {
-          setPurchaseError('Purchase system is not available. Please try again.');
-          return;
-        }
-        await ensurePurchasesConfigured(Purchases, user);
+        try {
+          console.log('[Paywall] Purchasing with native StoreKit payment queue:', targetId);
+          recordIAPDiagnostic('iap_storekit1_purchase_attempt', { product_id: targetId });
+          const result = await StoreKit.purchaseLegacy({ productIdentifier: targetId });
+          if (handleStoreKitPurchaseResult(result, targetId)) {
+            return;
+          }
+        } catch (legacyError) {
+          if (isUserCancelledPurchase(legacyError)) return;
 
-        // Fallback only. Build 70 should use GrahamStoreKit above.
-        if (rcPackages.length > 0) {
-          const pkg = getPackageForBilling(rcPackages, billing);
+          console.warn('StoreKit payment queue purchase failed:', legacyError);
+          recordIAPDiagnostic('iap_storekit1_purchase_failed', {
+            product_id: targetId,
+            code: legacyError.code || 'unknown',
+            message: legacyError.message || 'Unknown purchase error'
+          });
 
-          if (pkg) {
-            console.log('[Paywall] Fallback purchase with RevenueCat package:', pkg.identifier || pkg.packageType);
-            const result = await withTimeout(Purchases.purchasePackage({ aPackage: pkg }), PURCHASE_WATCHDOG_MS + 5000, 'Purchase');
-            await finishPurchase(Purchases, result);
+          // StoreKit 2 remains as a native Apple fallback. RevenueCat is no longer
+          // used to present checkout because that path repeatedly hung in review.
+          try {
+            console.log('[Paywall] Falling back to native StoreKit 2:', targetId);
+            recordIAPDiagnostic('iap_storekit2_purchase_attempt', { product_id: targetId });
+            const result = await StoreKit.purchase({ productIdentifier: targetId });
+            if (handleStoreKitPurchaseResult(result, targetId)) {
+              return;
+            }
+          } catch (storeKit2Error) {
+            if (isUserCancelledPurchase(storeKit2Error)) return;
+            console.error('StoreKit 2 purchase failed:', storeKit2Error);
+            recordIAPDiagnostic('iap_storekit2_purchase_failed', {
+              product_id: targetId,
+              code: storeKit2Error.code || 'unknown',
+              message: storeKit2Error.message || 'Unknown purchase error'
+            });
+            setPurchaseError(applePurchaseUnavailableMessage(storeKit2Error.code ? storeKit2Error : legacyError));
             return;
           }
         }
-
-        console.log('[Paywall] Fallback RevenueCat checkout by product ID:', targetId);
-        recordIAPDiagnostic('iap_revenuecat_product_id_purchase_attempt', { product_id: targetId });
-        const result = await withTimeout(
-          Purchases.purchaseStoreProduct({ product: { identifier: targetId } }),
-          PURCHASE_WATCHDOG_MS + 5000,
-          'Purchase'
-        );
-        await finishPurchase(Purchases, result);
-        return;
       } catch (e) {
         if (!isUserCancelledPurchase(e)) {
           console.error("Native purchase error", e);
@@ -397,7 +415,7 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
             code: e.code || 'unknown',
             message: e.message || 'Unknown purchase error'
           });
-          setPurchaseError(e.message || 'Purchase could not be completed. Please try again.');
+          setPurchaseError(applePurchaseUnavailableMessage(e));
         }
       } finally {
         if (purchaseWatchdogRef.current) {
