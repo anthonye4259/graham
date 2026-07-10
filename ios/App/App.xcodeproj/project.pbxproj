@@ -21,6 +21,7 @@
 		CC0000000000000000000001 /* GrahamStoreKitPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000000000000000000003 /* GrahamStoreKitPlugin.swift */; };
 		CC0000000000000000000002 /* GrahamStoreKitPlugin.m in Sources */ = {isa = PBXBuildFile; fileRef = CC0000000000000000000004 /* GrahamStoreKitPlugin.m */; };
 		CC0000000000000000000005 /* GrahamBridgeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000000000000000000006 /* GrahamBridgeViewController.swift */; };
+		DD0000000000000000000001 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = DD0000000000000000000002 /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -40,6 +41,7 @@
 		CC0000000000000000000003 /* GrahamStoreKitPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrahamStoreKitPlugin.swift; sourceTree = "<group>"; };
 		CC0000000000000000000004 /* GrahamStoreKitPlugin.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GrahamStoreKitPlugin.m; sourceTree = "<group>"; };
 		CC0000000000000000000006 /* GrahamBridgeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrahamBridgeViewController.swift; sourceTree = "<group>"; };
+		DD0000000000000000000002 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -80,6 +82,7 @@
 				504EC30E1FED79650016851F /* Assets.xcassets */,
 				504EC3101FED79650016851F /* LaunchScreen.storyboard */,
 				504EC3131FED79650016851F /* Info.plist */,
+				DD0000000000000000000002 /* PrivacyInfo.xcprivacy */,
 				2FAD9762203C412B000D30F8 /* config.xml */,
 				50B271D01FEDC1A000F3C39B /* public */,
 				AA1234560000000000000002 /* GoogleService-Info.plist */,
@@ -169,6 +172,7 @@
 				504EC30D1FED79650016851F /* Main.storyboard in Resources */,
 				2FAD9763203C412B000D30F8 /* config.xml in Resources */,
 				AA1234560000000000000001 /* GoogleService-Info.plist in Resources */,
+				DD0000000000000000000001 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

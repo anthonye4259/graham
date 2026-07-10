@@ -3,6 +3,18 @@
   "appName": "Graham AI",
   "webDir": "dist",
   "plugins": {
+    "CapacitorUpdater": {
+      "appId": "com.graham.ai",
+      "autoUpdate": "atBackground",
+      "defaultChannel": "production",
+      "appReadyTimeout": 10000,
+      "responseTimeout": 20,
+      "autoDeleteFailed": true,
+      "autoDeletePrevious": true,
+      "resetWhenUpdate": true,
+      "allowModifyUrl": false,
+      "periodCheckDelay": 3600
+    },
     "SplashScreen": {
       "backgroundColor": "#FAF7F2",
       "launchShowDuration": 2000,
