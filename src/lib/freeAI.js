@@ -1,5 +1,6 @@
 import { GoogleGenAI, Type } from '@google/genai';
 import AppleIntelligence from '../plugins/AppleIntelligence';
+import { requireAIConsent } from './aiConsent';
 
 let ai = null;
 function getAI() {
@@ -56,6 +57,9 @@ export async function freeAI(prompt, { json, schema, image } = {}) {
       console.warn("Apple AI failed:", e.message);
     }
   }
+
+  // All remaining providers leave the device.
+  requireAIConsent();
 
   // === 2-3. Gemini chain (each model = separate free quota) ===
   const geminiClient = getAI();

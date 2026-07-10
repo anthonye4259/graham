@@ -3,6 +3,7 @@ import { functions } from '../../lib/firebase';
 import { httpsCallable } from 'firebase/functions';
 import ProgressDots from '../ui/ProgressDots';
 import AIConsentModal from '../ui/AIConsentModal';
+import { acceptAIConsent, hasAIConsent } from '../../lib/aiConsent';
 
 export default function PortfolioUploadStep({ step, totalSteps, onNext }) {
   const [loading, setLoading] = useState(false);
@@ -13,8 +14,7 @@ export default function PortfolioUploadStep({ step, totalSteps, onNext }) {
 
   const handleUploadClick = () => {
     // Check AI consent before allowing upload
-    const hasConsented = localStorage.getItem('graham_ai_consent') === 'true';
-    if (!hasConsented) {
+    if (!hasAIConsent()) {
       setShowAIConsent(true);
       return;
     }
@@ -22,7 +22,7 @@ export default function PortfolioUploadStep({ step, totalSteps, onNext }) {
   };
 
   const handleAIConsentAccept = () => {
-    localStorage.setItem('graham_ai_consent', 'true');
+    acceptAIConsent();
     setShowAIConsent(false);
     // Now open file picker
     fileInputRef.current?.click();

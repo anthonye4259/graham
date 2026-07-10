@@ -11,6 +11,7 @@ import ReactMarkdown from 'react-markdown';
 import { analytics, trackEvent } from '../lib/firebase';
 
 import { freeAI, Type } from '../lib/freeAI';
+import { acceptAIConsent, hasAIConsent } from '../lib/aiConsent';
 
 import { getPersonaPrompt } from '../lib/personas';
 
@@ -98,8 +99,7 @@ export default function ScanPage() {
     }
 
     // AI data consent check
-    const hasConsented = localStorage.getItem('graham_ai_consent') === 'true';
-    if (!hasConsented) {
+    if (!hasAIConsent()) {
       setPendingScan({ query: queryToUse, image: imageToUse });
       setShowAIConsent(true);
       return;
@@ -202,7 +202,7 @@ export default function ScanPage() {
   };
 
   const handleAIConsentAccept = () => {
-    localStorage.setItem('graham_ai_consent', 'true');
+    acceptAIConsent();
     setShowAIConsent(false);
     if (pendingScan) {
       handleScan(pendingScan.query, pendingScan.image);

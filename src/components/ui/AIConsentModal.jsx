@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { AI_DISCLOSURE_TEXT } from '../../lib/aiConsent';
 
 export default function AIConsentModal({ isOpen, onAccept, onDecline }) {
   if (!isOpen) return null;
@@ -65,61 +66,8 @@ export default function AIConsentModal({ isOpen, onAccept, onDecline }) {
 
         {/* Body */}
         <div style={{ fontSize: '14px', lineHeight: '1.6', color: 'var(--text-secondary)' }}>
-          <p style={{ margin: '0 0 12px 0' }}>
-            Graham uses Google Gemini AI to analyze stocks and generate investment insights.
-          </p>
-          <p style={{ margin: '0 0 8px 0' }}>
-            When you use AI features, the following data may be sent to Google for processing:
-          </p>
-
-          <ul style={{ margin: '0 0 12px 0', paddingLeft: '0', listStyle: 'none' }}>
-            <li
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                marginBottom: '8px',
-              }}
-            >
-              <ion-icon
-                name="checkmark-circle"
-                style={{ fontSize: '16px', color: 'var(--accent-teal)', flexShrink: 0 }}
-              ></ion-icon>
-              <span>Your questions and stock queries</span>
-            </li>
-            <li
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                marginBottom: '8px',
-              }}
-            >
-              <ion-icon
-                name="checkmark-circle"
-                style={{ fontSize: '16px', color: 'var(--accent-teal)', flexShrink: 0 }}
-              ></ion-icon>
-              <span>Uploaded images (screenshots, charts)</span>
-            </li>
-            <li
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                marginBottom: '0',
-              }}
-            >
-              <ion-icon
-                name="checkmark-circle"
-                style={{ fontSize: '16px', color: 'var(--accent-teal)', flexShrink: 0 }}
-              ></ion-icon>
-              <span>Conversation history within this session</span>
-            </li>
-          </ul>
-
-          <p style={{ margin: '0 0 12px 0' }}>
-            This data is processed according to Google's Privacy Policy. Graham does not sell your
-            personal data.
+          <p style={{ margin: '0 0 12px 0', whiteSpace: 'pre-line' }}>
+            {AI_DISCLOSURE_TEXT}
           </p>
 
           <Link

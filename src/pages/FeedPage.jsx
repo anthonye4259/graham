@@ -7,6 +7,7 @@ import FundModal from '../components/ui/FundModal';
 import DailyBrieferCard from '../components/Feed/DailyBrieferCard';
 import StockOfTheDayCard from '../components/Feed/StockOfTheDayCard';
 import { freeAI } from '../lib/freeAI';
+import { hasAIConsent } from '../lib/aiConsent';
 
 // ── Personalized tips based on onboarding data ──
 const TIPS_BY_GOAL = {
@@ -149,8 +150,7 @@ export default function FeedPage() {
   // Generate AI insight for stock of the day (cached per day, requires consent)
   useEffect(() => {
     // Only call AI if user has consented to data sharing
-    const hasConsented = localStorage.getItem('graham_ai_consent') === 'true';
-    if (!hasConsented) {
+    if (!hasAIConsent()) {
       setStockInsight({ 
         thesis: `${dailyStock.name} is a leading ${dailyStock.sector} company worth analyzing. Research the fundamentals, check recent earnings, and consider how it fits your investment strategy.`,
         sentiment: 'neutral' 

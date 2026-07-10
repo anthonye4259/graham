@@ -523,6 +523,10 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
   const price = dynamicPrice || FALLBACK_PRICES[billing] || FALLBACK_PRICES.annual;
   const billedText = billing === 'annual' ? 'Billed annually' : (billing === 'weekly' ? 'Billed weekly' : 'Billed monthly');
   const periodText = billing === 'annual' ? 'yr' : (billing === 'weekly' ? 'wk' : 'mo');
+  const selectedPlanName = billing === 'annual' ? 'Yearly' : (billing === 'weekly' ? 'Weekly' : 'Monthly');
+  const ctaLabel = loadingStripe
+    ? 'Connecting to Apple...'
+    : (Capacitor.isNativePlatform() ? `Continue with ${selectedPlanName}` : (billing === 'annual' ? 'Start 3-Day Free Trial' : 'Subscribe Now'));
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -537,28 +541,28 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
             {source === 'scan' ? 'Unlock unlimited stock scans and full access.' : 'Master the markets with Graham Premium.'}
           </p>
 
-          <div className="billing-toggle" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px', background: 'var(--bg-secondary)', padding: '4px', borderRadius: '12px' }}>
+          <div className="billing-toggle" aria-label="Choose a subscription plan">
             <button
               className={`billing-btn ${billing === 'weekly' ? 'active' : ''}`}
               onClick={() => setBilling('weekly')}
-              style={{ padding: '12px 8px', fontSize: '14px', minHeight: '44px' }}
+              aria-pressed={billing === 'weekly'}
             >
               Weekly
             </button>
             <button
               className={`billing-btn ${billing === 'monthly' ? 'active' : ''}`}
               onClick={() => setBilling('monthly')}
-              style={{ padding: '12px 8px', fontSize: '14px', minHeight: '44px' }}
+              aria-pressed={billing === 'monthly'}
             >
               Monthly
             </button>
             <button
               className={`billing-btn ${billing === 'annual' ? 'active' : ''}`}
               onClick={() => setBilling('annual')}
-              style={{ padding: '12px 8px', fontSize: '14px', minHeight: '44px', position: 'relative' }}
+              aria-pressed={billing === 'annual'}
             >
               Yearly
-              <span className="save-badge" style={{ position: 'absolute', top: '-10px', right: '-5px', fontSize: '10px' }}>Save 30%</span>
+              <span className="save-badge">Save 30%</span>
             </button>
           </div>
         </div>
@@ -591,42 +595,42 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
             </li>
           </ul>
 
-          <div style={{ marginTop: '24px' }}>
+          <div className="paywall-cta-zone">
             <button className="paywall-cta" onClick={handleSubscribe} disabled={loadingStripe}>
-              {loadingStripe ? 'Processing...' : (billing === 'annual' ? 'Start 3-Day Free Trial' : 'Subscribe Now')}
+              {ctaLabel}
             </button>
             {Capacitor.isNativePlatform() && loadingOfferings && !loadingStripe && (
-              <p style={{ textAlign: 'center', fontSize: '12px', color: 'var(--text-muted)', marginTop: '10px', lineHeight: 1.4 }}>
-                Loading latest Apple subscription details...
+              <p className="paywall-status-note">
+                Checking Apple subscription availability...
               </p>
             )}
             {Capacitor.isNativePlatform() && fetchError && rcPackages.length === 0 && directProducts.length === 0 && !loadingStripe && (
               <button
                 onClick={() => fetchPackages()}
                 disabled={loadingStripe || loadingOfferings}
-                style={{ background: 'none', border: 'none', color: 'var(--accent-gold, #A67C52)', fontSize: '13px', cursor: 'pointer', textDecoration: 'underline', display: 'block', margin: '10px auto 0', padding: '8px 12px' }}
+                className="paywall-retry-button"
               >
                 Retry loading Apple subscriptions
               </button>
             )}
             {purchaseError && (
-              <p style={{ textAlign: 'center', fontSize: '12px', color: '#B45309', marginTop: '10px', lineHeight: 1.4 }}>
+              <p className="paywall-error-card" role="alert">
                 {purchaseError}
               </p>
             )}
-            <p style={{ textAlign: 'center', fontSize: '12px', color: 'var(--text-muted)', marginTop: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+            <p className="paywall-trust-note">
               <ion-icon name="lock-closed-outline"></ion-icon> {Capacitor.isNativePlatform() ? 'Secure checkout via Apple' : 'Secure checkout'}
             </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center', marginTop: '16px' }}>
-              <button onClick={handleRestore} style={{ background: 'none', border: 'none', color: 'var(--text-tertiary)', fontSize: '14px', cursor: 'pointer', textDecoration: 'underline', padding: '12px 16px', minHeight: '44px' }}>
+            <div className="paywall-secondary-actions">
+              <button onClick={handleRestore} className="paywall-link-button">
                 Restore Purchases
               </button>
-              <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-tertiary)', fontSize: '14px', cursor: 'pointer', padding: '12px 16px', minHeight: '44px' }}>
+              <button onClick={onClose} className="paywall-link-button">
                 Skip for now
               </button>
-              <div style={{ display: 'flex', gap: '16px', fontSize: '13px', color: 'var(--text-tertiary)' }}>
-                <a href="https://grahamapp.web.app/terms" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-gold, #A67C52)', textDecoration: 'underline', padding: '4px 0', minHeight: '44px', display: 'flex', alignItems: 'center' }}>Terms of Use (EULA)</a>
-                <a href="https://grahamapp.web.app/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-gold, #A67C52)', textDecoration: 'underline', padding: '4px 0', minHeight: '44px', display: 'flex', alignItems: 'center' }}>Privacy Policy</a>
+              <div className="paywall-legal-links">
+                <a href="https://grahamapp.web.app/terms" target="_blank" rel="noopener noreferrer">Terms of Use (EULA)</a>
+                <a href="https://grahamapp.web.app/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
               </div>
             </div>
           </div>

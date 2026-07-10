@@ -3,6 +3,7 @@ import { useUser } from '../context/UserContext';
 import { useNavigate } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import PaywallModal from '../components/ui/PaywallModal';
+import { hasAIConsent, revokeAIConsent } from '../lib/aiConsent';
 
 export default function SettingsPage() {
   const { state, setState, logout, deleteAccount, isPremium, requestPushPermissions } = useUser();
@@ -10,6 +11,11 @@ export default function SettingsPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
+  const [aiConsentActive, setAIConsentActive] = useState(() => hasAIConsent());
+
+  const openExternal = (url) => {
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
 
 
 
@@ -73,6 +79,21 @@ export default function SettingsPage() {
               </button>
             )}
           </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
+            <button
+              onClick={() => openExternal('https://apps.apple.com/account/subscriptions')}
+              style={{ background: 'var(--bg-main)', color: 'var(--text-primary)', border: '1px solid var(--border-light)', padding: '12px 14px', borderRadius: '10px', fontWeight: '700', cursor: 'pointer', minHeight: '44px' }}
+            >
+              Manage Apple Subscription
+            </button>
+            <button
+              onClick={() => setShowPaywall(true)}
+              style={{ background: 'transparent', color: 'var(--accent-gold)', border: '1px solid rgba(166,124,82,0.35)', padding: '12px 14px', borderRadius: '10px', fontWeight: '700', cursor: 'pointer', minHeight: '44px' }}
+            >
+              Restore Purchases
+            </button>
+          </div>
         </section>
 
         {/* Trophy Case */}
@@ -123,7 +144,7 @@ export default function SettingsPage() {
             <ion-icon name="options-outline" style={{ color: 'var(--accent-gold)' }}></ion-icon> Preferences
           </h2>
           
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '20px', borderBottom: '1px solid var(--border-light)', marginBottom: '20px' }}>
             <div>
               <div style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--text-primary)', marginBottom: '4px' }}>
                 Daily AI Briefings
@@ -155,6 +176,36 @@ export default function SettingsPage() {
               }} />
             </button>
           </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
+            <div>
+              <div style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--text-primary)', marginBottom: '4px' }}>
+                AI Data Sharing
+              </div>
+              <div style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
+                {aiConsentActive ? 'Consent is active for external AI analysis.' : 'Consent is not active. AI features will ask before sharing data.'}
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                revokeAIConsent();
+                setAIConsentActive(false);
+              }}
+              disabled={!aiConsentActive}
+              style={{
+                background: 'transparent',
+                color: aiConsentActive ? 'var(--accent-rose)' : 'var(--text-tertiary)',
+                border: `1px solid ${aiConsentActive ? 'var(--accent-rose)' : 'var(--border-light)'}`,
+                padding: '10px 16px',
+                borderRadius: '8px',
+                fontWeight: 'bold',
+                cursor: aiConsentActive ? 'pointer' : 'default',
+                opacity: aiConsentActive ? 1 : 0.6
+              }}
+            >
+              Revoke
+            </button>
+          </div>
         </section>
 
         {/* About Section - Web Only */}
@@ -173,6 +224,31 @@ export default function SettingsPage() {
             </button>
           </section>
         )}
+
+        <section style={{ background: 'var(--bg-card)', border: '1px solid var(--border-light)', borderRadius: '16px', padding: '24px' }}>
+          <h2 style={{ fontSize: '18px', marginBottom: '16px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <ion-icon name="shield-checkmark-outline" style={{ color: 'var(--accent-teal)' }}></ion-icon> Legal & Support
+          </h2>
+          <div style={{ display: 'grid', gap: '10px' }}>
+            {[
+              ['Privacy Policy', 'https://grahamapp.web.app/privacy', 'lock-closed-outline'],
+              ['Terms of Use', 'https://grahamapp.web.app/terms', 'document-text-outline'],
+              ['Contact Support', 'mailto:support@grahamapp.web.app', 'mail-outline'],
+            ].map(([label, url, icon]) => (
+              <button
+                key={label}
+                onClick={() => openExternal(url)}
+                style={{ background: 'var(--bg-main)', color: 'var(--text-primary)', border: '1px solid var(--border-light)', padding: '14px 16px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: '48px', textAlign: 'left' }}
+              >
+                <span style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '700' }}>
+                  <ion-icon name={icon}></ion-icon>
+                  {label}
+                </span>
+                <ion-icon name="open-outline" style={{ color: 'var(--text-tertiary)' }}></ion-icon>
+              </button>
+            ))}
+          </div>
+        </section>
 
         {/* Danger Zone */}
         <section style={{ background: 'var(--bg-card)', border: '1px solid var(--accent-rose)', borderRadius: '16px', padding: '24px' }}>

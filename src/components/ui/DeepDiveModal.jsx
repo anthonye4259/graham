@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { freeAI } from '../../lib/freeAI';
 import { useUser } from '../../context/UserContext';
+import { hasAIConsent } from '../../lib/aiConsent';
 
 export default function DeepDiveModal({ ticker, onClose }) {
   const { state } = useUser();
@@ -12,8 +13,7 @@ export default function DeepDiveModal({ ticker, onClose }) {
     let isMounted = true;
     async function generateReport() {
       // Check AI consent before sending data
-      const hasConsented = localStorage.getItem('graham_ai_consent') === 'true';
-      if (!hasConsented) {
+      if (!hasAIConsent()) {
         if (isMounted) {
           setReport("## AI Consent Required\n\nPlease use the Scan feature first to accept AI data sharing, then try again.");
           setLoading(false);
