@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../context/UserContext';
-import { analytics, trackEvent } from '../../lib/firebase';
+import { trackEvent } from '../../lib/firebase';
 
 import { Capacitor } from '@capacitor/core';
 
@@ -21,7 +21,7 @@ const PRODUCT_IDS = { weekly: 'G1', monthly: 'G2', annual: 'G3' };
 const PRODUCT_ID_LIST = Object.values(PRODUCT_IDS);
 const ENTITLEMENT_IDS = ['graham ai Pro', 'premium'];
 const FALLBACK_PRICES = { weekly: '$2.99', monthly: '$7.99', annual: '$39.99' };
-const PURCHASE_WATCHDOG_MS = 15000;
+const PURCHASE_WATCHDOG_MS = 90000;
 
 function withTimeout(promise, ms, label) {
   let timeoutId;
@@ -68,14 +68,14 @@ function getProductIdForBilling(billing) {
   return PRODUCT_IDS[billing] || PRODUCT_IDS.annual;
 }
 
-function getPackageForBilling(packages, billing) {
+function getExactPackageForBilling(packages, billing) {
   const targetType = billing === 'annual' ? 'ANNUAL' : (billing === 'weekly' ? 'WEEKLY' : 'MONTHLY');
-  return packages.find(p => p.packageType === targetType) || packages[0];
+  return packages.find(p => p.packageType === targetType) || null;
 }
 
-function getStoreProductForBilling(products, billing) {
+function getExactStoreProductForBilling(products, billing) {
   const targetId = getProductIdForBilling(billing);
-  return products.find(p => p.identifier === targetId) || products[0];
+  return products.find(p => p.identifier === targetId) || null;
 }
 
 function normalizeStoreProduct(product) {
@@ -104,13 +104,14 @@ function applePurchaseUnavailableMessage(error) {
 
 export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
   const navigate = useNavigate();
-  const { user, startTrial, hasUsedTrial } = useUser();
+  const { user, startTrial } = useUser();
   const [billing, setBilling] = useState('annual'); // 'annual' | 'monthly'
   const [loadingStripe, setLoadingStripe] = useState(false);
   const [rcPackages, setRcPackages] = useState([]);
   const [loadingOfferings, setLoadingOfferings] = useState(true);
   const [fetchError, setFetchError] = useState(false);
   const [purchaseError, setPurchaseError] = useState('');
+  const [checkoutNotice, setCheckoutNotice] = useState('');
   const [directProducts, setDirectProducts] = useState([]);
   const hasLoadedProductsRef = useRef(false);
   const purchasingRef = useRef(false);
@@ -126,10 +127,11 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
     try { trackEvent(eventName, payload); } catch(e) {}
   }, [billing]);
 
-  const fetchPackages = useCallback(async (retries = 1, delay = 1000) => {
+  const fetchPackages = useCallback(async (retries = 2, delay = 1500) => {
     setLoadingOfferings(true);
     setFetchError(false);
     setPurchaseError('');
+    setCheckoutNotice('');
     setRcPackages([]);
     setDirectProducts([]);
     hasLoadedProductsRef.current = false;
@@ -139,7 +141,7 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
       try {
         const productResult = await withTimeout(
           StoreKit.products({ productIdentifiers: PRODUCT_ID_LIST }),
-          8000,
+          20000,
           'Apple subscription loading'
         );
         const products = (productResult?.products || []).map(normalizeStoreProduct);
@@ -183,7 +185,7 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
     // Try offerings first
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
-        const offerings = await withTimeout(Purchases.getOfferings(), 4000, 'Subscription loading');
+        const offerings = await withTimeout(Purchases.getOfferings(), 10000, 'Subscription loading');
         const currentOffering = offerings.current;
 
         if (currentOffering && currentOffering.availablePackages && currentOffering.availablePackages.length > 0) {
@@ -210,7 +212,7 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
     try {
       const productResult = await withTimeout(Purchases.getProducts({
         productIdentifiers: PRODUCT_ID_LIST
-      }), 4000, 'Product loading');
+      }), 10000, 'Product loading');
       if (productResult && productResult.products && productResult.products.length > 0) {
         hasLoadedProductsRef.current = true;
         setDirectProducts(productResult.products.map(normalizeStoreProduct));
@@ -232,7 +234,7 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
     // All methods exhausted
     setLoadingOfferings(false);
     setFetchError(true);
-    setPurchaseError('Apple subscription options could not be loaded yet. You can retry or tap Subscribe to request checkout directly from Apple.');
+    setCheckoutNotice('Apple subscription options are still loading. Please retry in a moment.');
     console.error("All StoreKit and RevenueCat fetch attempts exhausted");
   }, [recordIAPDiagnostic, user?.uid]);
 
@@ -244,9 +246,9 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
         if (!hasLoadedProductsRef.current && !purchasingRef.current) {
           setLoadingOfferings(false);
           setFetchError(true);
-          setPurchaseError(current => current || 'Apple subscription options are taking longer than expected. You can retry or tap Subscribe to request checkout directly from Apple.');
+          setCheckoutNotice(current => current || 'Apple subscription options are taking longer than expected. Please retry in a moment.');
         }
-      }, 12000);
+      }, 30000);
       return () => clearTimeout(hardTimeout);
     } else {
       setLoadingOfferings(false);
@@ -299,7 +301,7 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
     }
 
     if (result?.pending) {
-      setPurchaseError('Your purchase is pending Apple approval. Premium access will unlock when Apple completes it.');
+      setCheckoutNotice('Your purchase is pending Apple approval. Premium access will unlock when Apple completes it.');
       recordIAPDiagnostic('iap_storekit_purchase_pending', { product_id: targetId });
       return true;
     }
@@ -307,28 +309,6 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
     setPurchaseError('Apple checkout did not complete. Please try again.');
     recordIAPDiagnostic('iap_storekit_purchase_incomplete', { product_id: targetId });
     return true;
-  };
-
-  const finishPurchase = async (Purchases, result) => {
-    if (hasActiveEntitlement(result)) {
-      startTrial();
-      onClose();
-      return true;
-    }
-
-    try {
-      const customerInfo = await withTimeout(Purchases.getCustomerInfo(), 10000, 'Purchase verification');
-      if (hasActiveEntitlement(customerInfo)) {
-        startTrial();
-        onClose();
-        return true;
-      }
-    } catch (e) {
-      recordIAPDiagnostic('iap_purchase_verification_failed', { message: e.message });
-    }
-
-    setPurchaseError('Purchase completed, but premium access could not be verified. Please tap Restore Purchases.');
-    return false;
   };
 
   const handleSubscribe = async () => {
@@ -342,6 +322,7 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
     setLoadingStripe(true);
     purchasingRef.current = true;
     setPurchaseError('');
+    setCheckoutNotice('');
     setLoadingOfferings(false);
     
     // Native iOS flow. Use StoreKit 2 directly so Apple checkout is not blocked
@@ -352,7 +333,7 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
         watchdogFired = true;
         purchasingRef.current = false;
         setLoadingStripe(false);
-        setPurchaseError('Apple checkout is taking longer than expected. Please try again.');
+        setCheckoutNotice('Apple checkout is still connecting. Please tap Continue again if the Apple sheet does not appear.');
         recordIAPDiagnostic('iap_purchase_watchdog_timeout', {
           product_id: getProductIdForBilling(billing),
           timeout_ms: PURCHASE_WATCHDOG_MS
@@ -370,40 +351,40 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
         }
 
         try {
-          console.log('[Paywall] Purchasing with native StoreKit payment queue:', targetId);
-          recordIAPDiagnostic('iap_storekit1_purchase_attempt', { product_id: targetId });
-          const result = await StoreKit.purchaseLegacy({ productIdentifier: targetId });
+          console.log('[Paywall] Purchasing with native StoreKit 2:', targetId);
+          recordIAPDiagnostic('iap_storekit2_purchase_attempt', { product_id: targetId });
+          const result = await StoreKit.purchase({ productIdentifier: targetId });
           if (handleStoreKitPurchaseResult(result, targetId)) {
             return;
           }
-        } catch (legacyError) {
-          if (isUserCancelledPurchase(legacyError)) return;
+        } catch (storeKit2Error) {
+          if (isUserCancelledPurchase(storeKit2Error)) return;
 
-          console.warn('StoreKit payment queue purchase failed:', legacyError);
-          recordIAPDiagnostic('iap_storekit1_purchase_failed', {
+          console.warn('StoreKit 2 purchase failed:', storeKit2Error);
+          recordIAPDiagnostic('iap_storekit2_purchase_failed', {
             product_id: targetId,
-            code: legacyError.code || 'unknown',
-            message: legacyError.message || 'Unknown purchase error'
+            code: storeKit2Error.code || 'unknown',
+            message: storeKit2Error.message || 'Unknown purchase error'
           });
 
-          // StoreKit 2 remains as a native Apple fallback. RevenueCat is no longer
-          // used to present checkout because that path repeatedly hung in review.
+          // Legacy StoreKit remains as an Apple-native fallback for devices where
+          // StoreKit 2 fails immediately before presenting the checkout sheet.
           try {
-            console.log('[Paywall] Falling back to native StoreKit 2:', targetId);
-            recordIAPDiagnostic('iap_storekit2_purchase_attempt', { product_id: targetId });
-            const result = await StoreKit.purchase({ productIdentifier: targetId });
+            console.log('[Paywall] Falling back to native StoreKit payment queue:', targetId);
+            recordIAPDiagnostic('iap_storekit1_purchase_attempt', { product_id: targetId });
+            const result = await StoreKit.purchaseLegacy({ productIdentifier: targetId });
             if (handleStoreKitPurchaseResult(result, targetId)) {
               return;
             }
-          } catch (storeKit2Error) {
-            if (isUserCancelledPurchase(storeKit2Error)) return;
-            console.error('StoreKit 2 purchase failed:', storeKit2Error);
-            recordIAPDiagnostic('iap_storekit2_purchase_failed', {
+          } catch (legacyError) {
+            if (isUserCancelledPurchase(legacyError)) return;
+            console.error('StoreKit payment queue purchase failed:', legacyError);
+            recordIAPDiagnostic('iap_storekit1_purchase_failed', {
               product_id: targetId,
-              code: storeKit2Error.code || 'unknown',
-              message: storeKit2Error.message || 'Unknown purchase error'
+              code: legacyError.code || 'unknown',
+              message: legacyError.message || 'Unknown purchase error'
             });
-            setPurchaseError(applePurchaseUnavailableMessage(storeKit2Error.code ? storeKit2Error : legacyError));
+            setPurchaseError(applePurchaseUnavailableMessage(legacyError.code ? legacyError : storeKit2Error));
             return;
           }
         }
@@ -467,6 +448,7 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
       try {
         setLoadingStripe(true);
         setPurchaseError('');
+        setCheckoutNotice('');
         const StoreKit = await getNativeStoreKit();
         if (StoreKit) {
           try {
@@ -517,16 +499,21 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
 
   // Calculate dynamic price based on RevenueCat packages or direct products.
   // Fallback prices are display-only; checkout always goes through Apple's IAP APIs.
-  const selectedPackage = rcPackages.length > 0 ? getPackageForBilling(rcPackages, billing) : null;
-  const selectedDirectProduct = directProducts.length > 0 ? getStoreProductForBilling(directProducts, billing) : null;
+  const isNativePaywall = Capacitor.isNativePlatform();
+  const selectedPackage = rcPackages.length > 0 ? getExactPackageForBilling(rcPackages, billing) : null;
+  const selectedDirectProduct = directProducts.length > 0 ? getExactStoreProductForBilling(directProducts, billing) : null;
   const dynamicPrice = selectedPackage?.product?.priceString || selectedDirectProduct?.priceString || null;
   const price = dynamicPrice || FALLBACK_PRICES[billing] || FALLBACK_PRICES.annual;
   const billedText = billing === 'annual' ? 'Billed annually' : (billing === 'weekly' ? 'Billed weekly' : 'Billed monthly');
   const periodText = billing === 'annual' ? 'yr' : (billing === 'weekly' ? 'wk' : 'mo');
   const selectedPlanName = billing === 'annual' ? 'Yearly' : (billing === 'weekly' ? 'Weekly' : 'Monthly');
+  const nativeProductReady = !isNativePaywall || Boolean(selectedDirectProduct || selectedPackage);
+  const purchaseDisabled = loadingStripe || (isNativePaywall && (loadingOfferings || !nativeProductReady));
   const ctaLabel = loadingStripe
-    ? 'Connecting to Apple...'
-    : (Capacitor.isNativePlatform() ? `Continue with ${selectedPlanName}` : (billing === 'annual' ? 'Start 3-Day Free Trial' : 'Subscribe Now'));
+    ? 'Waiting for Apple...'
+    : (isNativePaywall
+        ? (nativeProductReady ? `Continue with ${selectedPlanName}` : 'Loading Apple subscriptions...')
+        : (billing === 'annual' ? 'Start 3-Day Free Trial' : 'Subscribe Now'));
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -596,15 +583,20 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
           </ul>
 
           <div className="paywall-cta-zone">
-            <button className="paywall-cta" onClick={handleSubscribe} disabled={loadingStripe}>
+            <button className="paywall-cta" onClick={handleSubscribe} disabled={purchaseDisabled}>
               {ctaLabel}
             </button>
-            {Capacitor.isNativePlatform() && loadingOfferings && !loadingStripe && (
+            {isNativePaywall && loadingOfferings && !loadingStripe && (
               <p className="paywall-status-note">
                 Checking Apple subscription availability...
               </p>
             )}
-            {Capacitor.isNativePlatform() && fetchError && rcPackages.length === 0 && directProducts.length === 0 && !loadingStripe && (
+            {isNativePaywall && checkoutNotice && !purchaseError && (
+              <p className="paywall-status-note">
+                {checkoutNotice}
+              </p>
+            )}
+            {isNativePaywall && fetchError && rcPackages.length === 0 && directProducts.length === 0 && !loadingStripe && (
               <button
                 onClick={() => fetchPackages()}
                 disabled={loadingStripe || loadingOfferings}
