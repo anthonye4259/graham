@@ -14,6 +14,11 @@ async function getPushNotifications() {
   catch (e) { console.warn('PushNotifications not available:', e.message); return null; }
 }
 
+function getRevenueCatAppleKey() {
+  const key = import.meta.env.VITE_REVENUECAT_APPLE_KEY || import.meta.env.VITE_REVENUECAT_PUBLIC_KEY;
+  return key && key !== 'appl_REPLACE_ME_WHEN_READY' ? key : '';
+}
+
 const XP_LEVELS = [0, 100, 250, 500, 1000, 2000, 3500, 5500, 8000, 12000, 20000];
 
 const DEFAULT_STATE = {
@@ -93,10 +98,11 @@ export function UserProvider({ children }) {
           if (Capacitor.isNativePlatform()) {
             try {
               const Purchases = await getPurchases();
-              if (import.meta.env.VITE_REVENUECAT_PUBLIC_KEY && Purchases) {
+              const revenueCatKey = getRevenueCatAppleKey();
+              if (revenueCatKey && Purchases) {
                 await Promise.race([
                   (async () => {
-                    await Purchases.configure({ apiKey: import.meta.env.VITE_REVENUECAT_PUBLIC_KEY, appUserID: currentUser.uid });
+                    await Purchases.configure({ apiKey: revenueCatKey, appUserID: currentUser.uid });
                     
                     // Listen for dynamic updates (crucial for Sandbox/delayed purchases)
                     Purchases.addCustomerInfoUpdateListener((info) => {

@@ -4,6 +4,5 @@ import Capacitor
 class GrahamBridgeViewController: CAPBridgeViewController {
     override func capacitorDidLoad() {
         bridge?.registerPluginType(AppleIntelligencePlugin.self)
-        bridge?.registerPluginType(GrahamStoreKitPlugin.self)
     }
 }
