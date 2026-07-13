@@ -6,11 +6,11 @@ import { Capacitor } from '@capacitor/core';
 
 // SAFE: dynamic imports to prevent crash on iPad when plugins aren't registered
 async function getPurchases() {
-  try { const m = await import('@revenuecat/purchases-capacitor'); return m.Purchases; }
+  try { const m = await import('@revenuecat/purchases-capacitor'); return { plugin: m.Purchases }; }
   catch (e) { console.warn('Purchases not available:', e.message); return null; }
 }
 async function getPushNotifications() {
-  try { const m = await import('@capacitor/push-notifications'); return m.PushNotifications; }
+  try { const m = await import('@capacitor/push-notifications'); return { plugin: m.PushNotifications }; }
   catch (e) { console.warn('PushNotifications not available:', e.message); return null; }
 }
 
@@ -97,7 +97,7 @@ export function UserProvider({ children }) {
           
           if (Capacitor.isNativePlatform()) {
             try {
-              const Purchases = await getPurchases();
+              const Purchases = (await getPurchases())?.plugin;
               const revenueCatKey = getRevenueCatAppleKey();
               if (revenueCatKey && Purchases) {
                 await Promise.race([
@@ -231,7 +231,7 @@ export function UserProvider({ children }) {
   const requestPushPermissions = async () => {
     try {
       if (Capacitor.isNativePlatform()) {
-        const PN = await getPushNotifications();
+        const PN = (await getPushNotifications())?.plugin;
         if (!PN) return;
         let permStatus = await PN.checkPermissions();
 
@@ -252,7 +252,7 @@ export function UserProvider({ children }) {
     if (Capacitor.isNativePlatform()) {
       let listeners = [];
       (async () => {
-        const PN = await getPushNotifications();
+        const PN = (await getPushNotifications())?.plugin;
         if (!PN) return;
         listeners.push(
           PN.addListener('registration', (token) => {

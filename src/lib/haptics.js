@@ -6,7 +6,7 @@ async function getHaptics() {
   if (!isNative) return null;
   try {
     const m = await import('@capacitor/haptics');
-    return m.Haptics;
+    return { plugin: m.Haptics };
   } catch (e) {
     return null;
   }
@@ -21,36 +21,36 @@ const NotificationTypeError = 'ERROR';
 const NotificationTypeWarning = 'WARNING';
 
 export const hapticImpactLight = async () => {
-  const H = await getHaptics();
+  const H = (await getHaptics())?.plugin;
   if (H) try { await H.impact({ style: ImpactStyleLight }); } catch (e) {}
 };
 
 export const hapticImpactMedium = async () => {
-  const H = await getHaptics();
+  const H = (await getHaptics())?.plugin;
   if (H) try { await H.impact({ style: ImpactStyleMedium }); } catch (e) {}
 };
 
 export const hapticImpactHeavy = async () => {
-  const H = await getHaptics();
+  const H = (await getHaptics())?.plugin;
   if (H) try { await H.impact({ style: ImpactStyleHeavy }); } catch (e) {}
 };
 
 export const hapticSelection = async () => {
-  const H = await getHaptics();
+  const H = (await getHaptics())?.plugin;
   if (H) try { await H.selectionStart(); await H.selectionChanged(); await H.selectionEnd(); } catch (e) {}
 };
 
 export const hapticSuccess = async () => {
-  const H = await getHaptics();
+  const H = (await getHaptics())?.plugin;
   if (H) try { await H.notification({ type: NotificationTypeSuccess }); } catch (e) {}
 };
 
 export const hapticError = async () => {
-  const H = await getHaptics();
+  const H = (await getHaptics())?.plugin;
   if (H) try { await H.notification({ type: NotificationTypeError }); } catch (e) {}
 };
 
 export const hapticWarning = async () => {
-  const H = await getHaptics();
+  const H = (await getHaptics())?.plugin;
   if (H) try { await H.notification({ type: NotificationTypeWarning }); } catch (e) {}
 };

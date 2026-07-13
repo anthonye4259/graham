@@ -7,7 +7,7 @@ import { Capacitor } from '@capacitor/core';
 
 // SAFE: dynamic import to prevent crash on iPad
 async function getPurchases() {
-  try { const m = await import('@revenuecat/purchases-capacitor'); return m.Purchases; }
+  try { const m = await import('@revenuecat/purchases-capacitor'); return { plugin: m.Purchases }; }
   catch (e) { console.warn('Purchases not available:', e.message); return null; }
 }
 
@@ -143,7 +143,7 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
     setDirectProducts([]);
     hasLoadedProductsRef.current = false;
     
-    const Purchases = await getPurchases();
+    const Purchases = (await getPurchases())?.plugin;
     if (!Purchases) {
       setLoadingOfferings(false);
       setFetchError(true);
@@ -369,7 +369,7 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
 
       try {
         const targetId = getProductIdForBilling(billing);
-        const Purchases = await getPurchases();
+        const Purchases = (await getPurchases())?.plugin;
         if (!Purchases) {
           throw new Error('RevenueCat purchase system is not available in this build.');
         }
@@ -451,7 +451,7 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
         setLoadingStripe(true);
         setPurchaseError('');
         setCheckoutNotice('');
-        const Purchases = await getPurchases();
+        const Purchases = (await getPurchases())?.plugin;
         if (!Purchases) {
           setPurchaseError('Purchase system is not available. Please try again.');
           return;
