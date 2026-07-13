@@ -1,17 +1,33 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useUser } from '../context/UserContext';
+import { Link } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import Navbar from '../components/ui/Navbar';
 import TutorialModal from '../components/ui/TutorialModal';
 import PaywallModal from '../components/ui/PaywallModal';
 
 const SUGGESTIONS = [
-  'Stock Analysis',
-  'Options Trading',
-  'Portfolio Strategy',
-  'Market Basics',
-  'Retirement Planning',
+  'Explain NVDA earnings',
+  'Compare two stocks',
+  'Review my portfolio',
+  'Teach me options basics',
+];
+
+const CAPABILITIES = [
+  {
+    icon: 'bulb-outline',
+    title: 'Plain-English research',
+    copy: 'Turn earnings, headlines, and market signals into explanations you can actually use.',
+  },
+  {
+    icon: 'image-outline',
+    title: 'Analyze what you see',
+    copy: 'Upload a chart or portfolio screenshot and get a structured walkthrough in seconds.',
+  },
+  {
+    icon: 'school-outline',
+    title: 'Learn as you invest',
+    copy: 'Build market fluency with personalized lessons, definitions, and practical examples.',
+  },
 ];
 
 const TYPING_PHRASES = [
@@ -23,8 +39,6 @@ const TYPING_PHRASES = [
 ];
 
 export default function LandingPage() {
-  const navigate = useNavigate();
-  const { state, setState } = useUser();
   const [query, setQuery] = useState('');
   const [imagePreview, setImagePreview] = useState(null);
   const [showActionMenu, setShowActionMenu] = useState(false);
@@ -96,23 +110,22 @@ export default function LandingPage() {
         />
       )}
       <PaywallModal isOpen={showPricing} onClose={() => setShowPricing(false)} source="landing" />
-      {/* Animated Mesh Gradient Background */}
-      <div className="landing-bg-mesh"></div>
-
       <Navbar onOpenPricing={() => setShowPricing(true)} />
 
-      <main className="g-hero" style={{ zIndex: 1, position: 'relative' }}>
-        <div className="g-announce" style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.05)' }}>
-          <span className="g-announce-badge">NEW</span>
-          <span>Your personal investing AI</span>
-          <ion-icon name="arrow-forward-outline"></ion-icon>
+      <main className="g-hero">
+        <div className="g-announce">
+          <span className="g-announce-dot" aria-hidden="true"></span>
+          <span>AI market research, made understandable</span>
         </div>
 
-        <h1 className="g-hero-title" style={{ textShadow: '0 4px 24px rgba(0,0,0,0.5)' }}>
-          Turn your curiosity into<br />investing knowledge
+        <h1 className="g-hero-title">
+          Understand the market<br />before you act.
         </h1>
+        <p className="g-hero-sub">
+          Ask a question, upload a chart, or explore a company. Graham turns complex market information into a clear next step for your research.
+        </p>
 
-        <form onSubmit={handleSubmit} className="g-search-container" style={{ position: 'relative', width: '100%', maxWidth: '720px', margin: '0 auto', marginTop: '48px' }}>
+        <form onSubmit={handleSubmit} className="g-search-container">
           {imagePreview && (
             <div className="g-image-preview" style={{ marginBottom: '16px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', padding: '8px', display: 'inline-block', position: 'relative' }}>
               <img src={imagePreview} alt="Upload preview" style={{ maxWidth: '100px', borderRadius: '8px' }} />
@@ -122,25 +135,26 @@ export default function LandingPage() {
             </div>
           )}
           
-          <div className="glass-panel" style={{ display: 'flex', alignItems: 'center', background: 'rgba(30,30,30,0.6)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px', padding: '8px 16px', boxShadow: '0 8px 32px rgba(0,0,0,0.3)', transition: 'all 0.3s ease' }}>
+          <div className="g-search-panel">
             <button 
               type="button" 
               onClick={() => setShowActionMenu(!showActionMenu)}
-              style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', fontSize: '24px', cursor: 'pointer', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', transition: 'background 0.2s' }}
-              className="hover-bg-light"
+              className="g-search-action"
+              aria-label="Add an image or document"
             >
               <ion-icon name="add-circle-outline"></ion-icon>
             </button>
             
             <input 
               type="text" 
-              style={{ flex: 1, background: 'transparent', border: 'none', color: 'var(--text-primary)', fontSize: '18px', padding: '16px', outline: 'none', minWidth: 0 }}
+              className="g-search-input"
               placeholder={placeholderText}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              aria-label="Ask Graham an investing question"
             />
             
-            <button type="submit" style={{ opacity: query ? 1 : 0.5, background: 'var(--accent-teal)', color: '#000', border: 'none', borderRadius: '50%', width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', cursor: 'pointer', transition: 'all 0.2s' }}>
+            <button type="submit" className="g-search-submit" disabled={!query.trim()} aria-label="Ask Graham">
               <ion-icon name="arrow-up-outline"></ion-icon>
             </button>
           </div>
@@ -160,16 +174,12 @@ export default function LandingPage() {
           )}
         </form>
 
-        <div className="g-suggestions" style={{ marginTop: '32px', display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+        <div className="g-suggestions" aria-label="Example questions">
           {SUGGESTIONS.map(s => (
             <button 
               key={s} 
-              onClick={() => {
-                setQuery(s);
-                navigate('/app', { state: { query: s } });
-              }}
-              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-secondary)', padding: '10px 20px', borderRadius: '24px', fontSize: '14px', cursor: 'pointer', transition: 'all 0.2s' }}
-              className="hover-bg-light"
+              onClick={() => setQuery(s)}
+              className="g-suggestion-pill"
             >
               {s}
             </button>
@@ -177,7 +187,19 @@ export default function LandingPage() {
         </div>
       </main>
 
-      <footer className="g-footer" style={{ zIndex: 1, position: 'relative' }}>
+      <section id="capabilities" className="g-capabilities" aria-label="What Graham helps with">
+        {CAPABILITIES.map((capability) => (
+          <article className="g-capability" key={capability.title}>
+            <div className="g-capability-icon" aria-hidden="true">
+              <ion-icon name={capability.icon}></ion-icon>
+            </div>
+            <h2>{capability.title}</h2>
+            <p>{capability.copy}</p>
+          </article>
+        ))}
+      </section>
+
+      <footer className="g-footer">
         <div>© 2026 Graham AI. All rights reserved.</div>
         <div className="g-footer-links">
           {!Capacitor.isNativePlatform() && <Link to="/about" style={{ color: 'inherit', textDecoration: 'none' }}>Our Story</Link>}

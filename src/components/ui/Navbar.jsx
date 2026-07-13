@@ -8,8 +8,7 @@ export default function Navbar({ onOpenPricing }) {
       <div className="g-navbar-inner">
         <div className="g-nav-logo" onClick={() => navigate('/')}>graham.</div>
         <div className="g-nav-links">
-          <a href="#" className="g-nav-link" onClick={(e) => { e.preventDefault(); navigate('/auth'); }}>Learn</a>
-          <a href="#" className="g-nav-link" onClick={(e) => { e.preventDefault(); navigate('/auth'); }}>How it Works</a>
+          <a href="#capabilities" className="g-nav-link">Capabilities</a>
           <button className="g-nav-link" style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit' }} onClick={onOpenPricing}>Pricing</button>
         </div>
         <div className="g-nav-actions">

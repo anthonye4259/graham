@@ -1,6 +1,4 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { useUser } from '../../context/UserContext';
-import { useState } from 'react';
 import { hapticSelection } from '../../lib/haptics';
 
 
@@ -35,21 +33,21 @@ export default function DashboardLayout() {
       </main>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="bottom-nav">
-        <button onClick={() => { hapticSelection(); navigate('/app'); }} className={`nav-item ${location.pathname === '/app' ? 'active' : ''}`}>
-          <ion-icon name="home"></ion-icon>
+      <nav className="bottom-nav" aria-label="Primary navigation">
+        <button aria-label="Home" onClick={() => { hapticSelection(); navigate('/app'); }} className={`nav-item ${location.pathname === '/app' ? 'active' : ''}`}>
+          <ion-icon name={location.pathname === '/app' ? 'home' : 'home-outline'}></ion-icon>
           <span>Home</span>
         </button>
-        <button onClick={() => { hapticSelection(); navigate('/app/markets'); }} className={`nav-item ${location.pathname === '/app/markets' ? 'active' : ''}`}>
-          <ion-icon name="bar-chart-outline"></ion-icon>
+        <button aria-label="Markets" onClick={() => { hapticSelection(); navigate('/app/markets'); }} className={`nav-item ${location.pathname === '/app/markets' ? 'active' : ''}`}>
+          <ion-icon name={location.pathname === '/app/markets' ? 'bar-chart' : 'bar-chart-outline'}></ion-icon>
           <span>Markets</span>
         </button>
-        <button onClick={() => { hapticSelection(); navigate('/app/scan'); }} className={`nav-item ${location.pathname === '/app/scan' ? 'active' : ''}`}>
-          <ion-icon name="chatbubbles" class="nav-scan-icon"></ion-icon>
+        <button aria-label="Advisor" onClick={() => { hapticSelection(); navigate('/app/scan'); }} className={`nav-item ${location.pathname === '/app/scan' ? 'active' : ''}`}>
+          <ion-icon name={location.pathname === '/app/scan' ? 'chatbubbles' : 'chatbubbles-outline'}></ion-icon>
           <span>Advisor</span>
         </button>
-        <button onClick={() => { hapticSelection(); navigate('/app/settings'); }} className={`nav-item ${location.pathname === '/app/settings' ? 'active' : ''}`}>
-          <ion-icon name="person"></ion-icon>
+        <button aria-label="Profile" onClick={() => { hapticSelection(); navigate('/app/settings'); }} className={`nav-item ${location.pathname === '/app/settings' ? 'active' : ''}`}>
+          <ion-icon name={location.pathname === '/app/settings' ? 'person' : 'person-outline'}></ion-icon>
           <span>Profile</span>
         </button>
       </nav>
@@ -61,13 +59,13 @@ export default function DashboardLayout() {
           bottom: 0;
           left: 0;
           right: 0;
-          height: calc(80px + env(safe-area-inset-bottom));
-          background: rgba(250,247,242,0.75);
+          height: calc(72px + env(safe-area-inset-bottom));
+          background: rgba(250,247,242,0.94);
           backdrop-filter: blur(20px) saturate(180%);
           -webkit-backdrop-filter: blur(20px) saturate(180%);
           z-index: 1000;
           border-top: 0.5px solid rgba(26,24,21,0.08);
-          box-shadow: 0 -4px 24px rgba(26,24,21,0.02);
+          box-shadow: 0 -8px 28px rgba(26,24,21,0.04);
           justify-content: center;
           padding-bottom: env(safe-area-inset-bottom);
           align-items: center;
@@ -79,7 +77,7 @@ export default function DashboardLayout() {
         @media (min-width: 768px) {
           .bottom-nav {
             justify-content: center;
-            gap: 16px;
+            gap: 28px;
           }
           .bottom-nav > button {
             max-width: 100px;
@@ -92,20 +90,20 @@ export default function DashboardLayout() {
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 4px;
+          gap: 5px;
           font-size: 11px;
           font-weight: 600;
-          padding: 10px 16px;
-          min-height: 44px;
+          padding: 8px 16px;
+          min-height: 52px;
           cursor: pointer;
-          transition: var(--transition-spring);
+          transition: color 0.2s ease, transform 0.2s ease;
         }
         .nav-item.active {
           color: var(--text-primary);
-          transform: scale(1.05);
+          transform: translateY(-1px);
         }
-        .nav-item ion-icon { font-size: 24px; }
-        .nav-scan-icon { font-size: 50px !important; color: var(--accent-gold); transform: translateY(-8px); filter: drop-shadow(0 4px 12px rgba(166,124,82,0.3)); }
+        .nav-item ion-icon { font-size: 23px; }
+        .nav-item.active ion-icon { color: var(--accent-gold); }
       `}</style>
     </div>
   );

@@ -545,19 +545,19 @@ export default function PaywallModal({ isOpen, onClose, source = 'upgrade' }) {
 
           <ul className="perks-list">
             <li className="perk-item">
-              <ion-icon name="checkmark-circle" class="perk-icon"></ion-icon>
+              <ion-icon name="checkmark-circle" className="perk-icon"></ion-icon>
               Unlimited AI Stock Scans
             </li>
             <li className="perk-item">
-              <ion-icon name="checkmark-circle" class="perk-icon"></ion-icon>
+              <ion-icon name="checkmark-circle" className="perk-icon"></ion-icon>
               Full Options Trading Course
             </li>
             <li className="perk-item">
-              <ion-icon name="checkmark-circle" class="perk-icon"></ion-icon>
+              <ion-icon name="checkmark-circle" className="perk-icon"></ion-icon>
               Streak Freeze Protection
             </li>
             <li className="perk-item">
-              <ion-icon name="checkmark-circle" class="perk-icon"></ion-icon>
+              <ion-icon name="checkmark-circle" className="perk-icon"></ion-icon>
               Premium Wall Street Personas
             </li>
           </ul>
