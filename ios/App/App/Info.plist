@@ -24,8 +24,6 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>NSCameraUsageDescription</key>
-	<string>Graham uses your camera to capture screenshots of portfolios and financial charts for AI analysis.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Graham needs access to your photo library to select portfolio screenshots for AI analysis.</string>
 	<key>UILaunchStoryboardName</key>

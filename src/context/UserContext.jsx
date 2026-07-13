@@ -3,20 +3,11 @@ import { auth, db } from '../lib/firebase';
 import { signInAnonymously, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { Capacitor } from '@capacitor/core';
+import { ensurePurchasesConfigured } from '../lib/revenueCat';
 
-// SAFE: dynamic imports to prevent crash on iPad when plugins aren't registered
-async function getPurchases() {
-  try { const m = await import('@revenuecat/purchases-capacitor'); return { plugin: m.Purchases }; }
-  catch (e) { console.warn('Purchases not available:', e.message); return null; }
-}
 async function getPushNotifications() {
   try { const m = await import('@capacitor/push-notifications'); return { plugin: m.PushNotifications }; }
   catch (e) { console.warn('PushNotifications not available:', e.message); return null; }
-}
-
-function getRevenueCatAppleKey() {
-  const key = import.meta.env.VITE_REVENUECAT_APPLE_KEY || import.meta.env.VITE_REVENUECAT_PUBLIC_KEY;
-  return key && key !== 'appl_REPLACE_ME_WHEN_READY' ? key : '';
 }
 
 const XP_LEVELS = [0, 100, 250, 500, 1000, 2000, 3500, 5500, 8000, 12000, 20000];
@@ -85,10 +76,10 @@ export function UserProvider({ children }) {
         if (currentUser) {
           setUser(currentUser);
           
-           // Configure RevenueCat if Native — with timeout
+          // RevenueCat is the source of truth for native subscription state.
           let isNativeSubscribed = false;
+          let nativeEntitlementLoaded = false;
           
-          // App Store Review account bypass — define early so listener can check
           const REVIEW_EMAIL = 'review@grahamai.com';
           const isReviewAccount = currentUser.email === REVIEW_EMAIL;
           
@@ -97,29 +88,22 @@ export function UserProvider({ children }) {
           
           if (Capacitor.isNativePlatform()) {
             try {
-              const Purchases = (await getPurchases())?.plugin;
-              const revenueCatKey = getRevenueCatAppleKey();
-              if (revenueCatKey && Purchases) {
+              const Purchases = (await ensurePurchasesConfigured(currentUser.uid))?.plugin;
+              if (Purchases) {
                 await Promise.race([
                   (async () => {
-                    await Purchases.configure({ apiKey: revenueCatKey, appUserID: currentUser.uid });
-                    
                     // Listen for dynamic updates (crucial for Sandbox/delayed purchases)
                     Purchases.addCustomerInfoUpdateListener((info) => {
-                      // Review accounts: never auto-enable from listener
-                      if (isReviewAccount || isExpiredReviewAccount) return;
                       const active = info.entitlements?.active || {};
-                      if (active["graham ai Pro"] || active["premium"] || Object.keys(active).length > 0) {
-                        setStateRaw(s => ({ ...s, subscribed: true }));
-                      }
+                      const subscribed = Boolean(active["graham ai Pro"] || active["premium"] || Object.keys(active).length > 0);
+                      setStateRaw(s => ({ ...s, subscribed }));
                     });
 
                     const result = await Purchases.getCustomerInfo();
                     const info = result.customerInfo || result;
                     const activeEntitlements = info.entitlements?.active || {};
-                    if (activeEntitlements["graham ai Pro"] || activeEntitlements["premium"] || Object.keys(activeEntitlements).length > 0) {
-                      isNativeSubscribed = true;
-                    }
+                    isNativeSubscribed = Boolean(activeEntitlements["graham ai Pro"] || activeEntitlements["premium"] || Object.keys(activeEntitlements).length > 0);
+                    nativeEntitlementLoaded = true;
                   })(),
                   new Promise((_, reject) => setTimeout(() => reject(new Error('RC timeout')), 5000))
                 ]);
@@ -138,30 +122,26 @@ export function UserProvider({ children }) {
           
           if (docSnap.exists()) {
             const data = docSnap.data();
-            if (isNativeSubscribed && !isReviewAccount && !isExpiredReviewAccount) data.subscribed = true;
+            if (nativeEntitlementLoaded) data.subscribed = isNativeSubscribed;
             if (isReviewAccount) {
               data.onboarded = true; data.name = data.name || 'App Reviewer'; data.investingGoal = data.investingGoal || 'learn_basics'; data.persona = data.persona || 'Graham'; data.hasSeenFeedTutorial = true;
-              // ALWAYS force paywall for Apple Review — ignore RevenueCat existing entitlements
-              data.subscribed = false; data.trialStartDate = null;
-              // Persist to Firestore so DB doesn't have stale subscribed:true
-              try { await updateDoc(docRef, { subscribed: false, trialStartDate: null, onboarded: true }); } catch(e) { console.warn('Review account Firestore update failed:', e); }
+              try { await updateDoc(docRef, { onboarded: true }); } catch(e) { console.warn('Review account Firestore update failed:', e); }
             }
             if (isExpiredReviewAccount) {
               data.onboarded = true; data.name = data.name || 'App Reviewer (Expired)'; data.investingGoal = data.investingGoal || 'learn_basics'; data.persona = data.persona || 'Graham'; data.hasSeenFeedTutorial = true;
-              data.subscribed = false; data.trialStartDate = expiredTrialDate.toISOString();
-              try { await updateDoc(docRef, { subscribed: false, trialStartDate: expiredTrialDate.toISOString(), onboarded: true }); } catch(e) { console.warn('Review account Firestore update failed:', e); }
+              data.trialStartDate = expiredTrialDate.toISOString();
+              try { await updateDoc(docRef, { trialStartDate: expiredTrialDate.toISOString(), onboarded: true }); } catch(e) { console.warn('Review account Firestore update failed:', e); }
             }
             if (isMounted) setStateRaw({ ...DEFAULT_STATE, ...data });
           } else {
             const defaultWithSub = { ...DEFAULT_STATE };
-            if (isNativeSubscribed && !isReviewAccount && !isExpiredReviewAccount) defaultWithSub.subscribed = true;
+            if (nativeEntitlementLoaded) defaultWithSub.subscribed = isNativeSubscribed;
             if (isReviewAccount) {
               defaultWithSub.onboarded = true; defaultWithSub.name = 'App Reviewer'; defaultWithSub.investingGoal = 'learn_basics'; defaultWithSub.persona = 'Graham'; defaultWithSub.hasSeenFeedTutorial = true;
-              defaultWithSub.subscribed = false; defaultWithSub.trialStartDate = null;
             }
             if (isExpiredReviewAccount) {
               defaultWithSub.onboarded = true; defaultWithSub.name = 'App Reviewer (Expired)'; defaultWithSub.investingGoal = 'learn_basics'; defaultWithSub.persona = 'Graham'; defaultWithSub.hasSeenFeedTutorial = true;
-              defaultWithSub.subscribed = false; defaultWithSub.trialStartDate = expiredTrialDate.toISOString();
+              defaultWithSub.trialStartDate = expiredTrialDate.toISOString();
             }
             await setDoc(docRef, defaultWithSub);
             if (isMounted) setStateRaw(defaultWithSub);
