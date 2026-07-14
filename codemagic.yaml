@@ -14,11 +14,32 @@ workflows:
         bundle_identifier: com.graham.ai
     scripts:
       - name: Install dependencies
-        script: npm install
+        script: npm ci
       - name: Build Web App
         script: npm run build
       - name: Sync Capacitor iOS
         script: npx cap sync ios
+      - name: Verify embedded web bundle
+        script: |
+          test -s ios/App/App/public/index.html
+          test -s ios/App/App/public/launch-error.html
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const path = require('node:path');
+          const root = 'ios/App/App/public';
+          const config = JSON.parse(fs.readFileSync('ios/App/App/capacitor.config.json', 'utf8'));
+          if (config.server?.url) throw new Error('Release build must not load a remote server URL.');
+          if (config.plugins?.CapacitorUpdater) throw new Error('Release build must not include CapacitorUpdater.');
+          if (config.server?.errorPath !== 'launch-error.html') throw new Error('Release build is missing its launch error page.');
+          const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+          const assets = [...html.matchAll(/(?:src|href)="\/?(assets\/[^"?]+)"/g)].map(match => match[1]);
+          if (assets.length < 2) throw new Error('Generated index.html does not reference its JavaScript and CSS assets.');
+          for (const asset of assets) {
+            const file = path.join(root, asset);
+            if (!fs.existsSync(file) || fs.statSync(file).size === 0) throw new Error(`Missing generated asset: ${file}`);
+          }
+          console.log(`Verified index.html, launch-error.html, and ${assets.length} generated assets.`);
+          NODE
       - name: Set up code signing
         script: xcode-project use-profiles
       - name: Log build number

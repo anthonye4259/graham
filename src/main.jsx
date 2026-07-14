@@ -3,10 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
 import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
-import { initializeLiveUpdates } from './lib/liveUpdates';
 import './index.css';
-
-initializeLiveUpdates('Graham AI');
 
 // Global error handlers — catch anything that slips through ErrorBoundary
 // (e.g., unhandled promise rejections from Firestore, RevenueCat, etc.)

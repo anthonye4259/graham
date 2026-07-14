@@ -8,7 +8,20 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
     var window: UIWindow?
 
+    private func resetToBundledWebAssets() {
+        UserDefaults.standard.removeObject(forKey: "serverBasePath")
+        KeyValueStore.standard["serverBasePath"] = nil as String?
+    }
+
+    func application(_ application: UIApplication, willFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        // Previous builds supported OTA bundles. Always clear any persisted
+        // override before UIKit creates the Capacitor bridge for this binary.
+        resetToBundledWebAssets()
+        return true
+    }
+
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        resetToBundledWebAssets()
         // Initialize Firebase safely - prevent crash if config is missing
         if let _ = Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist") {
             FirebaseApp.configure()

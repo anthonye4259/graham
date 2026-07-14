@@ -7,10 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "sync:ios": "npm run build && npx cap sync ios",
-    "ota:compat": "npx @capgo/cli@latest bundle compatibility com.graham.ai --channel production",
-    "ota:upload": "npm run build && npx @capgo/cli@latest bundle upload com.graham.ai --path dist --channel production --bundle 1.0.0-ota.$(date +%Y%m%d%H%M%S).$(git rev-parse --short HEAD) --comment $(git rev-parse --short HEAD)",
-    "ota:upload:beta": "npm run build && npx @capgo/cli@latest bundle upload com.graham.ai --path dist --channel beta --bundle 1.0.0-beta.$(date +%Y%m%d%H%M%S).$(git rev-parse --short HEAD) --comment $(git rev-parse --short HEAD)"
+    "sync:ios": "npm run build && npx cap sync ios"
   },
   "devDependencies": {
     "@capacitor/cli": "^8.3.4",
@@ -25,7 +22,6 @@
     "@capacitor/ios": "^8.3.4",
     "@capacitor/push-notifications": "^8.1.1",
     "@capawesome/capacitor-app-review": "^8.0.1",
-    "@capgo/capacitor-updater": "^8.50.2",
     "@google/genai": "^2.6.0",
     "@revenuecat/purchases-capacitor": "^13.1.2",
     "@stripe/stripe-js": "^9.6.0",
