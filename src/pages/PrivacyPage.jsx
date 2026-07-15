@@ -34,7 +34,7 @@ export default function PrivacyPage() {
         <p style={{ marginBottom: '12px' }}>When you use Graham's AI features, we collect the stock tickers you search for and the questions you ask the AI Advisor. This includes queries submitted through the Advisor chat, stock scans, and Deep Dive reports.</p>
         
         <h3 style={{ fontSize: '17px', color: 'var(--text-primary)', marginTop: '16px', marginBottom: '8px' }}>c. Uploaded Images</h3>
-        <p style={{ marginBottom: '12px' }}>You may upload images — such as screenshots, portfolio photos, or charts — to the AI Advisor for analysis. These images are transmitted to our AI services for processing.</p>
+        <p style={{ marginBottom: '12px' }}>You may upload images — such as screenshots, portfolio photos, or charts — to the AI Advisor for analysis. Camera and photo library access occurs only when you choose to take or select an image. These images are transmitted to our AI services for processing.</p>
         
         <h3 style={{ fontSize: '17px', color: 'var(--text-primary)', marginTop: '16px', marginBottom: '8px' }}>d. Chat History</h3>
         <p style={{ marginBottom: '12px' }}>We collect and store your conversation history with the AI Advisor to provide continuity within your chat sessions and to improve the quality of responses.</p>

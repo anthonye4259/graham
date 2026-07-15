@@ -23,6 +23,8 @@ workflows:
         script: |
           test -s ios/App/App/public/index.html
           test -s ios/App/App/public/launch-error.html
+          test -n "$(/usr/libexec/PlistBuddy -c 'Print :NSCameraUsageDescription' ios/App/App/Info.plist)"
+          test -n "$(/usr/libexec/PlistBuddy -c 'Print :NSPhotoLibraryUsageDescription' ios/App/App/Info.plist)"
           node - <<'NODE'
           const fs = require('node:fs');
           const path = require('node:path');
